@@ -13,3 +13,6 @@ overrides:
   # (GHSA-f88m-g3jw-g9cj); force the patched line. Dev-only build tool
   # (image asset processing), never shipped to the browser.
   sharp: ">=0.35.0"
+  # postcss (via vite/qwik) pins an old nanoid with an infinite-loop bug on
+  # zero-size custom generators (GHSA-2v37-7h3g-55p8). Dev-only build tool.
+  nanoid: ">=3.3.18"
