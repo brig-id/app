@@ -1,16 +1,14 @@
 import { $, component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
 import { type DocumentHead, useNavigate } from "@builder.io/qwik-city";
 import { PasskeyItem } from "~/components/passkey-item/passkey-item";
-import { wa, useWaClick, useWaTextInput, type WaInputElement } from "~/lib/wa";
+import { wa, useWaClick } from "~/lib/wa";
 import type { PasskeySummary } from "~/lib/api-types";
-import { isValidUsername } from "~/lib/validation";
-import { currentServer } from "~/lib/server";
 import {
+  addCredential,
   clearAuth,
   deletePasskey,
   loadToken,
   loadUserId,
-  register,
   WebAuthnError,
 } from "~/lib/webauthn";
 
@@ -20,15 +18,11 @@ export default component$(() => {
   const message = useSignal<{ kind: "success" | "error"; text: string } | null>(
     null,
   );
-  const addUsername = useSignal("");
   const adding = useSignal(false);
   const signOutRef = useSignal<HTMLElement>();
-  const addUsernameRef = useSignal<WaInputElement>();
   const addButtonRef = useSignal<HTMLElement>();
-  const server = useSignal("");
 
   useVisibleTask$(() => {
-    server.value = currentServer();
     void Promise.all([
       wa.card(),
       wa.input(),
@@ -85,12 +79,13 @@ export default component$(() => {
   });
 
   const handleAdd = $(async () => {
-    if (!isValidUsername(addUsername.value)) return;
+    const token = loadToken();
+    const userId = loadUserId();
+    if (!token || !userId) return;
     adding.value = true;
     try {
-      await register(`${addUsername.value}@${server.value}`);
+      await addCredential(userId, token);
       message.value = { kind: "success", text: "Passkey added." };
-      addUsername.value = "";
       await refresh();
     } catch (err) {
       message.value = {
@@ -116,7 +111,6 @@ export default component$(() => {
   });
 
   useWaClick(signOutRef, handleSignOut);
-  useWaTextInput(addUsernameRef, addUsername);
   useWaClick(addButtonRef, handleAdd);
 
   return (
@@ -157,15 +151,8 @@ export default component$(() => {
         </div>
 
         <div class="wa-flank:end wa-gap-xs">
-          <wa-input
-            ref={addUsernameRef}
-            label="Add a passkey"
-            name="add-username"
-            placeholder="username"
-            value={addUsername.value}
-          />
           <wa-button ref={addButtonRef} variant="brand" loading={adding.value}>
-            Add
+            Add a passkey
           </wa-button>
         </div>
       </div>
