@@ -209,16 +209,50 @@ test.describe("passkeys page", () => {
 
     await waitForPasskeyList(page, 1);
 
+    // Add a second credential first: the server refuses to delete a user's
+    // last passkey (brig·id is passkey-only, no fallback to sign in with),
+    // and the UI disables "Remove" entirely when it's the only one.
+    await addVirtualAuthenticator(context, page, "usb");
+    await clickUntil(
+      page,
+      page.getByRole("button", { name: "Add a passkey" }),
+      () =>
+        expect(page.locator(".passkey-item")).toHaveCount(2, {
+          timeout: 2000,
+        }),
+    );
+
     await clickUntil(
       page,
       page.locator(".passkey-item").first().getByRole("button", {
         name: "Remove",
       }),
       () =>
-        expect(page.locator(".passkey-item")).toHaveCount(0, {
+        expect(page.locator(".passkey-item")).toHaveCount(1, {
           timeout: 2000,
         }),
     );
+  });
+
+  test("the only remaining passkey cannot be removed", async ({
+    page,
+    context,
+    browserName,
+  }) => {
+    skipIfNoVirtualAuthenticator(browserName);
+    await addVirtualAuthenticator(context, page);
+    const username = uniqueUsername("solo");
+    await register(page, username);
+    await page.goto("/login/");
+    await login(page, username);
+
+    await waitForPasskeyList(page, 1);
+
+    await expect(
+      page.locator(".passkey-item").first().getByRole("button", {
+        name: "Remove",
+      }),
+    ).toBeDisabled();
   });
 
   test("adding a passkey adds a credential to the same identity", async ({
