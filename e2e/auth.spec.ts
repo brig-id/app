@@ -209,15 +209,6 @@ test.describe("passkeys page", () => {
 
     await waitForPasskeyList(page, 1);
 
-    // Deleting the only passkey (→ empty list) rather than adding a second
-    // one first: "Add a passkey" here calls the same register() used for
-    // brand-new accounts (see passkeys/index.tsx's handleAdd) — it's an
-    // unrelated identity, not a second credential for the one currently
-    // logged in (see phases/backlog.md for that product question), and
-    // each attempt costs 2 more calls against the same rate-limited
-    // /auth/* budget this test has already been drawing from for
-    // register+login+list. Deleting the sole passkey covers "list updated"
-    // just as well without that extra, flakier round trip.
     await clickUntil(
       page,
       page.locator(".passkey-item").first().getByRole("button", {
@@ -225,6 +216,42 @@ test.describe("passkeys page", () => {
       }),
       () =>
         expect(page.locator(".passkey-item")).toHaveCount(0, {
+          timeout: 2000,
+        }),
+    );
+  });
+
+  test("adding a passkey adds a credential to the same identity", async ({
+    page,
+    context,
+    browserName,
+  }) => {
+    skipIfNoVirtualAuthenticator(browserName);
+    await addVirtualAuthenticator(context, page);
+    const username = uniqueUsername("add");
+    await register(page, username);
+    await page.goto("/login/");
+    await login(page, username);
+
+    await waitForPasskeyList(page, 1);
+
+    // A second, distinct virtual authenticator (a different transport —
+    // Chrome allows only one "internal" authenticator per context) stands
+    // in for a different physical key. Reusing the first one would make the
+    // browser refuse the ceremony outright: the backend now passes the
+    // identity's existing credential IDs as WebAuthn's `excludeCredentials`,
+    // so an authenticator that already holds one of them correctly declines
+    // to re-enrol it.
+    await addVirtualAuthenticator(context, page, "usb");
+
+    // "Add a passkey" must attach a second credential to the identity
+    // that's currently logged in — not register an unrelated new identity
+    // (see core#39 for the backend endpoint this exercises).
+    await clickUntil(
+      page,
+      page.getByRole("button", { name: "Add a passkey" }),
+      () =>
+        expect(page.locator(".passkey-item")).toHaveCount(2, {
           timeout: 2000,
         }),
     );
