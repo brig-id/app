@@ -23,6 +23,11 @@ errorOnDuplicatesPkgDeps(devDependencies, dependencies);
 export default defineConfig(({ command, mode }) => {
   return {
     plugins: [qwikCity(), qwikVite(), tsconfigPaths({ root: "." })],
+    // Vite only exposes `VITE_`-prefixed env vars to `import.meta.env` by
+    // default. UNSPLASH_ACCESS_KEY is Unsplash's own public/client-facing
+    // key (see their docs on client-side "Demo" apps) — meant to ship in
+    // the bundle, unlike UNSPLASH_SECRET_KEY which must never appear here.
+    envPrefix: ["VITE_", "UNSPLASH_"],
     // This tells Vite which dependencies to pre-build in dev mode.
     optimizeDeps: {
       // Put problematic deps that break bundling here, mostly those with binaries.

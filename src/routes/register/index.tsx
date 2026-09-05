@@ -1,5 +1,6 @@
 import { $, component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
 import { type DocumentHead, useNavigate } from "@builder.io/qwik-city";
+import { AuthBackground } from "~/components/auth-background/auth-background";
 import { wa, useWaTextInput, type WaInputElement } from "~/lib/wa";
 import { isValidUsername } from "~/lib/validation";
 import { currentServer } from "~/lib/server";
@@ -67,46 +68,52 @@ export default component$(() => {
 
   if (!supported.value) {
     return (
-      <wa-callout variant="warning" class="auth-unsupported" role="alert">
-        <wa-icon slot="icon" name="triangle-exclamation"></wa-icon>
-        Passkeys aren't supported on this browser or device. Try a recent
-        version of Chrome, Safari, Edge, or Firefox.
-      </wa-callout>
+      <>
+        <AuthBackground />
+        <wa-callout variant="warning" class="auth-unsupported" role="alert">
+          <wa-icon slot="icon" name="triangle-exclamation"></wa-icon>
+          Passkeys aren't supported on this browser or device. Try a recent
+          version of Chrome, Safari, Edge, or Firefox.
+        </wa-callout>
+      </>
     );
   }
 
   return (
-    <wa-card class="auth-card">
-      <form class="wa-stack" preventdefault:submit onSubmit$={handleSubmit}>
-        <h1 class="wa-heading-l">Create account</h1>
-        <wa-input
-          ref={usernameRef}
-          label="Username"
-          name="username"
-          placeholder="username"
-          value={username.value}
-          hint={usernameError}
-          class={usernameError ? "wa-input-error" : undefined}
-        />
-        {server.value && (
-          <p class="auth-server-hint">
-            on <strong>{server.value}</strong>
-          </p>
-        )}
-        {error.value && (
-          <wa-callout variant="danger" role="alert">
-            <wa-icon slot="icon" name="circle-exclamation"></wa-icon>
-            {error.value}
-          </wa-callout>
-        )}
-        <wa-button type="submit" variant="brand" loading={loading.value}>
-          Create account
-        </wa-button>
-        <a href="/login/" class="auth-alt-link">
-          Already have an account? Sign in
-        </a>
-      </form>
-    </wa-card>
+    <>
+      <AuthBackground />
+      <wa-card class="auth-card">
+        <form class="wa-stack" preventdefault:submit onSubmit$={handleSubmit}>
+          <h1 class="wa-heading-l">Create account</h1>
+          <wa-input
+            ref={usernameRef}
+            label="Username"
+            name="username"
+            placeholder="username"
+            value={username.value}
+            hint={usernameError}
+            class={usernameError ? "wa-input-error" : undefined}
+          />
+          {server.value && (
+            <p class="auth-server-hint">
+              on <strong>{server.value}</strong>
+            </p>
+          )}
+          {error.value && (
+            <wa-callout variant="danger" role="alert">
+              <wa-icon slot="icon" name="circle-exclamation"></wa-icon>
+              {error.value}
+            </wa-callout>
+          )}
+          <wa-button type="submit" variant="brand" loading={loading.value}>
+            Create account
+          </wa-button>
+          <a href="/login/" class="auth-alt-link">
+            Already have an account? Sign in
+          </a>
+        </form>
+      </wa-card>
+    </>
   );
 });
 
