@@ -16,6 +16,7 @@ node_modules
 .mf
 .rollup.cache
 tsconfig.tsbuildinfo
+tmp/
 
 # Playwright (e2e/)
 /test-results
