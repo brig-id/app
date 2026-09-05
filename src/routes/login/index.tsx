@@ -1,5 +1,6 @@
 import { $, component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
 import { type DocumentHead, useNavigate } from "@builder.io/qwik-city";
+import { AuthBackground } from "~/components/auth-background/auth-background";
 import { wa, useWaTextInput, type WaInputElement } from "~/lib/wa";
 import { parseLoginInput } from "~/lib/validation";
 import { currentServer } from "~/lib/server";
@@ -84,50 +85,56 @@ export default component$(() => {
 
   if (!supported.value) {
     return (
-      <wa-callout variant="warning" class="auth-unsupported" role="alert">
-        <wa-icon slot="icon" name="triangle-exclamation"></wa-icon>
-        Passkeys aren't supported on this browser or device. Try a recent
-        version of Chrome, Safari, Edge, or Firefox.
-      </wa-callout>
+      <>
+        <AuthBackground />
+        <wa-callout variant="warning" class="auth-unsupported" role="alert">
+          <wa-icon slot="icon" name="triangle-exclamation"></wa-icon>
+          Passkeys aren't supported on this browser or device. Try a recent
+          version of Chrome, Safari, Edge, or Firefox.
+        </wa-callout>
+      </>
     );
   }
 
   return (
-    <wa-card class="auth-card">
-      <form class="wa-stack" preventdefault:submit onSubmit$={handleSubmit}>
-        <h1 class="wa-heading-l">Sign in</h1>
-        <wa-input
-          ref={usernameRef}
-          label="Username"
-          name="username"
-          placeholder="username"
-          value={username.value}
-          hint={usernameError}
-          class={usernameError ? "wa-input-error" : undefined}
-        />
-        {remoteServer.value && (
-          <wa-callout variant="neutral" role="alert">
-            <wa-icon slot="icon" name="circle-info"></wa-icon>
-            This account is on <strong>{remoteServer.value}</strong>.{" "}
-            <a href={`https://${remoteServer.value}/login/`}>
-              Continue to {remoteServer.value} →
-            </a>
-          </wa-callout>
-        )}
-        {error.value && (
-          <wa-callout variant="danger" role="alert">
-            <wa-icon slot="icon" name="circle-exclamation"></wa-icon>
-            {error.value}
-          </wa-callout>
-        )}
-        <wa-button type="submit" variant="brand" loading={loading.value}>
-          Sign in with passkey
-        </wa-button>
-        <a href="/register/" class="auth-alt-link">
-          Create an account
-        </a>
-      </form>
-    </wa-card>
+    <>
+      <AuthBackground />
+      <wa-card class="auth-card">
+        <form class="wa-stack" preventdefault:submit onSubmit$={handleSubmit}>
+          <h1 class="wa-heading-l">Sign in</h1>
+          <wa-input
+            ref={usernameRef}
+            label="Username"
+            name="username"
+            placeholder="username"
+            value={username.value}
+            hint={usernameError}
+            class={usernameError ? "wa-input-error" : undefined}
+          />
+          {remoteServer.value && (
+            <wa-callout variant="neutral" role="alert">
+              <wa-icon slot="icon" name="circle-info"></wa-icon>
+              This account is on <strong>{remoteServer.value}</strong>.{" "}
+              <a href={`https://${remoteServer.value}/login/`}>
+                Continue to {remoteServer.value} →
+              </a>
+            </wa-callout>
+          )}
+          {error.value && (
+            <wa-callout variant="danger" role="alert">
+              <wa-icon slot="icon" name="circle-exclamation"></wa-icon>
+              {error.value}
+            </wa-callout>
+          )}
+          <wa-button type="submit" variant="brand" loading={loading.value}>
+            Sign in with passkey
+          </wa-button>
+          <a href="/register/" class="auth-alt-link">
+            Create an account
+          </a>
+        </form>
+      </wa-card>
+    </>
   );
 });
 
