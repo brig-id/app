@@ -146,6 +146,7 @@ export default component$(() => {
               key={passkey.id}
               id={passkey.id}
               onDelete$={handleDelete}
+              disableRemove={passkeys.value.length <= 1}
             />
           ))}
         </div>
