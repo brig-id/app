@@ -1,3 +1,20 @@
+/* Web Awesome Kit theme overrides — mirrors the org's Kit config
+   (ka-p.webawesome.com/kit/bbfa5ebe11804d55/...) so the npm-installed
+   package matches the same customization instead of drifting from it. */
+:root {
+  --wa-font-family-body: ui-sans-serif, system-ui, sans-serif;
+  --wa-font-family-heading: ui-sans-serif, system-ui, sans-serif;
+  --wa-font-family-code: ui-monospace, monospace;
+  --wa-font-family-longform: ui-serif, serif;
+  --wa-font-weight-body: 400;
+  --wa-font-weight-heading: 600;
+  --wa-font-weight-code: 400;
+  --wa-font-weight-longform: 400;
+  --wa-border-radius-scale: 1;
+  --wa-border-width-scale: 1;
+  --wa-space-scale: 0.875;
+}
+
 html,
 body {
   min-height: 100%;
@@ -72,20 +89,7 @@ wa-input.wa-input-error::part(hint) {
   color: var(--wa-color-danger-fill-loud);
 }
 
-/* -- Auth pages: daily background photo + accent gradient -------------- */
-
-:root {
-  /* Violet → pink → orange, echoing the existing brand violet rather than
-     replacing it. Used sparingly (primary CTA, card accent) — not applied
-     wholesale, to keep the identity-provider tone closer to Vercel/Clerk
-     than a consumer social app. */
-  --brigid-gradient: linear-gradient(
-    135deg,
-    #6c47ff 0%,
-    #ff3d77 55%,
-    #ff8a3d 100%
-  );
-}
+/* -- Auth pages: daily background photo ---------------------------------- */
 
 .auth-bg {
   position: fixed;
@@ -143,9 +147,4 @@ wa-input.wa-input-error::part(hint) {
 .auth-bg-credit a {
   color: inherit;
   font-weight: var(--wa-font-weight-bold);
-}
-
-.auth-card wa-button[variant="brand"]::part(button) {
-  background: var(--brigid-gradient);
-  border: none;
 }
