@@ -1,4 +1,5 @@
 import type {
+  BeginAddCredentialRequest,
   BeginLoginRequest,
   BeginLoginResponse,
   BeginRegisterRequest,
@@ -6,6 +7,7 @@ import type {
   FinishLoginRequest,
   FinishRegisterRequest,
   LoginResponse,
+  PublicKeyCredentialCreationOptionsJSON,
   PublicKeyCredentialJSON,
   RegisterPublicKeyCredentialJSON,
 } from "./api-types";
@@ -79,13 +81,11 @@ async function apiRequest<T>(
   return JSON.parse(text) as T;
 }
 
-export async function register(username: string): Promise<void> {
-  const begin = await apiRequest<BeginRegisterResponse>(
-    "/auth/register/begin",
-    { username } satisfies BeginRegisterRequest,
-  );
-
-  const options = begin.challenge.publicKey;
+/** Runs the browser-side `navigator.credentials.create()` ceremony and shapes
+ * the result for `/auth/register/finish` or `/auth/passkeys/add/finish`. */
+async function createPasskey(
+  options: PublicKeyCredentialCreationOptionsJSON,
+): Promise<RegisterPublicKeyCredentialJSON> {
   let credential: PublicKeyCredential | null;
   try {
     credential = (await navigator.credentials.create({
@@ -111,7 +111,7 @@ export async function register(username: string): Promise<void> {
   }
 
   const response = credential.response as AuthenticatorAttestationResponse;
-  const finishCredential: RegisterPublicKeyCredentialJSON = {
+  return {
     id: credential.id,
     rawId: bufferToBase64Url(credential.rawId),
     type: "public-key",
@@ -124,8 +124,54 @@ export async function register(username: string): Promise<void> {
       unknown
     >,
   };
+}
+
+export async function register(username: string): Promise<void> {
+  const begin = await apiRequest<BeginRegisterResponse>(
+    "/auth/register/begin",
+    { username } satisfies BeginRegisterRequest,
+  );
+
+  const finishCredential = await createPasskey(begin.challenge.publicKey);
 
   await apiRequest<void>("/auth/register/finish", {
+    session_id: begin.session_id,
+    credential: finishCredential,
+  } satisfies FinishRegisterRequest);
+}
+
+/** Adds a second (or further) passkey to the already-authenticated identity
+ * behind `token`/`userId`, instead of registering an unrelated identity. */
+export async function addCredential(
+  userId: string,
+  token: string,
+): Promise<void> {
+  let beginResponse: Response;
+  try {
+    beginResponse = await fetch("/auth/passkeys/add/begin", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        user_id: userId,
+      } satisfies BeginAddCredentialRequest),
+    });
+  } catch {
+    throw new WebAuthnError("network", "Unable to reach the server.");
+  }
+  if (!beginResponse.ok) {
+    throw new WebAuthnError(
+      "api",
+      `Failed to start passkey registration (status ${beginResponse.status}).`,
+    );
+  }
+  const begin = (await beginResponse.json()) as BeginRegisterResponse;
+
+  const finishCredential = await createPasskey(begin.challenge.publicKey);
+
+  await apiRequest<void>("/auth/passkeys/add/finish", {
     session_id: begin.session_id,
     credential: finishCredential,
   } satisfies FinishRegisterRequest);

@@ -115,6 +115,10 @@ export interface DeletePasskeyRequest {
   user_id: string;
 }
 
+export interface BeginAddCredentialRequest {
+  user_id: string;
+}
+
 // -- errors --
 
 export interface ApiErrorBody {
