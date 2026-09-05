@@ -28,6 +28,7 @@ export const PasskeyItem = component$<PasskeyItemProps>(({ id, onDelete$ }) => {
         variant="danger"
         appearance="outlined"
         size="s"
+        aria-label={`Remove passkey ${truncate(id)}`}
       >
         Remove
       </wa-button>
