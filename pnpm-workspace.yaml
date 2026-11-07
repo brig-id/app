@@ -10,9 +10,16 @@ minimumReleaseAgeExclude:
   - brace-expansion@1.1.17
 overrides:
   # vite-imagetools pins an older sharp with known libvips CVEs
-  # (GHSA-f88m-g3jw-g9cj); force the patched line. Dev-only build tool
+  # (GHSA-f88m-g3jw-g9cj, plus the libvips/libheif advisories fixed in
+  # 0.35.4 / 0.35.5); force the patched line. Dev-only build tool
   # (image asset processing), never shipped to the browser.
-  sharp: ">=0.35.0"
+  sharp: ">=0.35.5"
   # postcss (via vite/qwik) pins an old nanoid with an infinite-loop bug on
   # zero-size custom generators (GHSA-2v37-7h3g-55p8). Dev-only build tool.
   nanoid: ">=3.3.18"
+  # qwik-city 1.20.x pins zod 3.25.48 exactly; every zod <4.6.6 is flagged
+  # high (GHSA-mrhx-c7xc-m3w5). Forcing zod 4 is safe here only because this
+  # repo never calls qwik-city's zod$() form validator: its `instanceof
+  # z.Schema` check would throw on zod 4, which no longer exports Schema.
+  # Its `z` re-export still loads fine. Drop once qwik-city depends on zod 4.
+  zod: ">=4.6.6"
