@@ -1,1 +1,8 @@
-["app", "e2e", "ci", "deps"]
+[
+  "app",
+  "e2e",
+  "ci",
+  "deps",
+  "ai",
+  "docs"
+]
