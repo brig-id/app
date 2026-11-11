@@ -15,7 +15,41 @@ import type {
 
 /** Feature-detects WebAuthn/passkey support in the current browser. */
 export function isPasskeySupported(): boolean {
-  return typeof window !== "undefined" && "PublicKeyCredential" in window;
+  return passkeySupport() === "supported";
+}
+
+/**
+ * Why passkeys can or can't work here (app#13):
+ * - `insecure-context`: the page isn't served over HTTPS (or localhost), so
+ *   browsers hide the WebAuthn API even when they support it;
+ * - `no-webauthn`: the browser has no WebAuthn API at all (too old);
+ * - `supported`: the API is there. A device without its own authenticator
+ *   can still use a phone or a security key, so that is not a blocker.
+ */
+export type PasskeySupport = "supported" | "insecure-context" | "no-webauthn";
+
+export function passkeySupport(): PasskeySupport {
+  if (typeof window === "undefined") return "no-webauthn";
+  if (window.isSecureContext === false) return "insecure-context";
+  return "PublicKeyCredential" in window ? "supported" : "no-webauthn";
+}
+
+/** True when this device has a built-in authenticator (Touch ID, Windows
+ * Hello, Android screen lock…). False only means "use a phone or a key". */
+export async function hasPlatformAuthenticator(): Promise<boolean> {
+  const pkc = (
+    globalThis as {
+      PublicKeyCredential?: {
+        isUserVerifyingPlatformAuthenticatorAvailable?: () => Promise<boolean>;
+      };
+    }
+  ).PublicKeyCredential;
+  if (!pkc?.isUserVerifyingPlatformAuthenticatorAvailable) return false;
+  try {
+    return await pkc.isUserVerifyingPlatformAuthenticatorAvailable();
+  } catch {
+    return false;
+  }
 }
 
 export type WebAuthnErrorKind = "network" | "browser" | "api";

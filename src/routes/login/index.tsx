@@ -1,12 +1,14 @@
 import { $, component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
 import { type DocumentHead, useNavigate } from "@builder.io/qwik-city";
 import { AuthBackground } from "~/components/auth-background/auth-background";
+import { PasskeyUnsupported } from "~/components/passkey-unsupported/passkey-unsupported";
 import { wa, useWaTextInput, type WaInputElement } from "~/lib/wa";
 import { parseLoginInput } from "~/lib/validation";
 import { currentServer } from "~/lib/server";
 import {
   isAutofillSupported,
   isPasskeySupported,
+  passkeySupport,
   login,
   storeAuth,
   WebAuthnError,
@@ -31,11 +33,16 @@ export default component$(() => {
   const remoteServer = useSignal<string | null>(null);
   const usernameRef = useSignal<WaInputElement>();
   const supported = useSignal(true);
+  const unsupportedReason = useSignal<"insecure-context" | "no-webauthn">(
+    "no-webauthn",
+  );
   const server = useSignal("");
 
   useVisibleTask$(() => {
     server.value = currentServer();
-    supported.value = isPasskeySupported();
+    const support = passkeySupport();
+    supported.value = support === "supported";
+    if (support !== "supported") unsupportedReason.value = support;
     if (supported.value) {
       void Promise.all([
         wa.card(),
@@ -45,7 +52,7 @@ export default component$(() => {
         wa.icon(),
       ]);
     } else {
-      void Promise.all([wa.callout(), wa.icon()]);
+      void Promise.all([wa.card(), wa.callout(), wa.icon()]);
     }
   });
   useWaTextInput(usernameRef, username, touched);
@@ -118,11 +125,7 @@ export default component$(() => {
     return (
       <>
         <AuthBackground />
-        <wa-callout variant="warning" class="auth-unsupported" role="alert">
-          <wa-icon slot="icon" name="triangle-exclamation"></wa-icon>
-          Passkeys aren't supported on this browser or device. Try a recent
-          version of Chrome, Safari, Edge, or Firefox.
-        </wa-callout>
+        <PasskeyUnsupported reason={unsupportedReason.value} action="Sign in" />
       </>
     );
   }
