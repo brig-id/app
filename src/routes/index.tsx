@@ -6,7 +6,7 @@ export default component$(() => {
   const nav = useNavigate();
 
   useVisibleTask$(async () => {
-    await nav(loadToken() ? "/passkeys/" : "/login/");
+    await nav(loadToken() ? "/identities/" : "/login/");
   });
 
   return null;

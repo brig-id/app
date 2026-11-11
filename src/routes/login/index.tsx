@@ -5,11 +5,21 @@ import { wa, useWaTextInput, type WaInputElement } from "~/lib/wa";
 import { parseLoginInput } from "~/lib/validation";
 import { currentServer } from "~/lib/server";
 import {
+  isAutofillSupported,
+  isPasskeySupported,
   login,
   storeAuth,
-  isPasskeySupported,
   WebAuthnError,
 } from "~/lib/webauthn";
+
+/** The pending passkey-autofill request, aborted before any other sign-in:
+ * a browser only runs one credentials.get() at a time. Client-only state,
+ * outside Qwik's serialized signals on purpose. */
+let autofill: AbortController | null = null;
+const stopAutofill = () => {
+  autofill?.abort();
+  autofill = null;
+};
 
 export default component$(() => {
   const nav = useNavigate();
@@ -40,28 +50,34 @@ export default component$(() => {
   });
   useWaTextInput(usernameRef, username, touched);
 
-  const handleSubmit = $(async () => {
-    remoteServer.value = null;
-    const parsed = parseLoginInput(username.value, server.value);
-    if (parsed.kind === "invalid") {
-      formatError.value = "Expected: username or username@server";
-      return;
+  // Passkey autofill (app#2, core#18): offer the device's passkeys in the
+  // username field's suggestions; picking one signs in without typing.
+  useVisibleTask$(async ({ cleanup }) => {
+    if (!isPasskeySupported() || !(await isAutofillSupported())) return;
+    stopAutofill();
+    const controller = new AbortController();
+    autofill = controller;
+    cleanup(() => controller.abort());
+    try {
+      const result = await login(null, window.location.origin, {
+        conditional: true,
+        signal: controller.signal,
+      });
+      storeAuth(result.id_token, result.user_id);
+      await nav("/identities/");
+    } catch {
+      // aborted (another sign-in started) or dismissed: nothing to report
     }
-    formatError.value = null;
-    if (parsed.kind === "remote") {
-      remoteServer.value = parsed.server;
-      return;
-    }
+  });
+
+  const signIn = $(async (handle: string | null) => {
+    stopAutofill();
     error.value = null;
     loading.value = true;
     try {
-      const clientId = window.location.origin;
-      const result = await login(
-        `${parsed.username}@${parsed.server}`,
-        clientId,
-      );
+      const result = await login(handle, window.location.origin);
       storeAuth(result.id_token, result.user_id);
-      await nav("/passkeys/");
+      await nav("/identities/");
     } catch (err) {
       if (err instanceof WebAuthnError) {
         if (err.kind === "network") {
@@ -77,6 +93,21 @@ export default component$(() => {
     } finally {
       loading.value = false;
     }
+  });
+
+  const handleSubmit = $(async () => {
+    remoteServer.value = null;
+    const parsed = parseLoginInput(username.value, server.value);
+    if (parsed.kind === "invalid") {
+      formatError.value = "Expected: username or username@server";
+      return;
+    }
+    formatError.value = null;
+    if (parsed.kind === "remote") {
+      remoteServer.value = parsed.server;
+      return;
+    }
+    await signIn(`${parsed.username}@${parsed.server}`);
   });
 
   const usernameError = touched.value
@@ -108,6 +139,7 @@ export default component$(() => {
             name="username"
             placeholder="username"
             value={username.value}
+            autocomplete="username webauthn"
             hint={usernameError}
             class={usernameError ? "wa-input-error" : undefined}
           />
@@ -129,6 +161,14 @@ export default component$(() => {
           <wa-button type="submit" variant="brand" loading={loading.value}>
             Sign in with passkey
           </wa-button>
+          <button
+            type="button"
+            class="auth-alt-button"
+            disabled={loading.value}
+            onClick$={() => signIn(null)}
+          >
+            Use a saved passkey, no username
+          </button>
           <a href="/register/" class="auth-alt-link">
             Create an account
           </a>

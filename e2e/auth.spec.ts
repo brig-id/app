@@ -68,7 +68,7 @@ async function login(page: Page, username: string) {
     page.getByRole("textbox", { name: "Username" }),
     page.getByRole("button", { name: "Sign in with passkey" }),
     username,
-    /\/passkeys\/?$/,
+    /\/identities\/?$/,
   );
 }
 
@@ -119,6 +119,7 @@ test.beforeEach(async () => {
 // against a burst of 5) — on a 429 the app shows "Unable to load passkeys."
 // and never retries on its own. Reloading re-triggers that fetch.
 async function waitForPasskeyList(page: Page, count: number, attempts = 5) {
+  if (!/\/passkeys\/?$/.test(page.url())) await page.goto("/passkeys/");
   for (let i = 0; i < attempts; i++) {
     try {
       await expect(page.locator(".passkey-item")).toHaveCount(count, {
@@ -149,12 +150,12 @@ test.describe("register", () => {
     // Prove the passkey created during registration actually works, rather
     // than just checking the redirect happened.
     await login(page, username);
-    await expect(page).toHaveURL(/\/passkeys\/?$/);
+    await expect(page).toHaveURL(/\/identities\/?$/);
   });
 });
 
 test.describe("login", () => {
-  test("login redirects to /passkeys with token stored in localStorage", async ({
+  test("login redirects to /identities with token stored in localStorage", async ({
     page,
     context,
     browserName,
@@ -167,7 +168,7 @@ test.describe("login", () => {
     await page.goto("/login/");
     await login(page, username);
 
-    await expect(page).toHaveURL(/\/passkeys\/?$/);
+    await expect(page).toHaveURL(/\/identities\/?$/);
     const token = await page.evaluate(() =>
       localStorage.getItem("brigid.token"),
     );
@@ -394,5 +395,44 @@ test.describe("unsupported browser (no WebAuthn)", () => {
     await expect(
       page.getByRole("button", { name: "Sign in with passkey" }),
     ).not.toBeVisible();
+  });
+});
+
+test.describe("identities page", () => {
+  test("a new account starts with the default identities, and they can be managed", async ({
+    page,
+    context,
+    browserName,
+  }) => {
+    skipIfNoVirtualAuthenticator(browserName);
+    await addVirtualAuthenticator(context, page);
+    const username = uniqueUsername("ident");
+    await register(page, username);
+    await page.goto("/login/");
+    await login(page, username);
+
+    const cards = page.locator(".identity-list > li");
+    await expect(cards).toHaveCount(3, { timeout: 10000 });
+    for (const name of ["Public", "Personal", "Work"]) {
+      await expect(page.getByText(name, { exact: true })).toBeVisible();
+    }
+
+    // Create from a template, renamed.
+    await page.getByRole("button", { name: "New identity" }).click();
+    await page.getByLabel("Start from").selectOption("family");
+    await page.getByLabel("Name").fill("Les Dupont");
+    await page.getByRole("button", { name: "Create" }).click();
+    await expect(cards).toHaveCount(4);
+    await expect(page.getByText("Les Dupont", { exact: true })).toBeVisible();
+
+    // Edit, then delete.
+    await page.getByRole("button", { name: "Edit Les Dupont" }).click();
+    await page.getByLabel("Name").fill("Famille");
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByText("Famille", { exact: true })).toBeVisible();
+
+    page.once("dialog", (dialog) => void dialog.accept());
+    await page.getByRole("button", { name: "Delete Famille" }).click();
+    await expect(cards).toHaveCount(3);
   });
 });
