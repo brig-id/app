@@ -3,6 +3,7 @@ import {
   clearAuth,
   deletePasskey,
   isPasskeySupported,
+  passkeySupport,
   loadToken,
   loadUserId,
   login,
@@ -204,6 +205,15 @@ describe("register/login", () => {
 
     vi.stubGlobal("window", {});
     expect(isPasskeySupported()).toBe(false);
+  });
+
+  it("passkeySupport() tells an insecure context from a missing API", () => {
+    vi.stubGlobal("window", { isSecureContext: false, PublicKeyCredential: {} });
+    expect(passkeySupport()).toBe("insecure-context");
+    vi.stubGlobal("window", { isSecureContext: true });
+    expect(passkeySupport()).toBe("no-webauthn");
+    vi.stubGlobal("window", { isSecureContext: true, PublicKeyCredential: {} });
+    expect(passkeySupport()).toBe("supported");
   });
 
   it("round-trips auth state through localStorage", () => {
