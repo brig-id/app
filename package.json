@@ -44,6 +44,7 @@
     "vitest": "4.1.12"
   },
   "dependencies": {
-    "@web.awesome.me/webawesome-pro": "3.11.0"
+    "@web.awesome.me/webawesome-pro": "3.11.0",
+    "helpers4": "3.1.12"
   }
 }
