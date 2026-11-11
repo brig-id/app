@@ -1,4 +1,5 @@
 import { $, component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
+import { delay } from "helpers4/promise";
 import { type DocumentHead, useNavigate } from "@builder.io/qwik-city";
 import { PasskeyItem } from "~/components/passkey-item/passkey-item";
 import { wa } from "~/lib/wa";
@@ -41,7 +42,7 @@ export default component$(() => {
     // This call often lands right after register+login (or a delete), which
     // can already have spent most of the /auth/* rate-limit burst; the
     // limiter refills one request every 3 s, so one backoff is enough.
-    await new Promise((resolve) => setTimeout(resolve, 3500));
+    await delay(3500);
     if (!(await load())) {
       message.value = { kind: "error", text: "Unable to load passkeys." };
     }

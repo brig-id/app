@@ -1,3 +1,4 @@
+import { fromBase64, toBase64 } from "helpers4/string";
 import type {
   BeginAddCredentialRequest,
   BeginLoginRequest,
@@ -29,24 +30,18 @@ export class WebAuthnError extends Error {
   }
 }
 
+// WebAuthn exchanges binary fields as unpadded base64url (helpers4 accepts
+// both alphabets and optional padding on decode).
 function base64UrlToBuffer(value: string): ArrayBuffer {
-  const padded = value.replace(/-/g, "+").replace(/_/g, "/");
-  const padding = "=".repeat((4 - (padded.length % 4)) % 4);
-  const binary = atob(padded + padding);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes.buffer;
+  const bytes = fromBase64(value, { output: "bytes" });
+  return bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  ) as ArrayBuffer;
 }
 
 function bufferToBase64Url(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
-  }
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return toBase64(new Uint8Array(buffer), { urlSafe: true });
 }
 
 async function apiRequest<T>(
