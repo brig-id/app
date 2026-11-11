@@ -1,7 +1,9 @@
 import { fromBase64, toBase64 } from "helpers4/string";
+import { aaguidFromAuthenticatorData, providerName } from "./aaguid";
 import type {
   BeginAddCredentialRequest,
   BeginLoginRequest,
+  BeginRecoveryRequest,
   BeginLoginResponse,
   BeginRegisterRequest,
   BeginRegisterResponse,
@@ -110,11 +112,18 @@ async function apiRequest<T>(
   return JSON.parse(text) as T;
 }
 
+interface CreatedPasskey {
+  credential: RegisterPublicKeyCredentialJSON;
+  /** The provider's name from its AAGUID, when known (a default passkey name). */
+  provider: string | null;
+}
+
 /** Runs the browser-side `navigator.credentials.create()` ceremony and shapes
- * the result for `/auth/register/finish` or `/auth/passkeys/add/finish`. */
+ * the result for the `/finish` endpoints of signup, adding a passkey and
+ * recovery. */
 async function createPasskey(
   options: PublicKeyCredentialCreationOptionsJSON,
-): Promise<RegisterPublicKeyCredentialJSON> {
+): Promise<CreatedPasskey> {
   let credential: PublicKeyCredential | null;
   try {
     credential = (await navigator.credentials.create({
@@ -140,18 +149,27 @@ async function createPasskey(
   }
 
   const response = credential.response as AuthenticatorAttestationResponse;
+  let aaguid: string | null = null;
+  try {
+    aaguid = aaguidFromAuthenticatorData(response.getAuthenticatorData());
+  } catch {
+    // getAuthenticatorData() is missing in old browsers: no default name.
+  }
   return {
-    id: credential.id,
-    rawId: bufferToBase64Url(credential.rawId),
-    type: "public-key",
-    response: {
-      attestationObject: bufferToBase64Url(response.attestationObject),
-      clientDataJSON: bufferToBase64Url(response.clientDataJSON),
+    credential: {
+      id: credential.id,
+      rawId: bufferToBase64Url(credential.rawId),
+      type: "public-key",
+      response: {
+        attestationObject: bufferToBase64Url(response.attestationObject),
+        clientDataJSON: bufferToBase64Url(response.clientDataJSON),
+      },
+      clientExtensionResults: credential.getClientExtensionResults() as unknown as Record<
+        string,
+        unknown
+      >,
     },
-    clientExtensionResults: credential.getClientExtensionResults() as unknown as Record<
-      string,
-      unknown
-    >,
+    provider: providerName(aaguid),
   };
 }
 
@@ -170,17 +188,41 @@ export async function isAutofillSupported(): Promise<boolean> {
   }
 }
 
-export async function register(username: string): Promise<void> {
+/**
+ * Creates an account: one passkey, no username (the server generates a
+ * hidden one, ADR-003), and signs it in with the same ceremony. The passkey
+ * is named after its provider when the AAGUID is known.
+ */
+export async function signUp(clientId: string): Promise<LoginResponse> {
   const begin = await apiRequest<BeginRegisterResponse>(
     "/auth/register/begin",
-    { username } satisfies BeginRegisterRequest,
+    { client_id: clientId } satisfies BeginRegisterRequest,
   );
-
-  const finishCredential = await createPasskey(begin.challenge.publicKey);
-
-  await apiRequest<void>("/auth/register/finish", {
+  const { credential, provider } = await createPasskey(begin.challenge.publicKey);
+  return apiRequest<LoginResponse>("/auth/register/finish", {
     session_id: begin.session_id,
-    credential: finishCredential,
+    credential,
+    ...(provider ? { label: provider } : {}),
+  } satisfies FinishRegisterRequest);
+}
+
+/**
+ * Recovers an account with its recovery code (ADR-004): enrols a new passkey
+ * for the account the code names, consumes the code, and signs in.
+ */
+export async function recover(
+  code: string,
+  clientId: string,
+): Promise<LoginResponse> {
+  const begin = await apiRequest<BeginRegisterResponse>(
+    "/auth/recovery/begin",
+    { code, client_id: clientId } satisfies BeginRecoveryRequest,
+  );
+  const { credential, provider } = await createPasskey(begin.challenge.publicKey);
+  return apiRequest<LoginResponse>("/auth/recovery/finish", {
+    session_id: begin.session_id,
+    credential,
+    ...(provider ? { label: provider } : {}),
   } satisfies FinishRegisterRequest);
 }
 
@@ -213,11 +255,12 @@ export async function addCredential(
   }
   const begin = (await beginResponse.json()) as BeginRegisterResponse;
 
-  const finishCredential = await createPasskey(begin.challenge.publicKey);
+  const { credential, provider } = await createPasskey(begin.challenge.publicKey);
 
   await apiRequest<void>("/auth/passkeys/add/finish", {
     session_id: begin.session_id,
-    credential: finishCredential,
+    credential,
+    ...(provider ? { label: provider } : {}),
   } satisfies FinishRegisterRequest);
 }
 
@@ -308,6 +351,20 @@ export async function deletePasskey(
       `Failed to delete passkey (status ${response.status}).`,
     );
   }
+}
+
+const RECOVERED_KEY = "brigid.recovered";
+
+/** Marks the next onboarding page as following a recovery (read once). */
+export function markRecovered(): void {
+  sessionStorage.setItem(RECOVERED_KEY, "1");
+}
+
+/** Whether this onboarding follows a recovery; clears the mark. */
+export function takeRecoveredFlag(): boolean {
+  const recovered = sessionStorage.getItem(RECOVERED_KEY) === "1";
+  sessionStorage.removeItem(RECOVERED_KEY);
+  return recovered;
 }
 
 const TOKEN_KEY = "brigid.token";

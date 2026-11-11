@@ -42,7 +42,3 @@ export function skipIfNoVirtualAuthenticator(browserName: string): void {
     "WebAuthn virtual authenticator requires Chrome DevTools Protocol — not available for Firefox in Playwright",
   );
 }
-
-export function uniqueUsername(prefix: string): string {
-  return `${prefix}${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`;
-}

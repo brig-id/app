@@ -67,7 +67,10 @@ export interface PublicKeyCredentialJSON {
 // -- /auth/register --
 
 export interface BeginRegisterRequest {
-  username: string;
+  /** `username@server`. Absent: the server generates a hidden username. */
+  username?: string;
+  /** Present: `finish` signs the new account in (returns a LoginResponse). */
+  client_id?: string;
 }
 
 export interface BeginRegisterResponse {
@@ -119,6 +122,25 @@ export interface RenamePasskeyRequest {
   user_id: string;
   /** Empty removes the label. */
   label: string;
+}
+
+// -- recovery (ADR-004) --
+
+export interface BeginRecoveryRequest {
+  code: string;
+  client_id: string;
+}
+
+export interface RecoveryCodeResponse {
+  /** Shown once; the server keeps only a verifier. */
+  code: string;
+}
+
+export interface RecoveryStatus {
+  /** When the current code was created; null when there is none. */
+  code_created_at: string | null;
+  /** When a code last recovered the account. */
+  last_used_at: string | null;
 }
 
 // -- /auth/session --

@@ -6,7 +6,7 @@ import { wa } from "~/lib/wa";
 import { clearAuth, loadToken } from "~/lib/webauthn";
 
 /** Pages shown signed out: centered card layout, no navigation. */
-const PUBLIC_PATHS = new Set(["/", "/login/", "/register/"]);
+const PUBLIC_PATHS = new Set(["/", "/login/", "/register/", "/recover/"]);
 
 /** Tokens live an hour; refresh well before, while the app is open. */
 const REFRESH_EVERY_MS = 30 * 60 * 1000;

@@ -10,6 +10,8 @@ import type {
   IdentityTemplate,
   LoginResponse,
   PasskeySummary,
+  RecoveryCodeResponse,
+  RecoveryStatus,
   RenamePasskeyRequest,
   SessionResponse,
   UpdateIdentityRequest,
@@ -106,6 +108,21 @@ export async function renamePasskey(id: string, label: string): Promise<void> {
     user_id: credentials().userId,
     label,
   } satisfies RenamePasskeyRequest);
+}
+
+// -- recovery code (ADR-004) --------------------------------------------------
+
+export async function recoveryStatus(): Promise<RecoveryStatus> {
+  return call<RecoveryStatus>("GET", `/account/recovery-code?user_id=${uid()}`);
+}
+
+/** A new code, replacing the previous one. Shown once. */
+export async function createRecoveryCode(): Promise<string> {
+  const r = await call<RecoveryCodeResponse>(
+    "POST",
+    `/account/recovery-code?user_id=${uid()}`,
+  );
+  return r.code;
 }
 
 // -- identities ---------------------------------------------------------------
