@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main, "dev/*"]
 
+permissions:
+  contents: read
+
 jobs:
   ci:
     uses: brig-id/.github/.github/workflows/ci-web.yml@6fe7dcf9ebe5a5f0d0439bef978f68c27b07cbc3 # main @ 2026-09-03
