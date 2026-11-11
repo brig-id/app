@@ -370,7 +370,7 @@ test.describe("unsupported browser (no WebAuthn)", () => {
 
     await expect(page.locator(".auth-unsupported")).toBeVisible();
     await expect(
-      page.getByText(/Passkeys aren't supported on this browser or device/),
+      page.getByText(/This browser can't use passkeys/),
     ).toBeVisible();
     await expect(
       page.getByRole("textbox", { name: "Username" }),
@@ -387,7 +387,7 @@ test.describe("unsupported browser (no WebAuthn)", () => {
 
     await expect(page.locator(".auth-unsupported")).toBeVisible();
     await expect(
-      page.getByText(/Passkeys aren't supported on this browser or device/),
+      page.getByText(/This browser can't use passkeys/),
     ).toBeVisible();
     await expect(
       page.getByRole("textbox", { name: "Username" }),
