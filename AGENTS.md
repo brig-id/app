@@ -55,12 +55,12 @@ Format: `type(scope): <emoji> description`. Full type→emoji mapping:
 
 ### Allowed scopes
 
-| Scope | Maps to |
-| --- | --- |
-| `app` | Everything under `src/` not covered by a more specific scope |
-| `e2e` | `e2e/` — the Playwright suite |
-| `ci` | `.github/workflows/` |
-| `deps` | Dependency bumps |
+| Scope  | Maps to                                                      |
+| ------ | ------------------------------------------------------------ |
+| `app`  | Everything under `src/` not covered by a more specific scope |
+| `e2e`  | `e2e/` — the Playwright suite                                |
+| `ci`   | `.github/workflows/`                                         |
+| `deps` | Dependency bumps                                             |
 
 **Do not use a scope outside this list.** Update this table and
 `scopes.json` together if a new scope is needed.

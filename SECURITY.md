@@ -10,6 +10,7 @@ For critical issues, contact the brig·id maintainers via the org security conta
 ## Scope
 
 All brig·id repositories are in scope:
+
 - cryptographic primitives and key management
 - identity flows (WebAuthn, OIDC, DID)
 - storage and encrypted vault
@@ -17,11 +18,11 @@ All brig·id repositories are in scope:
 
 ## Response SLA
 
-| Severity | Acknowledgement | Remediation target |
-|---|---|---|
-| Critical | 48 h | 7 days |
-| High | 72 h | 30 days |
-| Medium/Low | 7 days | 90 days |
+| Severity   | Acknowledgement | Remediation target |
+| ---------- | --------------- | ------------------ |
+| Critical   | 48 h            | 7 days             |
+| High       | 72 h            | 30 days            |
+| Medium/Low | 7 days          | 90 days            |
 
 ## Disclosure policy
 

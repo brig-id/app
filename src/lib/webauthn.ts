@@ -126,6 +126,21 @@ async function createPasskey(
   };
 }
 
+/** True when the browser can offer passkeys as autofill (conditional UI). */
+export async function isAutofillSupported(): Promise<boolean> {
+  const pkc = (
+    globalThis as {
+      PublicKeyCredential?: { isConditionalMediationAvailable?: () => Promise<boolean> };
+    }
+  ).PublicKeyCredential;
+  if (!pkc?.isConditionalMediationAvailable) return false;
+  try {
+    return await pkc.isConditionalMediationAvailable();
+  } catch {
+    return false;
+  }
+}
+
 export async function register(username: string): Promise<void> {
   const begin = await apiRequest<BeginRegisterResponse>(
     "/auth/register/begin",
@@ -177,12 +192,20 @@ export async function addCredential(
   } satisfies FinishRegisterRequest);
 }
 
+/**
+ * Passkey sign-in. With a `username`, the server names the allowed passkeys.
+ * Without one (`null`), it is username-less: the authenticator picks the
+ * passkey and the server learns the user from it. `conditional` runs it as
+ * passkey autofill on the username field; `signal` aborts it (a conditional
+ * request stays pending until the user picks a passkey or it is aborted).
+ */
 export async function login(
-  username: string,
+  username: string | null,
   clientId: string,
+  opts: { conditional?: boolean; signal?: AbortSignal } = {},
 ): Promise<LoginResponse> {
   const begin = await apiRequest<BeginLoginResponse>("/auth/login/begin", {
-    username,
+    ...(username ? { username } : {}),
     client_id: clientId,
   } satisfies BeginLoginRequest);
 
@@ -190,6 +213,8 @@ export async function login(
   let credential: PublicKeyCredential | null;
   try {
     credential = (await navigator.credentials.get({
+      ...(opts.conditional ? { mediation: "conditional" } : {}),
+      ...(opts.signal ? { signal: opts.signal } : {}),
       publicKey: {
         ...options,
         challenge: base64UrlToBuffer(options.challenge),
@@ -199,7 +224,7 @@ export async function login(
           transports: cred.transports as AuthenticatorTransport[] | undefined,
         })),
       } as PublicKeyCredentialRequestOptions,
-    })) as PublicKeyCredential | null;
+    } as CredentialRequestOptions)) as PublicKeyCredential | null;
   } catch {
     throw new WebAuthnError("browser", "Passkey sign-in was cancelled or failed.");
   }

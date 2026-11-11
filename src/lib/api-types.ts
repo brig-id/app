@@ -78,12 +78,15 @@ export interface BeginRegisterResponse {
 export interface FinishRegisterRequest {
   session_id: string;
   credential: RegisterPublicKeyCredentialJSON;
+  /** Optional human-readable passkey name. */
+  label?: string;
 }
 
 // -- /auth/login --
 
 export interface BeginLoginRequest {
-  username: string;
+  /** Absent: username-less login (discoverable credential). */
+  username?: string;
   client_id: string;
 }
 
@@ -109,6 +112,55 @@ export interface LoginResponse {
 
 export interface PasskeySummary {
   id: string;
+  label: string | null;
+}
+
+export interface RenamePasskeyRequest {
+  user_id: string;
+  /** Empty removes the label. */
+  label: string;
+}
+
+// -- /auth/session --
+
+export interface SessionResponse {
+  user_id: string;
+  expires_at: number;
+}
+
+// -- /account/identities --
+
+export interface Identity {
+  id: string;
+  name: string;
+  /** `icon:<style>:<name>` */
+  logo: string;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface IdentityTemplate {
+  key: string;
+  name: string;
+  logo: string;
+  description: string;
+}
+
+export interface CreateIdentityRequest {
+  user_id: string;
+  template?: string;
+  name?: string;
+  logo?: string;
+  description?: string;
+}
+
+export interface UpdateIdentityRequest {
+  user_id: string;
+  name?: string;
+  logo?: string;
+  /** Empty clears it. */
+  description?: string;
 }
 
 export interface DeletePasskeyRequest {

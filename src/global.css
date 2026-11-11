@@ -148,3 +148,137 @@ wa-input.wa-input-error::part(hint) {
   color: inherit;
   font-weight: var(--wa-font-weight-bold);
 }
+
+/* -- Signed-in shell (app#25): header + left navigation, content top-aligned */
+
+wa-page.app-shell::part(main-content) {
+  display: block;
+  min-height: auto;
+  padding: var(--wa-space-xl) var(--wa-space-l);
+}
+
+.app-shell .app-header {
+  width: 100%;
+}
+
+.app-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: var(--wa-space-s);
+  display: flex;
+  flex-direction: column;
+  gap: var(--wa-space-2xs);
+}
+
+.app-nav-link {
+  display: flex;
+  align-items: center;
+  gap: var(--wa-space-s);
+  padding: var(--wa-space-xs) var(--wa-space-s);
+  border-radius: var(--wa-border-radius-m);
+  color: var(--wa-color-text-normal);
+  text-decoration: none;
+}
+
+.app-nav-link:hover {
+  background: var(--wa-color-neutral-fill-quiet);
+}
+
+.app-nav-link[aria-current="page"] {
+  background: var(--wa-color-brand-fill-quiet);
+  color: var(--wa-color-brand-on-quiet);
+  font-weight: var(--wa-font-weight-semibold);
+}
+
+.page {
+  max-width: 48rem;
+  margin: 0 auto;
+}
+
+.quiet {
+  color: var(--wa-color-text-quiet);
+  margin: 0;
+}
+
+/* -- Identities (core#49, app#11, app#27) */
+
+.identity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--wa-space-s);
+}
+
+.identity-logo {
+  display: inline-grid;
+  place-items: center;
+  border-radius: var(--wa-border-radius-circle);
+  background: var(--wa-color-brand-fill-quiet);
+  color: var(--wa-color-brand-on-quiet);
+}
+
+.identity-logo--s {
+  width: 1.75rem;
+  height: 1.75rem;
+  font-size: var(--wa-font-size-s);
+}
+
+.identity-logo--m {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.identity-logo--l {
+  width: 3rem;
+  height: 3rem;
+  font-size: var(--wa-font-size-xl);
+}
+
+.icon-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--wa-space-s);
+}
+
+.icon-picker-group {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.icon-picker-group legend {
+  font-size: var(--wa-font-size-s);
+  color: var(--wa-color-text-quiet);
+  padding: 0;
+  margin-bottom: var(--wa-space-2xs);
+}
+
+.icon-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(2.5rem, 1fr));
+  gap: var(--wa-space-2xs);
+}
+
+.icon-picker-option {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  padding: 0;
+  font-size: var(--wa-font-size-l);
+}
+
+.icon-picker-option[aria-pressed="true"] {
+  outline: var(--wa-focus-ring);
+  background: var(--wa-color-brand-fill-quiet);
+  color: var(--wa-color-brand-on-quiet);
+}
+
+.passkey-label-input {
+  max-width: 14rem;
+}
+
+.auth-alt-button {
+  width: 100%;
+}

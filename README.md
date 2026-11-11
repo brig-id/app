@@ -39,7 +39,7 @@ WebAuthn ceremonies will fail on an origin mismatch.
 ### HTTPS in dev
 
 The plain-HTTP `*.localhost` exception above satisfies the browser's own WebAuthn
-implementation, but not every WebAuthn *client* — some passkey-manager browser
+implementation, but not every WebAuthn _client_ — some passkey-manager browser
 extensions (e.g. Proton Pass) run their own origin check that doesn't grant that
 exception and require a real `https://` scheme, failing registration with an
 "insecure protocol" error even though the browser itself considers the page secure.
