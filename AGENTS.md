@@ -36,7 +36,7 @@ in local files.
 
 ```bash
 pnpm dev              # vite dev server (SSR), proxies /auth + /.well-known to :8080
-pnpm build            # full production build (SSG)
+pnpm build            # full production build (SSG) + dist/csp-hashes.json
 pnpm typecheck
 pnpm lint             # oxlint
 pnpm fmt.check        # prettier --check
@@ -71,3 +71,11 @@ fix(e2e): 🐛 back off after a 429 before retrying delete-passkey
 ci(ci): 👷 add Lighthouse accessibility check
 chore(deps): 📦 bump @builder.io/qwik to 1.21.0
 ```
+
+## CSP hash manifest
+
+`pnpm build` ends with `scripts/csp-hashes.mjs`, which writes `dist/csp-hashes.json`: the
+`'sha256-…'` source of every inline `<script>` and `<style>` in the static pages. A server
+serving `dist/` (`server-leaf`) reads it to allow exactly those instead of `'unsafe-inline'`.
+The hashes change from one build to the next (Qwik's inline state differs), so the manifest
+is produced with each build and shipped inside `dist/`, never committed.
