@@ -68,6 +68,11 @@ jobs:
           node-version: "24"
           working-directory: web
 
+      - name: Build leaf
+        # Playwright starts leaf with `cargo run` and waits 60 s for its port:
+        # enough to start a binary, not to compile one. Build it beforehand.
+        run: cargo build --manifest-path server-leaf/Cargo.toml
+
       - name: Install Playwright browsers
         working-directory: web
         run: npx playwright install --with-deps chromium firefox
