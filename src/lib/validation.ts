@@ -51,3 +51,20 @@ export function parseLoginInput(
   }
   return { kind: "remote", username, server };
 }
+
+/**
+ * Where "Another server" on the sign-in page leads (ADR-003): that server's
+ * sign-in page, `"current"` when the domain is this server's own, or `null`
+ * when the input is not a server domain. A pasted URL (`https://x/...`) is
+ * reduced to its host.
+ */
+export function otherServerUrl(
+  input: string,
+  currentServer: string,
+): string | "current" | null {
+  let host = input.trim().toLowerCase();
+  host = host.replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+  if (!isHostname(host)) return null;
+  if (host === currentServer.toLowerCase()) return "current";
+  return `https://${host}/login/`;
+}

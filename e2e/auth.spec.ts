@@ -1,86 +1,24 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
 import {
-  addVirtualAuthenticator,
-  skipIfNoVirtualAuthenticator,
-  uniqueUsername,
-} from "./webauthn";
+  expect,
+  test,
+  type BrowserContext,
+  type Locator,
+  type Page,
+} from "@playwright/test";
+import { E2E_ORIGIN } from "../playwright.config";
+import { addVirtualAuthenticator, skipIfNoVirtualAuthenticator } from "./webauthn";
 
-// Right after a client-side Qwik City navigation (dev/SSR mode), the
-// on:input and on:click QRLs for a given element can be wired up a beat
-// after the element itself is visible/actionable — Playwright sees a normal
-// interactive input/button and fills/clicks it happily, but the event is
-// lost because Qwik's listener isn't attached yet. This shows up two ways:
-// the click silently no-ops, or (more subtly) `.fill()` sets the DOM value
-// fine but the app's signal never sees the `input` event, so submitting
-// re-validates against a stale empty value. Retrying the whole fill+click
-// cycle — not just the click — covers both without depending on Qwik
-// internals to detect "hydrated yet".
-//
-// `/auth/*` is also rate-limited server-side (1 token/3s, burst 5, per IP —
-// a real security feature, see brigid-api's GovernorLayer). Every retry here
-// is itself an API call, so retrying immediately on a 429 just prolongs the
-// throttle. Back off ~3.5s (one refill tick) whenever the 429 error callout
-// is visible, instead of the normal short retry delay.
-async function retryDelay(page: Page): Promise<number> {
-  const rateLimited = await page
-    .getByText("Request failed with status 429")
-    .isVisible()
-    .catch(() => false);
-  return rateLimited ? 3500 : 300;
-}
+// `/auth/*` ceremonies are rate-limited server-side (1 token/3 s, burst 5, per
+// IP: brigid-api's GovernorLayer), and every test hits the same `leaf` from
+// the same loopback IP. A gap between tests lets the bucket refill.
+test.beforeEach(async () => {
+  await new Promise((resolve) => setTimeout(resolve, 4000));
+});
 
-async function fillAndSubmit(
-  page: Page,
-  textbox: Locator,
-  button: Locator,
-  value: string,
-  pattern: RegExp,
-  attempts = 5,
-) {
-  for (let i = 0; i < attempts; i++) {
-    await textbox.fill("");
-    await textbox.fill(value);
-    await button.click();
-    try {
-      await page.waitForURL(pattern, { timeout: 2000 });
-      return;
-    } catch {
-      await page.waitForTimeout(await retryDelay(page));
-    }
-  }
-  await expect(page).toHaveURL(pattern);
-}
-
-async function register(page: Page, username: string) {
-  await page.goto("/register/");
-  await fillAndSubmit(
-    page,
-    page.getByRole("textbox", { name: "Username" }),
-    page.getByRole("button", { name: "Create account" }),
-    username,
-    /\/login\/?$/,
-  );
-}
-
-async function login(page: Page, username: string) {
-  await fillAndSubmit(
-    page,
-    page.getByRole("textbox", { name: "Username" }),
-    page.getByRole("button", { name: "Sign in with passkey" }),
-    username,
-    /\/identities\/?$/,
-  );
-}
-
-// Same hydration race as fillAndSubmit, for actions with no associated text
-// input to re-fill — retries the click itself until `check` passes. Always
-// backs off a full refill tick (~3.5s): sign-out/delete-passkey calls often
-// land as the 6th+ /auth/* request in a test that's already spent most of
-// the burst on register+login+list, but unlike register/login's visible
-// "Request failed with status 429" callout, delete-passkey's UI collapses
-// every failure into a generic "Failed to remove passkey." — no reliable
-// text to detect the rate-limit case specifically, so just always assume
-// it might be that.
+// Right after a client-side Qwik City navigation the click handler of a
+// freshly shown button can be wired a beat after the button is clickable, and
+// a 429 can bounce a ceremony: retry the click until `check` passes, backing
+// off one refill tick between attempts.
 async function clickUntil(
   page: Page,
   button: Locator,
@@ -88,12 +26,6 @@ async function clickUntil(
   attempts = 5,
 ) {
   for (let i = 0; i < attempts; i++) {
-    // A short timeout, not the default 30s: if a prior iteration's click
-    // already went through and `button` vanished as a result (list emptied,
-    // redirected away from the page it was on), there's nothing left to
-    // click — falling through to `check()` below is what actually detects
-    // that, rather than hanging here waiting for an element that will never
-    // reappear.
     await button.click({ timeout: 2000 }).catch(() => {});
     try {
       await check();
@@ -105,26 +37,45 @@ async function clickUntil(
   await check();
 }
 
-// Every test in this file shares one rate-limited `leaf` instance (see the
-// backoff comment on retryDelay above) — a gap between tests lets the token
-// bucket recover instead of every test starting from whatever the previous
-// one left behind.
-test.beforeEach(async () => {
-  await new Promise((resolve) => setTimeout(resolve, 4000));
-});
+/** Signup: one button, no username; lands on the onboarding page. */
+async function signUp(page: Page) {
+  await page.goto("/register/");
+  await clickUntil(page, page.getByRole("button", { name: "Create account" }), () =>
+    expect(page).toHaveURL(/\/welcome\/?/, { timeout: 5000 }),
+  );
+}
 
-// The passkeys page's own GET /auth/passkeys fetch runs once, in a
-// useVisibleTask$, right after register+login already spent most of the
-// rate-limit burst (register begin/finish + login begin/finish = 4 calls
-// against a burst of 5) — on a 429 the app shows "Unable to load passkeys."
-// and never retries on its own. Reloading re-triggers that fetch.
-async function waitForPasskeyList(page: Page, count: number, attempts = 5) {
+/** Onboarding: reads the recovery code shown, confirms it, continues. */
+async function finishOnboarding(page: Page): Promise<string> {
+  const code = page.getByLabel("Your recovery code");
+  await expect(code).toHaveText(/^([A-Z2-7]{4}-){9}[A-Z2-7]{4}$/, { timeout: 10000 });
+  const value = (await code.textContent()) ?? "";
+  const next = page.getByRole("button", { name: "Continue to my identities" });
+  await expect(next).toBeDisabled();
+  await page.getByLabel("I saved my recovery code").check();
+  await next.click();
+  await expect(page).toHaveURL(/\/identities\/?$/);
+  return value;
+}
+
+async function signIn(page: Page) {
+  await page.goto("/login/");
+  await clickUntil(page, page.getByRole("button", { name: "Use my passkey" }), () =>
+    expect(page).toHaveURL(/\/identities\/?$/, { timeout: 5000 }),
+  );
+}
+
+async function signOut(page: Page) {
+  await clickUntil(page, page.getByRole("button", { name: "Sign out" }), () =>
+    expect(page).toHaveURL(/\/login\/?$/, { timeout: 2000 }),
+  );
+}
+
+async function waitForPasskeyList(page: Page, count: number) {
   if (!/\/passkeys\/?$/.test(page.url())) await page.goto("/passkeys/");
-  for (let i = 0; i < attempts; i++) {
+  for (let i = 0; i < 5; i++) {
     try {
-      await expect(page.locator(".passkey-item")).toHaveCount(count, {
-        timeout: 3000,
-      });
+      await expect(page.locator(".passkey-item")).toHaveCount(count, { timeout: 3000 });
       return;
     } catch {
       await page.waitForTimeout(3500);
@@ -134,267 +85,145 @@ async function waitForPasskeyList(page: Page, count: number, attempts = 5) {
   await expect(page.locator(".passkey-item")).toHaveCount(count);
 }
 
-test.describe("register", () => {
-  test("full register flow creates an account and a usable passkey", async ({
+test.describe("signup and onboarding", () => {
+  test("an account is a passkey: onboarding names it and gives a recovery code", async ({
     page,
     context,
     browserName,
   }) => {
     skipIfNoVirtualAuthenticator(browserName);
     await addVirtualAuthenticator(context, page);
-    const username = uniqueUsername("register");
+    await expect(page.getByRole("textbox", { name: "Username" })).toHaveCount(0);
+    await signUp(page);
 
-    await register(page, username);
-    await expect(page).toHaveURL(/\/login\/?$/);
+    await expect(page.getByRole("heading", { name: "Welcome to brig·id" })).toBeVisible();
+    // The passkey is loaded once its name can be saved.
+    await expect(page.getByRole("button", { name: "Save the name" })).toBeEnabled();
+    const name = page.getByLabel("Name");
+    await name.fill("Laptop");
+    await page.getByRole("button", { name: "Save the name" }).click();
+    await expect(page.getByText("Saved.")).toBeVisible();
 
-    // Prove the passkey created during registration actually works, rather
-    // than just checking the redirect happened.
-    await login(page, username);
-    await expect(page).toHaveURL(/\/identities\/?$/);
+    await finishOnboarding(page);
+    await expect(page.locator(".identity-list > li")).toHaveCount(3, { timeout: 10000 });
+
+    await waitForPasskeyList(page, 1);
+    await expect(page.locator(".passkey-item")).toContainText("Laptop");
+    expect(await page.evaluate(() => localStorage.getItem("brigid.token"))).toBeTruthy();
   });
 });
 
-test.describe("login", () => {
-  test("login redirects to /identities with token stored in localStorage", async ({
+test.describe("sign in", () => {
+  test("signs in with the passkey alone, and signs out", async ({
     page,
     context,
     browserName,
   }) => {
     skipIfNoVirtualAuthenticator(browserName);
     await addVirtualAuthenticator(context, page);
-    const username = uniqueUsername("login");
-    await register(page, username);
+    await signUp(page);
+    await finishOnboarding(page);
+    await signOut(page);
+    expect(await page.evaluate(() => localStorage.getItem("brigid.token"))).toBeNull();
 
+    await signIn(page);
+    expect(await page.evaluate(() => localStorage.getItem("brigid.token"))).toBeTruthy();
+  });
+
+  test("another server leads to its own sign-in page", async ({ page }) => {
+    await page.route("https://id.example.org/**", (route) =>
+      route.fulfill({ status: 200, body: "other server" }),
+    );
     await page.goto("/login/");
-    await login(page, username);
+    await clickUntil(page, page.getByRole("button", { name: "Another server" }), () =>
+      expect(page.getByLabel("Server")).toBeVisible({ timeout: 2000 }),
+    );
+    await page.getByLabel("Server").fill("not a domain");
+    await page.getByRole("button", { name: "Continue" }).click();
+    await expect(page.getByRole("alert")).toContainText("server's domain");
+    await page.getByLabel("Server").fill("https://id.example.org/somewhere");
+    await page.getByRole("button", { name: "Continue" }).click();
+    await expect(page).toHaveURL("https://id.example.org/login/");
+  });
+});
 
-    await expect(page).toHaveURL(/\/identities\/?$/);
-    const token = await page.evaluate(() =>
-      localStorage.getItem("brigid.token"),
+test.describe("recovery", () => {
+  test("the recovery code adds a passkey on a new device, once", async ({
+    page,
+    context,
+    browser,
+    browserName,
+  }) => {
+    skipIfNoVirtualAuthenticator(browserName);
+    await addVirtualAuthenticator(context, page);
+    await signUp(page);
+    const code = await finishOnboarding(page);
+
+    // Another device, with none of the account's passkeys.
+    const device: BrowserContext = await browser.newContext({
+      baseURL: E2E_ORIGIN,
+      ignoreHTTPSErrors: true,
+    });
+    const other = await device.newPage();
+    await addVirtualAuthenticator(device, other);
+    await other.goto("/recover/");
+    await other.getByLabel("Recovery code").fill(code.toLowerCase());
+    await clickUntil(other, other.getByRole("button", { name: "Recover" }), () =>
+      expect(other).toHaveURL(/\/welcome\/?$/, { timeout: 5000 }),
     );
-    const userId = await page.evaluate(() =>
-      localStorage.getItem("brigid.user_id"),
+    await expect(other.getByRole("heading", { name: "Your account is back" })).toBeVisible();
+    const newCode = await finishOnboarding(other);
+    expect(newCode).not.toBe(code);
+    await waitForPasskeyList(other, 2);
+
+    // The old code is used up.
+    const third = await device.newPage();
+    await third.goto("/recover/");
+    await third.getByLabel("Recovery code").fill(code);
+    await third.getByRole("button", { name: "Recover" }).click();
+    await expect(third.getByRole("alert")).toBeVisible({ timeout: 10000 });
+    await expect(third).toHaveURL(/\/recover\/?$/);
+    await device.close();
+  });
+
+  test("a typo is reported before any account is touched", async ({ page }) => {
+    await page.goto("/recover/");
+    await page.getByLabel("Recovery code").fill("AAAA-BBBB");
+    await clickUntil(page, page.getByRole("button", { name: "Recover" }), () =>
+      expect(page.getByRole("alert")).toContainText("40 characters", { timeout: 3000 }),
     );
-    expect(token).toBeTruthy();
-    expect(userId).toBeTruthy();
   });
 });
 
 test.describe("passkeys page", () => {
-  test("passkey list is displayed after login", async ({
+  test("adding and removing passkeys; the last one stays", async ({
     page,
     context,
     browserName,
   }) => {
     skipIfNoVirtualAuthenticator(browserName);
     await addVirtualAuthenticator(context, page);
-    const username = uniqueUsername("list");
-    await register(page, username);
-    await page.goto("/login/");
-    await login(page, username);
-
+    await signUp(page);
+    await finishOnboarding(page);
     await waitForPasskeyList(page, 1);
-  });
-
-  test("deleting a passkey updates the list", async ({
-    page,
-    context,
-    browserName,
-  }) => {
-    skipIfNoVirtualAuthenticator(browserName);
-    await addVirtualAuthenticator(context, page);
-    const username = uniqueUsername("delete");
-    await register(page, username);
-    await page.goto("/login/");
-    await login(page, username);
-
-    await waitForPasskeyList(page, 1);
-
-    // Add a second credential first: the server refuses to delete a user's
-    // last passkey (brig·id is passkey-only, no fallback to sign in with),
-    // and the UI disables "Remove" entirely when it's the only one.
-    await addVirtualAuthenticator(context, page, "usb");
-    await clickUntil(
-      page,
-      page.getByRole("button", { name: "Add a passkey" }),
-      () =>
-        expect(page.locator(".passkey-item")).toHaveCount(2, {
-          timeout: 2000,
-        }),
-    );
-
-    await clickUntil(
-      page,
-      page.locator(".passkey-item").first().getByRole("button", {
-        name: "Remove",
-      }),
-      () =>
-        expect(page.locator(".passkey-item")).toHaveCount(1, {
-          timeout: 2000,
-        }),
-    );
-  });
-
-  test("the only remaining passkey cannot be removed", async ({
-    page,
-    context,
-    browserName,
-  }) => {
-    skipIfNoVirtualAuthenticator(browserName);
-    await addVirtualAuthenticator(context, page);
-    const username = uniqueUsername("solo");
-    await register(page, username);
-    await page.goto("/login/");
-    await login(page, username);
-
-    await waitForPasskeyList(page, 1);
-
     await expect(
-      page.locator(".passkey-item").first().getByRole("button", {
-        name: "Remove",
-      }),
+      page.locator(".passkey-item").first().getByRole("button", { name: "Remove" }),
     ).toBeDisabled();
-  });
 
-  test("adding a passkey adds a credential to the same identity", async ({
-    page,
-    context,
-    browserName,
-  }) => {
-    skipIfNoVirtualAuthenticator(browserName);
-    await addVirtualAuthenticator(context, page);
-    const username = uniqueUsername("add");
-    await register(page, username);
-    await page.goto("/login/");
-    await login(page, username);
-
-    await waitForPasskeyList(page, 1);
-
-    // A second, distinct virtual authenticator (a different transport —
-    // Chrome allows only one "internal" authenticator per context) stands
-    // in for a different physical key. Reusing the first one would make the
-    // browser refuse the ceremony outright: the backend now passes the
-    // identity's existing credential IDs as WebAuthn's `excludeCredentials`,
-    // so an authenticator that already holds one of them correctly declines
-    // to re-enrol it.
+    // A second, distinct authenticator (Chrome allows one "internal" per
+    // context): the backend excludes the account's existing credential.
     await addVirtualAuthenticator(context, page, "usb");
-
-    // "Add a passkey" must attach a second credential to the identity
-    // that's currently logged in — not register an unrelated new identity
-    // (see core#39 for the backend endpoint this exercises).
+    await clickUntil(page, page.getByRole("button", { name: "Add a passkey" }), () =>
+      expect(page.locator(".passkey-item")).toHaveCount(2, { timeout: 2000 }),
+    );
     await clickUntil(
       page,
-      page.getByRole("button", { name: "Add a passkey" }),
-      () =>
-        expect(page.locator(".passkey-item")).toHaveCount(2, {
-          timeout: 2000,
-        }),
-    );
-  });
-});
-
-test.describe("sign out", () => {
-  test("sign out redirects to /login and clears localStorage", async ({
-    page,
-    context,
-    browserName,
-  }) => {
-    skipIfNoVirtualAuthenticator(browserName);
-    await addVirtualAuthenticator(context, page);
-    const username = uniqueUsername("signout");
-    await register(page, username);
-    await page.goto("/login/");
-    await login(page, username);
-
-    await clickUntil(page, page.getByRole("button", { name: "Sign out" }), () =>
-      expect(page).toHaveURL(/\/login\/?$/, { timeout: 2000 }),
+      page.locator(".passkey-item").first().getByRole("button", { name: "Remove" }),
+      () => expect(page.locator(".passkey-item")).toHaveCount(1, { timeout: 2000 }),
     );
 
-    const token = await page.evaluate(() =>
-      localStorage.getItem("brigid.token"),
-    );
-    expect(token).toBeNull();
-  });
-});
-
-// These don't touch navigator.credentials at all (client-side format
-// validation happens before register()/login() ever run), so — unlike
-// every other describe block above — they run on both projects, Firefox
-// included. This is what actually backs the "non-WebAuthn assertions still
-// execute normally" claim in playwright.config.ts's project comment.
-test.describe("form validation (no passkey required)", () => {
-  test("register rejects a too-short username without calling the API", async ({
-    page,
-  }) => {
-    await page.goto("/register/");
-    const usernameField = page.getByRole("textbox", { name: "Username" });
-    await usernameField.fill("ab");
-    await usernameField.blur();
-    await page.getByRole("button", { name: "Create account" }).click();
-
-    await expect(page.getByText("3-64 letters, digits, - or _")).toBeVisible();
-    await expect(page).toHaveURL(/\/register\/?$/);
-  });
-
-  test("login page renders the username field and submit button", async ({
-    page,
-  }) => {
-    await page.goto("/login/");
-    await expect(
-      page.getByRole("textbox", { name: "Username" }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Sign in with passkey" }),
-    ).toBeVisible();
-  });
-});
-
-// isPasskeySupported() just checks "PublicKeyCredential" in window (see
-// lib/webauthn.ts), so deleting it before any page script runs simulates an
-// unsupported browser/device regardless of what Chromium/Firefox actually
-// support — no navigator.credentials involved, so (like the validation
-// block above) these run on both projects and never touch the rate-limited
-// /auth/* endpoints.
-test.describe("unsupported browser (no WebAuthn)", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.addInitScript(() => {
-      // @ts-expect-error - deliberately removing a browser API for the test
-      delete window.PublicKeyCredential;
-    });
-  });
-
-  test("register shows the unsupported-browser callout instead of the form", async ({
-    page,
-  }) => {
-    await page.goto("/register/");
-
-    await expect(page.locator(".auth-unsupported")).toBeVisible();
-    await expect(
-      page.getByText(/This browser can't use passkeys/),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("textbox", { name: "Username" }),
-    ).not.toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Create account" }),
-    ).not.toBeVisible();
-  });
-
-  test("login shows the unsupported-browser callout instead of the form", async ({
-    page,
-  }) => {
-    await page.goto("/login/");
-
-    await expect(page.locator(".auth-unsupported")).toBeVisible();
-    await expect(
-      page.getByText(/This browser can't use passkeys/),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("textbox", { name: "Username" }),
-    ).not.toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Sign in with passkey" }),
-    ).not.toBeVisible();
+    // The recovery code can be renewed from here.
+    await expect(page.getByText(/You have a recovery code, created on/)).toBeVisible();
   });
 });
 
@@ -406,10 +235,8 @@ test.describe("identities page", () => {
   }) => {
     skipIfNoVirtualAuthenticator(browserName);
     await addVirtualAuthenticator(context, page);
-    const username = uniqueUsername("ident");
-    await register(page, username);
-    await page.goto("/login/");
-    await login(page, username);
+    await signUp(page);
+    await finishOnboarding(page);
 
     const cards = page.locator(".identity-list > li");
     await expect(cards).toHaveCount(3, { timeout: 10000 });
@@ -417,7 +244,6 @@ test.describe("identities page", () => {
       await expect(page.getByText(name, { exact: true })).toBeVisible();
     }
 
-    // Create from a template, renamed.
     await page.getByRole("button", { name: "New identity" }).click();
     await page.getByLabel("Start from").selectOption("family");
     await page.getByLabel("Name").fill("Les Dupont");
@@ -425,7 +251,6 @@ test.describe("identities page", () => {
     await expect(cards).toHaveCount(4);
     await expect(page.getByText("Les Dupont", { exact: true })).toBeVisible();
 
-    // Edit, then delete.
     await page.getByRole("button", { name: "Edit Les Dupont" }).click();
     await page.getByLabel("Name").fill("Famille");
     await page.getByRole("button", { name: "Save" }).click();
@@ -434,5 +259,35 @@ test.describe("identities page", () => {
     page.once("dialog", (dialog) => void dialog.accept());
     await page.getByRole("button", { name: "Delete Famille" }).click();
     await expect(cards).toHaveCount(3);
+  });
+});
+
+// No navigator.credentials involved: these run on both projects and never
+// touch the rate-limited ceremonies.
+test.describe("browsers that can't use passkeys", () => {
+  for (const path of ["/register/", "/login/", "/recover/"]) {
+    test(`${path} explains a browser without WebAuthn`, async ({ page }) => {
+      await page.addInitScript(() => {
+        // @ts-expect-error - deliberately removing a browser API for the test
+        delete window.PublicKeyCredential;
+      });
+      await page.goto(path);
+      await expect(page.locator(".auth-unsupported")).toBeVisible();
+      await expect(page.getByText(/This browser can't use passkeys/)).toBeVisible();
+      await expect(page.getByRole("button", { name: /Use my passkey|Create account|Recover/ })).toHaveCount(0);
+    });
+  }
+
+  // app#13: a page not served over HTTPS hides WebAuthn even in a browser
+  // that supports it. The test server is a secure context (localhost), so
+  // the flag is overridden before any page script runs.
+  test("an insecure page says to use https", async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(window, "isSecureContext", { get: () => false });
+    });
+    await page.goto("/login/");
+    await expect(page.locator(".auth-unsupported")).toBeVisible();
+    await expect(page.getByText(/Passkeys only work on secure pages/)).toBeVisible();
+    await expect(page.getByRole("button", { name: "Use my passkey" })).toHaveCount(0);
   });
 });

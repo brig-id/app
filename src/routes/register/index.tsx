@@ -2,19 +2,24 @@ import { $, component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
 import { type DocumentHead, useNavigate } from "@builder.io/qwik-city";
 import { AuthBackground } from "~/components/auth-background/auth-background";
 import { PasskeyUnsupported } from "~/components/passkey-unsupported/passkey-unsupported";
-import { wa, useWaTextInput, type WaInputElement } from "~/lib/wa";
-import { isValidUsername } from "~/lib/validation";
+import { wa } from "~/lib/wa";
 import { currentServer } from "~/lib/server";
-import { register, passkeySupport, WebAuthnError } from "~/lib/webauthn";
+import {
+  passkeySupport,
+  signUp,
+  storeAuth,
+  WebAuthnError,
+} from "~/lib/webauthn";
 
+/**
+ * Signup (ADR-003, app#36): an account is just a passkey. No username: the
+ * server generates a hidden one. The account exists only once the passkey is
+ * stored; then the onboarding page (passkey name, recovery code).
+ */
 export default component$(() => {
   const nav = useNavigate();
-  const username = useSignal("");
-  const touched = useSignal(false);
   const loading = useSignal(false);
   const error = useSignal<string | null>(null);
-  const formatError = useSignal<string | null>(null);
-  const usernameRef = useSignal<WaInputElement>();
   const supported = useSignal(true);
   const unsupportedReason = useSignal<"insecure-context" | "no-webauthn">(
     "no-webauthn",
@@ -26,35 +31,21 @@ export default component$(() => {
     const support = passkeySupport();
     supported.value = support === "supported";
     if (support !== "supported") unsupportedReason.value = support;
-    if (supported.value) {
-      void Promise.all([
-        wa.card(),
-        wa.input(),
-        wa.button(),
-        wa.callout(),
-        wa.icon(),
-      ]);
-    } else {
-      void Promise.all([wa.card(), wa.callout(), wa.icon()]);
-    }
+    void Promise.all([wa.card(), wa.callout(), wa.icon()]);
   });
-  useWaTextInput(usernameRef, username, touched);
 
-  const handleSubmit = $(async () => {
-    if (!isValidUsername(username.value)) {
-      formatError.value = "3-64 letters, digits, - or _";
-      return;
-    }
-    formatError.value = null;
+  const create = $(async () => {
     error.value = null;
     loading.value = true;
     try {
-      await register(`${username.value}@${server.value}`);
-      await nav("/login/");
+      const session = await signUp(window.location.origin);
+      storeAuth(session.id_token, session.user_id);
+      await nav("/welcome/");
     } catch (err) {
       if (err instanceof WebAuthnError) {
         if (err.kind === "browser") {
-          error.value = "Passkey creation was cancelled.";
+          error.value =
+            "No passkey was created, so no account either. Try again.";
         } else if (err.kind === "network") {
           error.value = "Server unreachable. Please try again.";
         } else {
@@ -67,10 +58,6 @@ export default component$(() => {
       loading.value = false;
     }
   });
-
-  const usernameError = touched.value
-    ? (formatError.value ?? undefined)
-    : undefined;
 
   if (!supported.value) {
     return (
@@ -88,17 +75,17 @@ export default component$(() => {
     <>
       <AuthBackground />
       <wa-card class="auth-card">
-        <form class="wa-stack" preventdefault:submit onSubmit$={handleSubmit}>
+        <div class="wa-stack">
           <h1 class="wa-heading-l">Create account</h1>
-          <wa-input
-            ref={usernameRef}
-            label="Username"
-            name="username"
-            placeholder="username"
-            value={username.value}
-            hint={usernameError}
-            class={usernameError ? "wa-input-error" : undefined}
-          />
+          <p>
+            Your account is a <strong>passkey</strong>: no password, no
+            username. Your device or password manager keeps it and unlocks it
+            with your fingerprint, face or PIN.
+          </p>
+          <p class="quiet">
+            Then you create the identities that services will see. They never
+            see your account itself.
+          </p>
           {server.value && (
             <p class="auth-server-hint">
               on <strong>{server.value}</strong>
@@ -110,13 +97,18 @@ export default component$(() => {
               {error.value}
             </wa-callout>
           )}
-          <wa-button type="submit" variant="brand" loading={loading.value}>
-            Create account
-          </wa-button>
+          <button
+            type="button"
+            class="wa-brand auth-main-button"
+            disabled={loading.value}
+            onClick$={create}
+          >
+            {loading.value ? "Waiting for your passkey…" : "Create account"}
+          </button>
           <a href="/login/" class="auth-alt-link">
             Already have an account? Sign in
           </a>
-        </form>
+        </div>
       </wa-card>
     </>
   );

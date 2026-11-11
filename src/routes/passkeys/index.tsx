@@ -2,6 +2,7 @@ import { $, component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
 import { delay } from "helpers4/promise";
 import { type DocumentHead, useNavigate } from "@builder.io/qwik-city";
 import { PasskeyItem } from "~/components/passkey-item/passkey-item";
+import { RecoveryCodePanel } from "~/components/recovery-code/recovery-code";
 import { wa } from "~/lib/wa";
 import type { PasskeySummary } from "~/lib/api-types";
 import { listPasskeys, renamePasskey, SessionEndedError } from "~/lib/api";
@@ -151,6 +152,10 @@ export default component$(() => {
             />
           ))}
         </div>
+      </wa-card>
+
+      <wa-card>
+        <RecoveryCodePanel />
       </wa-card>
     </div>
   );

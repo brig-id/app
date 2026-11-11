@@ -2,87 +2,47 @@ import { $, component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
 import { type DocumentHead, useNavigate } from "@builder.io/qwik-city";
 import { AuthBackground } from "~/components/auth-background/auth-background";
 import { PasskeyUnsupported } from "~/components/passkey-unsupported/passkey-unsupported";
-import { wa, useWaTextInput, type WaInputElement } from "~/lib/wa";
-import { parseLoginInput } from "~/lib/validation";
+import { wa } from "~/lib/wa";
+import { otherServerUrl } from "~/lib/validation";
 import { currentServer } from "~/lib/server";
 import {
-  isAutofillSupported,
-  isPasskeySupported,
-  passkeySupport,
   login,
+  passkeySupport,
   storeAuth,
   WebAuthnError,
 } from "~/lib/webauthn";
 
-/** The pending passkey-autofill request, aborted before any other sign-in:
- * a browser only runs one credentials.get() at a time. Client-only state,
- * outside Qwik's serialized signals on purpose. */
-let autofill: AbortController | null = null;
-const stopAutofill = () => {
-  autofill?.abort();
-  autofill = null;
-};
-
+/**
+ * Sign-in (ADR-003, app#37): the server serving this page by default, another
+ * one by its domain (the browser goes there: a passkey only works on the
+ * domain that created it), and the passkey, with no username to type.
+ */
 export default component$(() => {
   const nav = useNavigate();
-  const username = useSignal("");
-  const touched = useSignal(false);
   const loading = useSignal(false);
   const error = useSignal<string | null>(null);
-  const formatError = useSignal<string | null>(null);
-  const remoteServer = useSignal<string | null>(null);
-  const usernameRef = useSignal<WaInputElement>();
   const supported = useSignal(true);
   const unsupportedReason = useSignal<"insecure-context" | "no-webauthn">(
     "no-webauthn",
   );
   const server = useSignal("");
+  const choosingServer = useSignal(false);
+  const otherServer = useSignal("");
+  const otherServerError = useSignal<string | null>(null);
 
   useVisibleTask$(() => {
     server.value = currentServer();
     const support = passkeySupport();
     supported.value = support === "supported";
     if (support !== "supported") unsupportedReason.value = support;
-    if (supported.value) {
-      void Promise.all([
-        wa.card(),
-        wa.input(),
-        wa.button(),
-        wa.callout(),
-        wa.icon(),
-      ]);
-    } else {
-      void Promise.all([wa.card(), wa.callout(), wa.icon()]);
-    }
-  });
-  useWaTextInput(usernameRef, username, touched);
-
-  // Passkey autofill (app#2, core#18): offer the device's passkeys in the
-  // username field's suggestions; picking one signs in without typing.
-  useVisibleTask$(async ({ cleanup }) => {
-    if (!isPasskeySupported() || !(await isAutofillSupported())) return;
-    stopAutofill();
-    const controller = new AbortController();
-    autofill = controller;
-    cleanup(() => controller.abort());
-    try {
-      const result = await login(null, window.location.origin, {
-        conditional: true,
-        signal: controller.signal,
-      });
-      storeAuth(result.id_token, result.user_id);
-      await nav("/identities/");
-    } catch {
-      // aborted (another sign-in started) or dismissed: nothing to report
-    }
+    void Promise.all([wa.card(), wa.callout(), wa.icon()]);
   });
 
-  const signIn = $(async (handle: string | null) => {
-    stopAutofill();
+  const signIn = $(async () => {
     error.value = null;
     loading.value = true;
     try {
-      const result = await login(handle, window.location.origin);
+      const result = await login(null, window.location.origin);
       storeAuth(result.id_token, result.user_id);
       await nav("/identities/");
     } catch (err) {
@@ -90,7 +50,8 @@ export default component$(() => {
         if (err.kind === "network") {
           error.value = "Server unreachable. Please try again.";
         } else if (err.kind === "browser") {
-          error.value = "Passkey sign-in was cancelled.";
+          error.value =
+            "No passkey was used. Try again, or use another device.";
         } else {
           error.value = err.message;
         }
@@ -102,24 +63,18 @@ export default component$(() => {
     }
   });
 
-  const handleSubmit = $(async () => {
-    remoteServer.value = null;
-    const parsed = parseLoginInput(username.value, server.value);
-    if (parsed.kind === "invalid") {
-      formatError.value = "Expected: username or username@server";
+  const goToServer = $(() => {
+    const url = otherServerUrl(otherServer.value, server.value);
+    if (url === null) {
+      otherServerError.value = "Enter a server's domain, e.g. id.example.org";
       return;
     }
-    formatError.value = null;
-    if (parsed.kind === "remote") {
-      remoteServer.value = parsed.server;
+    if (url === "current") {
+      choosingServer.value = false;
       return;
     }
-    await signIn(`${parsed.username}@${parsed.server}`);
+    window.location.assign(url);
   });
-
-  const usernameError = touched.value
-    ? (formatError.value ?? undefined)
-    : undefined;
 
   if (!supported.value) {
     return (
@@ -134,48 +89,80 @@ export default component$(() => {
     <>
       <AuthBackground />
       <wa-card class="auth-card">
-        <form class="wa-stack" preventdefault:submit onSubmit$={handleSubmit}>
+        <div class="wa-stack">
           <h1 class="wa-heading-l">Sign in</h1>
-          <wa-input
-            ref={usernameRef}
-            label="Username"
-            name="username"
-            placeholder="username"
-            value={username.value}
-            autocomplete="username webauthn"
-            hint={usernameError}
-            class={usernameError ? "wa-input-error" : undefined}
-          />
-          {remoteServer.value && (
-            <wa-callout variant="neutral" role="alert">
-              <wa-icon slot="icon" name="circle-info"></wa-icon>
-              This account is on <strong>{remoteServer.value}</strong>.{" "}
-              <a href={`https://${remoteServer.value}/login/`}>
-                Continue to {remoteServer.value} →
-              </a>
-            </wa-callout>
+
+          {choosingServer.value ? (
+            <form
+              class="wa-stack wa-gap-xs"
+              preventdefault:submit
+              onSubmit$={goToServer}
+            >
+              <label class="wa-stack wa-gap-2xs">
+                Server
+                <input
+                  bind:value={otherServer}
+                  placeholder="id.example.org"
+                  autoComplete="url"
+                  inputMode="url"
+                />
+              </label>
+              {otherServerError.value && (
+                <p class="field-error" role="alert">
+                  {otherServerError.value}
+                </p>
+              )}
+              <div class="wa-cluster wa-gap-xs">
+                <button type="submit" class="wa-brand">
+                  Continue
+                </button>
+                <button
+                  type="button"
+                  onClick$={() => {
+                    choosingServer.value = false;
+                    otherServerError.value = null;
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          ) : (
+            <p class="auth-server-hint">
+              on <strong>{server.value}</strong> ·{" "}
+              <button
+                type="button"
+                class="link-button"
+                onClick$={() => {
+                  choosingServer.value = true;
+                }}
+              >
+                Another server
+              </button>
+            </p>
           )}
+
           {error.value && (
             <wa-callout variant="danger" role="alert">
               <wa-icon slot="icon" name="circle-exclamation"></wa-icon>
               {error.value}
             </wa-callout>
           )}
-          <wa-button type="submit" variant="brand" loading={loading.value}>
-            Sign in with passkey
-          </wa-button>
+
           <button
             type="button"
-            class="auth-alt-button"
-            disabled={loading.value}
-            onClick$={() => signIn(null)}
+            class="wa-brand auth-main-button"
+            disabled={loading.value || choosingServer.value}
+            onClick$={signIn}
           >
-            Use a saved passkey, no username
+            {loading.value ? "Waiting for your passkey…" : "Use my passkey"}
           </button>
-          <a href="/register/" class="auth-alt-link">
-            Create an account
-          </a>
-        </form>
+
+          <div class="wa-split auth-links">
+            <a href="/register/">Create an account</a>
+            <a href="/recover/">Lost your passkeys?</a>
+          </div>
+        </div>
       </wa-card>
     </>
   );

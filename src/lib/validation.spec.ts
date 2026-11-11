@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidHandle, parseLoginInput } from "./validation";
+import { isValidHandle, otherServerUrl, parseLoginInput } from "./validation";
 
 describe("isValidHandle", () => {
   it("accepts a well-formed handle", () => {
@@ -76,5 +76,23 @@ describe("parseLoginInput", () => {
     expect(parseLoginInput("alice@ex@ample.com", "example.com")).toEqual({
       kind: "invalid",
     });
+  });
+});
+
+describe("otherServerUrl", () => {
+  it("sends the browser to another server's sign-in page", () => {
+    expect(otherServerUrl("id.example.org", "helm.brig.id")).toBe(
+      "https://id.example.org/login/",
+    );
+    expect(otherServerUrl(" https://ID.example.org/whatever ", "helm.brig.id")).toBe(
+      "https://id.example.org/login/",
+    );
+  });
+
+  it("stays here for this server, and refuses what isn't a domain", () => {
+    expect(otherServerUrl("Helm.Brig.Id", "helm.brig.id")).toBe("current");
+    expect(otherServerUrl("", "helm.brig.id")).toBeNull();
+    expect(otherServerUrl("not a domain", "helm.brig.id")).toBeNull();
+    expect(otherServerUrl("127.0.0.1", "helm.brig.id")).toBeNull();
   });
 });

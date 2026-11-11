@@ -282,3 +282,48 @@ wa-page.app-shell::part(main-content) {
 .auth-alt-button {
   width: 100%;
 }
+
+/* -- Sign-in, signup, recovery (ADR-003/004) */
+
+.auth-main-button {
+  width: 100%;
+  padding-block: var(--wa-space-s);
+}
+
+.auth-links {
+  font-size: var(--wa-font-size-s);
+}
+
+.link-button {
+  all: unset;
+  cursor: pointer;
+  color: var(--wa-color-text-link);
+  text-decoration: underline;
+}
+
+.link-button:focus-visible {
+  outline: var(--wa-focus-ring);
+}
+
+.field-error {
+  margin: 0;
+  color: var(--wa-color-danger-on-quiet);
+  font-size: var(--wa-font-size-s);
+}
+
+.recovery-code-value {
+  display: block;
+  padding: var(--wa-space-m);
+  border-radius: var(--wa-border-radius-m);
+  background: var(--wa-color-neutral-fill-quiet);
+  font: var(--wa-font-weight-code) var(--wa-font-size-l) / 1.6
+    var(--wa-font-family-code);
+  letter-spacing: 0.05em;
+  word-break: break-all;
+  user-select: all;
+}
+
+.recovery-code-input {
+  font-family: var(--wa-font-family-code);
+  letter-spacing: 0.05em;
+}
