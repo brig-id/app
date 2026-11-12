@@ -5,12 +5,7 @@ import { PasskeyUnsupported } from "~/components/passkey-unsupported/passkey-uns
 import { wa } from "~/lib/wa";
 import { otherServerUrl } from "~/lib/validation";
 import { currentServer } from "~/lib/server";
-import {
-  login,
-  passkeySupport,
-  storeAuth,
-  WebAuthnError,
-} from "~/lib/webauthn";
+import { login, passkeySupport, WebAuthnError } from "~/lib/webauthn";
 
 /**
  * Sign-in (ADR-003, app#37): the server serving this page by default, another
@@ -42,8 +37,7 @@ export default component$(() => {
     error.value = null;
     loading.value = true;
     try {
-      const result = await login(null, window.location.origin);
-      storeAuth(result.id_token, result.user_id);
+      await login(null);
       await nav("/identities/");
     } catch (err) {
       if (err instanceof WebAuthnError) {
