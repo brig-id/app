@@ -4,12 +4,7 @@ import { AuthBackground } from "~/components/auth-background/auth-background";
 import { PasskeyUnsupported } from "~/components/passkey-unsupported/passkey-unsupported";
 import { wa } from "~/lib/wa";
 import { currentServer } from "~/lib/server";
-import {
-  passkeySupport,
-  signUp,
-  storeAuth,
-  WebAuthnError,
-} from "~/lib/webauthn";
+import { passkeySupport, signUp, WebAuthnError } from "~/lib/webauthn";
 
 /**
  * Signup (ADR-003, app#36): an account is just a passkey. No username: the
@@ -38,8 +33,7 @@ export default component$(() => {
     error.value = null;
     loading.value = true;
     try {
-      const session = await signUp(window.location.origin);
-      storeAuth(session.id_token, session.user_id);
+      await signUp();
       await nav("/welcome/");
     } catch (err) {
       if (err instanceof WebAuthnError) {

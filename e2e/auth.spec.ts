@@ -37,6 +37,30 @@ async function clickUntil(
   await check();
 }
 
+/** Fills `field` and clicks `button` until `check` passes: a field filled
+ * before Qwik wires it keeps an empty signal, so each attempt fills again. */
+async function fillAndClickUntil(
+  page: Page,
+  field: Locator,
+  value: string,
+  button: Locator,
+  check: () => Promise<void>,
+  attempts = 5,
+) {
+  for (let i = 0; i < attempts; i++) {
+    await field.fill("");
+    await field.fill(value);
+    await button.click({ timeout: 2000 }).catch(() => {});
+    try {
+      await check();
+      return;
+    } catch {
+      await page.waitForTimeout(3500);
+    }
+  }
+  await check();
+}
+
 /** Signup: one button, no username; lands on the onboarding page. */
 async function signUp(page: Page) {
   await page.goto("/register/");
@@ -69,6 +93,20 @@ async function signOut(page: Page) {
   await clickUntil(page, page.getByRole("button", { name: "Sign out" }), () =>
     expect(page).toHaveURL(/\/login\/?$/, { timeout: 2000 }),
   );
+}
+
+/** The session cookie (ADR-005): HttpOnly, so scripts can't read it, and
+ * nothing of the session in web storage (the login page's background photo
+ * is the only thing cached there). */
+async function sessionCookie(context: BrowserContext, page: Page) {
+  const cookie = (await context.cookies()).find((c) =>
+    /^(__Host-)?brigid_session$/.test(c.name),
+  );
+  const stored = await page.evaluate(() =>
+    JSON.stringify({ ...localStorage, ...sessionStorage }),
+  );
+  expect(stored).not.toMatch(/brigid\.(token|user_id)|eyJ/);
+  return cookie;
 }
 
 async function waitForPasskeyList(page: Page, count: number) {
@@ -109,7 +147,10 @@ test.describe("signup and onboarding", () => {
 
     await waitForPasskeyList(page, 1);
     await expect(page.locator(".passkey-item")).toContainText("Laptop");
-    expect(await page.evaluate(() => localStorage.getItem("brigid.token"))).toBeTruthy();
+    const cookie = await sessionCookie(context, page);
+    expect(cookie?.httpOnly).toBe(true);
+    expect(cookie?.sameSite).toBe("Strict");
+    expect(await page.evaluate(() => document.cookie)).not.toContain("brigid_session");
   });
 });
 
@@ -124,10 +165,13 @@ test.describe("sign in", () => {
     await signUp(page);
     await finishOnboarding(page);
     await signOut(page);
-    expect(await page.evaluate(() => localStorage.getItem("brigid.token"))).toBeNull();
+    expect(await sessionCookie(context, page)).toBeUndefined();
+    // Signed out for the server too: a signed-in page sends back to sign-in.
+    await page.goto("/identities/");
+    await expect(page).toHaveURL(/\/login\/?$/);
 
     await signIn(page);
-    expect(await page.evaluate(() => localStorage.getItem("brigid.token"))).toBeTruthy();
+    expect(await sessionCookie(context, page)).toBeTruthy();
   });
 
   test("another server leads to its own sign-in page", async ({ page }) => {
@@ -167,9 +211,12 @@ test.describe("recovery", () => {
     const other = await device.newPage();
     await addVirtualAuthenticator(device, other);
     await other.goto("/recover/");
-    await other.getByLabel("Recovery code").fill(code.toLowerCase());
-    await clickUntil(other, other.getByRole("button", { name: "Recover" }), () =>
-      expect(other).toHaveURL(/\/welcome\/?$/, { timeout: 5000 }),
+    await fillAndClickUntil(
+      other,
+      other.getByLabel("Recovery code"),
+      code.toLowerCase(),
+      other.getByRole("button", { name: "Recover" }),
+      () => expect(other).toHaveURL(/\/welcome\/?$/, { timeout: 5000 }),
     );
     await expect(other.getByRole("heading", { name: "Your account is back" })).toBeVisible();
     const newCode = await finishOnboarding(other);
@@ -179,18 +226,25 @@ test.describe("recovery", () => {
     // The old code is used up.
     const third = await device.newPage();
     await third.goto("/recover/");
-    await third.getByLabel("Recovery code").fill(code);
-    await third.getByRole("button", { name: "Recover" }).click();
-    await expect(third.getByRole("alert")).toBeVisible({ timeout: 10000 });
+    await fillAndClickUntil(
+      third,
+      third.getByLabel("Recovery code"),
+      code,
+      third.getByRole("button", { name: "Recover" }),
+      () => expect(third.getByRole("alert")).toBeVisible({ timeout: 5000 }),
+    );
     await expect(third).toHaveURL(/\/recover\/?$/);
     await device.close();
   });
 
   test("a typo is reported before any account is touched", async ({ page }) => {
     await page.goto("/recover/");
-    await page.getByLabel("Recovery code").fill("AAAA-BBBB");
-    await clickUntil(page, page.getByRole("button", { name: "Recover" }), () =>
-      expect(page.getByRole("alert")).toContainText("40 characters", { timeout: 3000 }),
+    await fillAndClickUntil(
+      page,
+      page.getByLabel("Recovery code"),
+      "AAAA-BBBB",
+      page.getByRole("button", { name: "Recover" }),
+      () => expect(page.getByRole("alert")).toContainText("40 characters", { timeout: 3000 }),
     );
   });
 });
@@ -256,9 +310,10 @@ test.describe("identities page", () => {
     await page.getByRole("button", { name: "Save" }).click();
     await expect(page.getByText("Famille", { exact: true })).toBeVisible();
 
-    page.once("dialog", (dialog) => void dialog.accept());
-    await page.getByRole("button", { name: "Delete Famille" }).click();
-    await expect(cards).toHaveCount(3);
+    page.on("dialog", (dialog) => void dialog.accept());
+    await clickUntil(page, page.getByRole("button", { name: "Delete Famille" }), () =>
+      expect(cards).toHaveCount(3, { timeout: 3000 }),
+    );
   });
 });
 

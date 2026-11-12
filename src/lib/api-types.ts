@@ -69,8 +69,6 @@ export interface PublicKeyCredentialJSON {
 export interface BeginRegisterRequest {
   /** `username@server`. Absent: the server generates a hidden username. */
   username?: string;
-  /** Present: `finish` signs the new account in (returns a LoginResponse). */
-  client_id?: string;
 }
 
 export interface BeginRegisterResponse {
@@ -90,7 +88,6 @@ export interface FinishRegisterRequest {
 export interface BeginLoginRequest {
   /** Absent: username-less login (discoverable credential). */
   username?: string;
-  client_id: string;
 }
 
 export interface BeginLoginResponse {
@@ -106,11 +103,6 @@ export interface FinishLoginRequest {
   credential: PublicKeyCredentialJSON;
 }
 
-export interface LoginResponse {
-  id_token: string;
-  user_id: string;
-}
-
 // -- /auth/passkeys --
 
 export interface PasskeySummary {
@@ -119,7 +111,6 @@ export interface PasskeySummary {
 }
 
 export interface RenamePasskeyRequest {
-  user_id: string;
   /** Empty removes the label. */
   label: string;
 }
@@ -128,7 +119,6 @@ export interface RenamePasskeyRequest {
 
 export interface BeginRecoveryRequest {
   code: string;
-  client_id: string;
 }
 
 export interface RecoveryCodeResponse {
@@ -146,7 +136,9 @@ export interface RecoveryStatus {
 // -- /auth/session --
 
 export interface SessionResponse {
-  user_id: string;
+  /** Unix time the session ends if unused (each request pushes it back). */
+  idle_expires_at: number;
+  /** Unix time the session ends in any case. */
   expires_at: number;
 }
 
@@ -170,7 +162,6 @@ export interface IdentityTemplate {
 }
 
 export interface CreateIdentityRequest {
-  user_id: string;
   template?: string;
   name?: string;
   logo?: string;
@@ -178,19 +169,10 @@ export interface CreateIdentityRequest {
 }
 
 export interface UpdateIdentityRequest {
-  user_id: string;
   name?: string;
   logo?: string;
   /** Empty clears it. */
   description?: string;
-}
-
-export interface DeletePasskeyRequest {
-  user_id: string;
-}
-
-export interface BeginAddCredentialRequest {
-  user_id: string;
 }
 
 // -- errors --

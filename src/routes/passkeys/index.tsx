@@ -5,14 +5,13 @@ import { PasskeyItem } from "~/components/passkey-item/passkey-item";
 import { RecoveryCodePanel } from "~/components/recovery-code/recovery-code";
 import { wa } from "~/lib/wa";
 import type { PasskeySummary } from "~/lib/api-types";
-import { listPasskeys, renamePasskey, SessionEndedError } from "~/lib/api";
 import {
-  addCredential,
   deletePasskey,
-  loadToken,
-  loadUserId,
-  WebAuthnError,
-} from "~/lib/webauthn";
+  listPasskeys,
+  renamePasskey,
+  SessionEndedError,
+} from "~/lib/api";
+import { addCredential, WebAuthnError } from "~/lib/webauthn";
 
 export default component$(() => {
   const nav = useNavigate();
@@ -54,14 +53,15 @@ export default component$(() => {
   });
 
   const handleDelete = $(async (passkeyId: string) => {
-    const token = loadToken();
-    const userId = loadUserId();
-    if (!token || !userId) return;
     try {
-      await deletePasskey(passkeyId, userId, token);
+      await deletePasskey(passkeyId);
       message.value = { kind: "success", text: "Passkey removed." };
       await refresh();
-    } catch {
+    } catch (err) {
+      if (err instanceof SessionEndedError) {
+        await nav("/login/");
+        return;
+      }
       message.value = { kind: "error", text: "Failed to remove passkey." };
     }
   });
@@ -84,12 +84,9 @@ export default component$(() => {
   });
 
   const handleAdd = $(async () => {
-    const token = loadToken();
-    const userId = loadUserId();
-    if (!token || !userId) return;
     adding.value = true;
     try {
-      await addCredential(userId, token);
+      await addCredential();
       message.value = { kind: "success", text: "Passkey added." };
       await refresh();
     } catch (err) {

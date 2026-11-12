@@ -1,15 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  clearAuth,
-  deletePasskey,
   isPasskeySupported,
   passkeySupport,
-  loadToken,
-  loadUserId,
   login,
   recover,
   signUp,
-  storeAuth,
   WebAuthnError,
 } from "./webauthn";
 
@@ -78,7 +73,7 @@ describe("register/login", () => {
     vi.unstubAllGlobals();
   });
 
-  it("signUp() sends no username, names the passkey after its provider, returns the session", async () => {
+  it("signUp() sends no username and names the passkey after its provider", async () => {
     const fetchMock = vi
       .fn<FakeFetch>()
       .mockResolvedValueOnce(
@@ -94,7 +89,8 @@ describe("register/login", () => {
           },
         }),
       )
-      .mockResolvedValueOnce(jsonResponse(200, { id_token: "jwt", user_id: "user-1" }));
+      // 204 + Set-Cookie: the session is the cookie, the body is empty.
+      .mockResolvedValueOnce(emptyOkResponse());
     vi.stubGlobal("fetch", fetchMock);
     vi.stubGlobal("navigator", {
       credentials: {
@@ -104,13 +100,13 @@ describe("register/login", () => {
       },
     });
 
-    const session = await signUp("https://app.example");
+    await signUp();
 
-    expect(session).toEqual({ id_token: "jwt", user_id: "user-1" });
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[0]?.[0]).toBe("/auth/register/begin");
     const beginBody = JSON.parse(fetchMock.mock.calls[0]![1]!.body as string);
-    expect(beginBody).toEqual({ client_id: "https://app.example" });
+    expect(beginBody).toEqual({});
+    expect(fetchMock.mock.calls[0]![1]!.credentials).toBe("same-origin");
     expect(fetchMock.mock.calls[1]?.[0]).toBe("/auth/register/finish");
     const finishBody = JSON.parse(fetchMock.mock.calls[1]![1]!.body as string);
     expect(finishBody.session_id).toBe("sess-1");
@@ -143,7 +139,7 @@ describe("register/login", () => {
       },
     });
 
-    const error = await signUp("https://app.example").catch((err: unknown) => err);
+    const error = await signUp().catch((err: unknown) => err);
     expect(error).toBeInstanceOf(WebAuthnError);
     expect((error as WebAuthnError).kind).toBe("browser");
   });
@@ -151,7 +147,7 @@ describe("register/login", () => {
   it("signUp() throws a network WebAuthnError when fetch fails", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
 
-    const error = await signUp("https://app.example").catch((err: unknown) => err);
+    const error = await signUp().catch((err: unknown) => err);
     expect(error).toBeInstanceOf(WebAuthnError);
     expect((error as WebAuthnError).kind).toBe("network");
   });
@@ -162,13 +158,13 @@ describe("register/login", () => {
       vi.fn().mockResolvedValueOnce(jsonResponse(409, { error: "username taken" })),
     );
 
-    const error = await signUp("https://app.example").catch((err: unknown) => err);
+    const error = await signUp().catch((err: unknown) => err);
     expect(error).toBeInstanceOf(WebAuthnError);
     expect((error as WebAuthnError).kind).toBe("api");
     expect((error as WebAuthnError).message).toBe("username taken");
   });
 
-  it("recover() sends the code, then finishes and returns the session", async () => {
+  it("recover() sends the code, then finishes", async () => {
     const fetchMock = vi
       .fn<FakeFetch>()
       .mockResolvedValueOnce(
@@ -184,7 +180,8 @@ describe("register/login", () => {
           },
         }),
       )
-      .mockResolvedValueOnce(jsonResponse(200, { id_token: "jwt", user_id: "user-1" }));
+      // 204 + Set-Cookie: the session is the cookie, the body is empty.
+      .mockResolvedValueOnce(emptyOkResponse());
     vi.stubGlobal("fetch", fetchMock);
     vi.stubGlobal("navigator", {
       credentials: {
@@ -194,13 +191,11 @@ describe("register/login", () => {
       },
     });
 
-    const session = await recover("ABCD-EFGH", "https://app.example");
+    await recover("ABCD-EFGH");
 
-    expect(session.user_id).toBe("user-1");
     expect(fetchMock.mock.calls[0]?.[0]).toBe("/auth/recovery/begin");
     expect(JSON.parse(fetchMock.mock.calls[0]![1]!.body as string)).toEqual({
       code: "ABCD-EFGH",
-      client_id: "https://app.example",
     });
     expect(fetchMock.mock.calls[1]?.[0]).toBe("/auth/recovery/finish");
     const finish = JSON.parse(fetchMock.mock.calls[1]![1]!.body as string);
@@ -213,12 +208,12 @@ describe("register/login", () => {
       "fetch",
       vi.fn().mockResolvedValueOnce(jsonResponse(400, { error: "this recovery code has a typo" })),
     );
-    const error = await recover("bad", "https://app.example").catch((err: unknown) => err);
+    const error = await recover("bad").catch((err: unknown) => err);
     expect(error).toBeInstanceOf(WebAuthnError);
     expect((error as WebAuthnError).message).toBe("this recovery code has a typo");
   });
 
-  it("login() returns the LoginResponse from the finish call", async () => {
+  it("login() sends the username only, and finishes", async () => {
     const fetchMock = vi
       .fn<FakeFetch>()
       .mockResolvedValueOnce(
@@ -227,9 +222,7 @@ describe("register/login", () => {
           challenge: { publicKey: { challenge: "Y2hhbGxlbmdl" } },
         }),
       )
-      .mockResolvedValueOnce(
-        jsonResponse(200, { id_token: "jwt-token", user_id: "user-1" }),
-      );
+      .mockResolvedValueOnce(emptyOkResponse());
     vi.stubGlobal("fetch", fetchMock);
     vi.stubGlobal("navigator", {
       credentials: {
@@ -239,28 +232,11 @@ describe("register/login", () => {
       },
     });
 
-    const result = await login("alice@example.com", "client-1");
+    await login("alice@example.com");
 
-    expect(result).toEqual({ id_token: "jwt-token", user_id: "user-1" });
     const beginBody = JSON.parse(fetchMock.mock.calls[0]![1]!.body as string);
-    expect(beginBody).toEqual({ username: "alice@example.com", client_id: "client-1" });
-  });
-
-  it("deletePasskey() sends a DELETE with the bearer token", async () => {
-    const fetchMock = vi
-      .fn<() => Promise<{ ok: boolean; status: number }>>()
-      .mockResolvedValue({ ok: true, status: 200 });
-    vi.stubGlobal("fetch", fetchMock);
-
-    await deletePasskey("pk-1", "user-1", "jwt-token");
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      "/auth/passkeys/pk-1",
-      expect.objectContaining({
-        method: "DELETE",
-        headers: expect.objectContaining({ Authorization: "Bearer jwt-token" }),
-      }),
-    );
+    expect(beginBody).toEqual({ username: "alice@example.com" });
+    expect(fetchMock.mock.calls[1]?.[0]).toBe("/auth/login/finish");
   });
 
   it("isPasskeySupported() reflects PublicKeyCredential availability", () => {
@@ -280,13 +256,25 @@ describe("register/login", () => {
     expect(passkeySupport()).toBe("supported");
   });
 
-  it("round-trips auth state through localStorage", () => {
-    expect(loadToken()).toBeNull();
-    storeAuth("jwt-token", "user-1");
-    expect(loadToken()).toBe("jwt-token");
-    expect(loadUserId()).toBe("user-1");
-    clearAuth();
-    expect(loadToken()).toBeNull();
-    expect(loadUserId()).toBeNull();
+  it("keeps nothing of the session in localStorage", async () => {
+    const fetchMock = vi
+      .fn<FakeFetch>()
+      .mockResolvedValueOnce(
+        jsonResponse(200, {
+          session_id: "sess-3",
+          challenge: { publicKey: { challenge: "Y2hhbGxlbmdl" } },
+        }),
+      )
+      .mockResolvedValueOnce(emptyOkResponse());
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("navigator", {
+      credentials: {
+        get: vi
+          .fn<() => Promise<ReturnType<typeof fakeCredential>>>()
+          .mockResolvedValue(fakeCredential("assertion")),
+      },
+    });
+    await login(null);
+    expect(memory.size).toBe(0);
   });
 });

@@ -7,7 +7,6 @@ import {
   markRecovered,
   passkeySupport,
   recover,
-  storeAuth,
   WebAuthnError,
 } from "~/lib/webauthn";
 
@@ -36,8 +35,7 @@ export default component$(() => {
     error.value = null;
     loading.value = true;
     try {
-      const session = await recover(code.value, window.location.origin);
-      storeAuth(session.id_token, session.user_id);
+      await recover(code.value);
       markRecovered();
       await nav("/welcome/");
     } catch (err) {

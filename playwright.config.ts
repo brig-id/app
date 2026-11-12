@@ -92,7 +92,10 @@ export default defineConfig({
       // `leaf` process that serves both the API and that build via
       // `LEAF_SERVER__UI_DIST_DIR` — the actual production topology, one
       // origin, no proxy, no CORS.
-      command: `pnpm build.server && cargo run --manifest-path ${path.join(SERVER_LEAF_DIR, "Cargo.toml")}`,
+      // The CSP manifest is regenerated with every build: leaf allows the
+      // inline scripts by hash, and a stale manifest blocks them (the pages
+      // then never hydrate). Production builds do the same (`pnpm build`).
+      command: `pnpm build.server && node scripts/csp-hashes.mjs && cargo run --manifest-path ${path.join(SERVER_LEAF_DIR, "Cargo.toml")}`,
       // A `port` (TCP-only) check, not `url`: when `.cert/` is populated
       // `leaf` serves HTTPS only, and Playwright's webServer readiness
       // check can't be told to accept a self-signed cert the way
