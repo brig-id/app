@@ -1,7 +1,6 @@
 import { fromBase64, toBase64 } from "helpers4/string";
 import { aaguidFromAuthenticatorData, providerName } from "./aaguid";
 import type {
-  BeginAddCredentialRequest,
   BeginLoginRequest,
   BeginRecoveryRequest,
   BeginLoginResponse,
@@ -9,7 +8,6 @@ import type {
   BeginRegisterResponse,
   FinishLoginRequest,
   FinishRegisterRequest,
-  LoginResponse,
   PublicKeyCredentialCreationOptionsJSON,
   PublicKeyCredentialJSON,
   RegisterPublicKeyCredentialJSON,
@@ -89,8 +87,12 @@ async function apiRequest<T>(
   try {
     response = await fetch(path, {
       method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      // The ceremonies' finish responses set the session cookie, and adding
+      // a passkey needs it: same-origin, said explicitly.
+      credentials: "same-origin",
+      headers:
+        body === undefined ? undefined : { "Content-Type": "application/json" },
+      body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {
     throw new WebAuthnError("network", "Unable to reach the server.");
@@ -190,16 +192,16 @@ export async function isAutofillSupported(): Promise<boolean> {
 
 /**
  * Creates an account: one passkey, no username (the server generates a
- * hidden one, ADR-003), and signs it in with the same ceremony. The passkey
+ * hidden one, ADR-003), and opens its session (an HttpOnly cookie) with the same ceremony. The passkey
  * is named after its provider when the AAGUID is known.
  */
-export async function signUp(clientId: string): Promise<LoginResponse> {
+export async function signUp(): Promise<void> {
   const begin = await apiRequest<BeginRegisterResponse>(
     "/auth/register/begin",
-    { client_id: clientId } satisfies BeginRegisterRequest,
+    {} satisfies BeginRegisterRequest,
   );
   const { credential, provider } = await createPasskey(begin.challenge.publicKey);
-  return apiRequest<LoginResponse>("/auth/register/finish", {
+  await apiRequest<void>("/auth/register/finish", {
     session_id: begin.session_id,
     credential,
     ...(provider ? { label: provider } : {}),
@@ -208,61 +210,36 @@ export async function signUp(clientId: string): Promise<LoginResponse> {
 
 /**
  * Recovers an account with its recovery code (ADR-004): enrols a new passkey
- * for the account the code names, consumes the code, and signs in.
+ * for the account the code names, consumes the code, and opens a session.
  */
-export async function recover(
-  code: string,
-  clientId: string,
-): Promise<LoginResponse> {
+export async function recover(code: string): Promise<void> {
   const begin = await apiRequest<BeginRegisterResponse>(
     "/auth/recovery/begin",
-    { code, client_id: clientId } satisfies BeginRecoveryRequest,
+    { code } satisfies BeginRecoveryRequest,
   );
   const { credential, provider } = await createPasskey(begin.challenge.publicKey);
-  return apiRequest<LoginResponse>("/auth/recovery/finish", {
+  await apiRequest<void>("/auth/recovery/finish", {
     session_id: begin.session_id,
     credential,
     ...(provider ? { label: provider } : {}),
   } satisfies FinishRegisterRequest);
 }
 
-/** Adds a second (or further) passkey to the already-authenticated identity
- * behind `token`/`userId`, instead of registering an unrelated identity. */
-export async function addCredential(
-  userId: string,
-  token: string,
-): Promise<void> {
-  let beginResponse: Response;
-  try {
-    beginResponse = await fetch("/auth/passkeys/add/begin", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        user_id: userId,
-      } satisfies BeginAddCredentialRequest),
-    });
-  } catch {
-    throw new WebAuthnError("network", "Unable to reach the server.");
-  }
-  if (!beginResponse.ok) {
-    throw new WebAuthnError(
-      "api",
-      `Failed to start passkey registration (status ${beginResponse.status}).`,
-    );
-  }
-  const begin = (await beginResponse.json()) as BeginRegisterResponse;
-
+/** Adds one more passkey to the signed-in account (the session cookie says
+ * which), named after its provider when known. */
+export async function addCredential(): Promise<void> {
+  const begin = await apiRequest<BeginRegisterResponse>(
+    "/auth/passkeys/add/begin",
+    undefined,
+  );
   const { credential, provider } = await createPasskey(begin.challenge.publicKey);
-
   await apiRequest<void>("/auth/passkeys/add/finish", {
     session_id: begin.session_id,
     credential,
     ...(provider ? { label: provider } : {}),
   } satisfies FinishRegisterRequest);
 }
+
 
 /**
  * Passkey sign-in. With a `username`, the server names the allowed passkeys.
@@ -273,13 +250,12 @@ export async function addCredential(
  */
 export async function login(
   username: string | null,
-  clientId: string,
   opts: { conditional?: boolean; signal?: AbortSignal } = {},
-): Promise<LoginResponse> {
-  const begin = await apiRequest<BeginLoginResponse>("/auth/login/begin", {
-    ...(username ? { username } : {}),
-    client_id: clientId,
-  } satisfies BeginLoginRequest);
+): Promise<void> {
+  const begin = await apiRequest<BeginLoginResponse>(
+    "/auth/login/begin",
+    (username ? { username } : {}) satisfies BeginLoginRequest,
+  );
 
   const options = begin.challenge.publicKey;
   let credential: PublicKeyCredential | null;
@@ -323,35 +299,12 @@ export async function login(
     >,
   };
 
-  return apiRequest<LoginResponse>("/auth/login/finish", {
+  await apiRequest<void>("/auth/login/finish", {
     session_id: begin.session_id,
     credential: finishCredential,
   } satisfies FinishLoginRequest);
 }
 
-export async function deletePasskey(
-  passkeyId: string,
-  userId: string,
-  token: string,
-): Promise<void> {
-  const response = await fetch(`/auth/passkeys/${passkeyId}`, {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ user_id: userId }),
-  }).catch(() => {
-    throw new WebAuthnError("network", "Unable to reach the server.");
-  });
-
-  if (!response.ok) {
-    throw new WebAuthnError(
-      "api",
-      `Failed to delete passkey (status ${response.status}).`,
-    );
-  }
-}
 
 const RECOVERED_KEY = "brigid.recovered";
 
@@ -365,25 +318,4 @@ export function takeRecoveredFlag(): boolean {
   const recovered = sessionStorage.getItem(RECOVERED_KEY) === "1";
   sessionStorage.removeItem(RECOVERED_KEY);
   return recovered;
-}
-
-const TOKEN_KEY = "brigid.token";
-const USER_ID_KEY = "brigid.user_id";
-
-export function storeAuth(token: string, userId: string): void {
-  localStorage.setItem(TOKEN_KEY, token);
-  localStorage.setItem(USER_ID_KEY, userId);
-}
-
-export function loadToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
-}
-
-export function loadUserId(): string | null {
-  return localStorage.getItem(USER_ID_KEY);
-}
-
-export function clearAuth(): void {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(USER_ID_KEY);
 }

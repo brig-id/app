@@ -1,15 +1,20 @@
 import { $, component$, Slot, useVisibleTask$ } from "@builder.io/qwik";
 import { useLocation, useNavigate } from "@builder.io/qwik-city";
 import { AppNav } from "~/components/app-nav/app-nav";
-import { checkSession, refreshSession, SessionEndedError } from "~/lib/api";
+import {
+  checkSession,
+  SessionEndedError,
+  signOut as endSession,
+} from "~/lib/api";
 import { wa } from "~/lib/wa";
-import { clearAuth, loadToken } from "~/lib/webauthn";
 
 /** Pages shown signed out: centered card layout, no navigation. */
 const PUBLIC_PATHS = new Set(["/", "/login/", "/register/", "/recover/"]);
 
-/** Tokens live an hour; refresh well before, while the app is open. */
-const REFRESH_EVERY_MS = 30 * 60 * 1000;
+/** How often an open signed-in page checks its session, so one that ended
+ * (idle, lifetime, signed out elsewhere) sends the user to sign in. Each
+ * request also keeps the session alive, as long as it is in use. */
+const CHECK_EVERY_MS = 5 * 60 * 1000;
 
 export default component$(() => {
   const loc = useLocation();
@@ -20,38 +25,25 @@ export default component$(() => {
     void wa.page();
   });
 
-  // Signed-in pages: make sure the session is still good (the account may
-  // be gone, the token expired or revoked) and keep it fresh (core#47).
+  // Signed-in pages: the session lives in an HttpOnly cookie (ADR-005), so
+  // the page asks the server whether it is still good.
   useVisibleTask$(async ({ track, cleanup }) => {
     track(() => loc.url.pathname);
     if (PUBLIC_PATHS.has(loc.url.pathname)) return;
-    if (!loadToken()) {
-      await nav("/login/");
-      return;
-    }
-    try {
-      await checkSession();
-    } catch (err) {
-      if (err instanceof SessionEndedError) await nav("/login/");
-      return;
-    }
-    const timer = setInterval(() => {
-      refreshSession().catch(async (err) => {
+    const check = async () => {
+      try {
+        await checkSession();
+      } catch (err) {
         if (err instanceof SessionEndedError) await nav("/login/");
-      });
-    }, REFRESH_EVERY_MS);
+      }
+    };
+    await check();
+    const timer = setInterval(() => void check(), CHECK_EVERY_MS);
     cleanup(() => clearInterval(timer));
   });
 
   const signOut = $(async () => {
-    const token = loadToken();
-    if (token) {
-      await fetch("/auth/logout", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch(() => undefined);
-    }
-    clearAuth();
+    await endSession().catch(() => undefined);
     await nav("/login/");
   });
 

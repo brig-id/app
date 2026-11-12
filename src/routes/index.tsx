@@ -1,12 +1,16 @@
 import { component$, useVisibleTask$ } from "@builder.io/qwik";
 import { type DocumentHead, useNavigate } from "@builder.io/qwik-city";
-import { loadToken } from "~/lib/webauthn";
+import { checkSession } from "~/lib/api";
 
 export default component$(() => {
   const nav = useNavigate();
 
   useVisibleTask$(async () => {
-    await nav(loadToken() ? "/identities/" : "/login/");
+    const signedIn = await checkSession().then(
+      () => true,
+      () => false,
+    );
+    await nav(signedIn ? "/identities/" : "/login/");
   });
 
   return null;
