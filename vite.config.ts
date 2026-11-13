@@ -1,99 +1,48 @@
 /**
- * This is the base config for vite.
- * When building, the adapter config is used which loads this file and extends it.
+ * The base Vite configuration. The static build extends it
+ * (`adapters/ssg/vite.config.ts`).
  */
 import { existsSync, readFileSync } from "node:fs";
 import { defineConfig } from "vitest/config";
-import { qwikVite } from "@builder.io/qwik/optimizer";
-import { qwikCity } from "@builder.io/qwik-city/vite";
-import tsconfigPaths from "vite-tsconfig-paths";
-import pkg from "./package.json";
-
-type PkgDep = Record<string, string>;
-const { dependencies = {}, devDependencies = {} } = pkg as any as {
-  dependencies: PkgDep;
-  devDependencies: PkgDep;
-  [key: string]: unknown;
-};
-errorOnDuplicatesPkgDeps(devDependencies, dependencies);
+import { qwikVite } from "@qwik.dev/core/optimizer";
+import { qwikRouter } from "@qwik.dev/router/vite";
 
 /**
- * Note that Vite normally starts from `index.html` but the qwikCity plugin makes start at `src/entry.ssr.tsx` instead.
+ * Vite normally starts from `index.html`; the qwikRouter plugin makes it
+ * start at `src/entry.ssr.tsx` instead.
  */
-export default defineConfig(({ command, mode }) => {
+export default defineConfig(() => {
   return {
-    plugins: [qwikCity(), qwikVite(), tsconfigPaths({ root: "." })],
-    // Vite only exposes `VITE_`-prefixed env vars to `import.meta.env` by
-    // default. UNSPLASH_ACCESS_KEY is Unsplash's own public/client-facing
-    // key (see their docs on client-side "Demo" apps) — meant to ship in
-    // the bundle, unlike UNSPLASH_SECRET_KEY which must never appear here.
-    envPrefix: ["VITE_", "UNSPLASH_"],
-    // This tells Vite which dependencies to pre-build in dev mode.
-    optimizeDeps: {
-      // Put problematic deps that break bundling here, mostly those with binaries.
-      // For example ['better-sqlite3'] if you use that in server functions.
-      exclude: [],
+    plugins: [qwikRouter(), qwikVite()],
+    resolve: {
+      // `~/…` is `src/…` (tsconfig.json).
+      tsconfigPaths: true,
     },
-
-    /**
-     * This is an advanced setting. It improves the bundling of your server code. To use it, make sure you understand when your consumed packages are dependencies or dev dependencies. (otherwise things will break in production)
-     */
-    // ssr:
-    //   command === "build" && mode === "production"
-    //     ? {
-    //         // All dev dependencies should be bundled in the server build
-    //         noExternal: Object.keys(devDependencies),
-    //         // Anything marked as a dependency will not be bundled
-    //         // These should only be production binary deps (including deps of deps), CLI deps, and their module graph
-    //         // If a dep-of-dep needs to be external, add it here
-    //         // For example, if something uses `bcrypt` but you don't have it as a dep, you can write
-    //         // external: [...Object.keys(dependencies), 'bcrypt']
-    //         external: Object.keys(dependencies),
-    //       }
-    //     : undefined,
-
     server: {
       host: "0.0.0.0",
-      // *.localhost auto-resolves to 127.0.0.1 in every modern browser (no
-      // /etc/hosts entry needed) and is a secure context per the Secure
-      // Contexts spec, same as bare "localhost" — browsers run WebAuthn on
-      // it over plain HTTP. Vite's Host-header check (DNS-rebinding
-      // protection) blocks anything not explicitly allowed, hence the entry
-      // below. Dropping the port too (bare "brigid.localhost", no ":5173")
-      // was evaluated and deferred: it needs Vite listening on :80 inside
-      // the container, which the non-root devcontainer user can't bind
-      // without added capabilities — more risk than the cosmetic win is
-      // worth today.
+      // *.localhost resolves to 127.0.0.1 in every modern browser and is a
+      // secure context, like bare "localhost": browsers run WebAuthn on it
+      // over plain HTTP. Vite's Host-header check blocks anything not
+      // explicitly allowed, hence the entry below.
       allowedHosts: [".localhost"],
-      // Real HTTPS on top of the *.localhost exception above: some WebAuthn
-      // clients (password-manager passkey providers, e.g. Proton Pass) run
-      // their own origin check that's stricter than the Secure Contexts spec
-      // and don't grant the plain-HTTP *.localhost exception browsers do —
-      // they require an actual https:// scheme. Generate the cert once with
-      // `mkcert` (see README) — falls back to plain HTTP if it hasn't been
-      // generated yet, so a fresh clone still runs `pnpm dev` out of the box.
+      // Real HTTPS on top of that: some passkey providers run their own
+      // origin check, stricter than the browser's, and require an actual
+      // https:// scheme. Generate the certificate once with `mkcert` (see
+      // README); without it, plain HTTP.
       https: httpsConfig(),
       headers: {
-        // Don't cache the server response in dev mode
         "Cache-Control": "public, max-age=0",
       },
-      // Both prefixes mirror server-leaf's real routes as-is (no synthetic
-      // "/api" wrapper) so the dev proxy matches production, where leaf
-      // serves the UI and these API routes from the same origin already.
+      // The server's own routes, as they are: in production the server
+      // serves the interface and these routes from one origin.
       proxy: {
-        "/auth": {
-          target: "http://localhost:8080",
-          changeOrigin: true,
-        },
-        "/.well-known": {
-          target: "http://localhost:8080",
-          changeOrigin: true,
-        },
+        "/auth": { target: "http://localhost:8080", changeOrigin: true },
+        "/account": { target: "http://localhost:8080", changeOrigin: true },
+        "/.well-known": { target: "http://localhost:8080", changeOrigin: true },
       },
     },
     preview: {
       headers: {
-        // Do cache the server response in preview (non-adapter production build)
         "Cache-Control": "public, max-age=600",
       },
     },
@@ -104,62 +53,15 @@ export default defineConfig(({ command, mode }) => {
   };
 });
 
-// *** utils ***
-
 const CERT_DIR = new URL(".cert/", import.meta.url);
 const CERT_FILE = new URL("brigid.localhost.pem", CERT_DIR);
 const KEY_FILE = new URL("brigid.localhost-key.pem", CERT_DIR);
 
-/**
- * Reads the mkcert-generated cert for `brigid.localhost` if present.
- * Returns undefined (plain HTTP) when it hasn't been generated yet.
- */
+/** The mkcert certificate for `brigid.localhost` when there is one. */
 function httpsConfig() {
   if (!existsSync(CERT_FILE) || !existsSync(KEY_FILE)) return undefined;
   return {
     cert: readFileSync(CERT_FILE),
     key: readFileSync(KEY_FILE),
   };
-}
-
-/**
- * Function to identify duplicate dependencies and throw an error
- * @param {Object} devDependencies - List of development dependencies
- * @param {Object} dependencies - List of production dependencies
- */
-function errorOnDuplicatesPkgDeps(
-  devDependencies: PkgDep,
-  dependencies: PkgDep,
-) {
-  let msg = "";
-  // Create an array 'duplicateDeps' by filtering devDependencies.
-  // If a dependency also exists in dependencies, it is considered a duplicate.
-  const duplicateDeps = Object.keys(devDependencies).filter(
-    (dep) => dependencies[dep],
-  );
-
-  // include any known qwik packages
-  const qwikPkg = Object.keys(dependencies).filter((value) =>
-    /qwik/i.test(value),
-  );
-
-  // any errors for missing "qwik-city-plan"
-  // [PLUGIN_ERROR]: Invalid module "@qwik-city-plan" is not a valid package
-  msg = `Move qwik packages ${qwikPkg.join(", ")} to devDependencies`;
-
-  if (qwikPkg.length > 0) {
-    throw new Error(msg);
-  }
-
-  // Format the error message with the duplicates list.
-  // The `join` function is used to represent the elements of the 'duplicateDeps' array as a comma-separated string.
-  msg = `
-    Warning: The dependency "${duplicateDeps.join(", ")}" is listed in both "devDependencies" and "dependencies".
-    Please move the duplicated dependencies to "devDependencies" only and remove it from "dependencies"
-  `;
-
-  // Throw an error with the constructed message.
-  if (duplicateDeps.length > 0) {
-    throw new Error(msg);
-  }
 }

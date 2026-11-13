@@ -142,6 +142,13 @@ export interface SessionResponse {
   expires_at: number;
 }
 
+// -- /auth/server --
+
+export interface ServerInfo {
+  /** Whether this server accepts new accounts. */
+  sign_up: boolean;
+}
+
 // -- /account/identities --
 
 export interface Identity {

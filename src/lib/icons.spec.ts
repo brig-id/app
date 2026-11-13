@@ -1,47 +1,51 @@
 import { describe, expect, it } from "vitest";
-import { ALL_ICONS, logoLabel, parseLogo } from "./icons";
+import { LOGO_ICONS } from "~/components/ui/icons.gen";
+import { MESSAGES } from "~/i18n/messages";
+import { DEFAULT_LOGO, ICON_GROUPS, LOGO_NAMES, logoName, logoRef } from "./icons";
 
-describe("icon library", () => {
-  it("only holds refs the server accepts (icon:<style>:<name>)", () => {
-    for (const icon of ALL_ICONS) {
-      expect(icon.ref).toMatch(/^icon:[a-z0-9-]{1,32}:[a-z0-9-]{1,64}$/);
+describe("logo library", () => {
+  it("only holds references the server accepts (icon:ph:<name>)", () => {
+    for (const name of LOGO_NAMES) {
+      expect(logoRef(name)).toMatch(/^icon:ph:[a-z0-9-]{1,64}$/);
     }
   });
 
   it("has no duplicates", () => {
-    const refs = ALL_ICONS.map((i) => i.ref);
-    expect(new Set(refs).size).toBe(refs.length);
+    expect(new Set(LOGO_NAMES).size).toBe(LOGO_NAMES.length);
   });
 
-  it("covers every server template's logo", () => {
-    for (const ref of [
-      "icon:solid:user",
-      "icon:solid:briefcase",
-      "icon:solid:code",
-      "icon:solid:palette",
-      "icon:solid:people-roof",
-      "icon:solid:globe",
-      "icon:solid:user-secret",
-    ]) {
-      expect(ALL_ICONS.some((i) => i.ref === ref)).toBe(true);
+  it("has a drawing and a name in both languages for every logo", () => {
+    for (const name of LOGO_NAMES) {
+      expect(LOGO_ICONS[name], name).toBeTruthy();
+      expect(MESSAGES).toHaveProperty([`icon.${name}`]);
+    }
+    for (const group of ICON_GROUPS) {
+      expect(MESSAGES).toHaveProperty([`icons.group.${group.key}`]);
     }
   });
 
-  it("maps refs to wa-icon attributes", () => {
-    expect(parseLogo("icon:solid:briefcase")).toEqual({
-      name: "briefcase",
-      variant: "solid",
-    });
-    expect(parseLogo("icon:brands:github")).toEqual({
-      name: "github",
-      family: "brands",
-    });
-    expect(parseLogo("upload:123")).toBeNull();
-    expect(parseLogo("icon:Solid:x")).toBeNull();
+  it("covers the logo of every template of the server", () => {
+    // `brigid-identity/src/templates.rs` in `core`.
+    for (const name of [
+      "user",
+      "briefcase",
+      "code",
+      "palette",
+      "house-line",
+      "globe-hemisphere-west",
+      "detective",
+    ]) {
+      expect(LOGO_NAMES).toContain(name);
+    }
+    expect(logoName(DEFAULT_LOGO)).toBe("user");
   });
 
-  it("labels refs", () => {
-    expect(logoLabel("icon:solid:briefcase")).toBe("Briefcase");
-    expect(logoLabel("icon:solid:unknown-one")).toBe("unknown-one");
+  it("reads a reference, and nothing else", () => {
+    expect(logoName("icon:ph:briefcase")).toBe("briefcase");
+    // The earlier form: the server converted every stored one.
+    expect(logoName("icon:solid:briefcase")).toBeNull();
+    expect(logoName("icon:ph:not-in-the-library")).toBeNull();
+    expect(logoName("upload:123")).toBeNull();
+    expect(logoName('icon:ph:x"><script>')).toBeNull();
   });
 });

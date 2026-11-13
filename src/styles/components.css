@@ -1,0 +1,297 @@
+/* The components: icon, button, input, card, callout. Native elements, our
+   own styles. Each uses semantic tokens only. */
+
+/* -- icon ---------------------------------------------------------------- */
+
+.icon {
+  flex: none;
+  width: 1.25em;
+  height: 1.25em;
+  vertical-align: -0.25em;
+}
+
+/* -- button ---------------------------------------------------------------- */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--p-space-2);
+  min-height: var(--control-height);
+  padding: 0 var(--p-space-5);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--button-radius);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 560;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--p-fast) var(--ease),
+    border-color var(--p-fast) var(--ease),
+    box-shadow var(--p-slow) var(--ease),
+    transform var(--p-fast) var(--ease);
+}
+
+.button:hover:not(:disabled) {
+  border-color: var(--text-faint);
+  background: var(--surface-hover);
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.button:focus-visible {
+  border-radius: var(--button-radius);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* The one action of a page. */
+.button--primary {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 0 2.2rem var(--accent-glow);
+}
+
+.button--primary:hover:not(:disabled) {
+  border-color: transparent;
+  background: var(--accent);
+  box-shadow:
+    0 0 3.2rem var(--accent-glow),
+    0 0 0.8rem var(--accent-glow);
+}
+
+.button--danger {
+  border-color: var(--danger-border);
+  color: var(--danger);
+}
+
+.button--danger:hover:not(:disabled) {
+  border-color: var(--danger);
+  background: var(--danger-surface);
+}
+
+.button--small {
+  min-height: 2.25rem;
+  padding: 0 var(--p-space-4);
+  font-size: var(--p-text-s);
+}
+
+.button--wide {
+  width: 100%;
+}
+
+/* A button that reads as a link: a secondary way out of a page. */
+.link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--p-space-2);
+  min-height: 1.5rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.link-button:hover:not(:disabled) {
+  text-decoration-color: currentcolor;
+}
+
+.link-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* -- input ------------------------------------------------------------------ */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-2);
+}
+
+/* The label holds its text and its control, so that they are tied without
+   an id; the hint and the error sit outside, tied by `aria-describedby`. */
+.field-control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-2);
+}
+
+.field-label {
+  font-weight: 560;
+}
+
+/* A legend is not a flex item: it takes the gap as a margin. */
+legend.field-label {
+  margin-bottom: var(--p-space-2);
+}
+
+.field-hint {
+  color: var(--text-quiet);
+  font-size: var(--p-text-s);
+}
+
+.field-error {
+  color: var(--danger);
+  font-size: var(--p-text-s);
+}
+
+.input {
+  width: 100%;
+  min-height: var(--control-height);
+  padding: var(--p-space-2) var(--p-space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--control-radius);
+  background: var(--surface-sunken);
+  color: var(--text);
+  font: inherit;
+  transition: border-color var(--p-fast) var(--ease);
+}
+
+textarea.input {
+  min-height: 4.5rem;
+  resize: vertical;
+}
+
+.input:hover {
+  border-color: var(--text-faint);
+}
+
+.input:focus-visible {
+  outline-offset: 0;
+  border-color: var(--focus-ring);
+  border-radius: var(--control-radius);
+}
+
+.input::placeholder {
+  color: var(--text-faint);
+}
+
+.input--mono {
+  font-family: var(--font-mono);
+  font-variant-ligatures: none;
+  letter-spacing: 0.02em;
+}
+
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--p-space-3);
+  cursor: pointer;
+}
+
+.check input {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0.15rem 0 0;
+  accent-color: var(--accent);
+}
+
+/* -- card ----------------------------------------------------------------- */
+
+.card {
+  padding: var(--card-padding);
+  border: 1px solid var(--border);
+  border-radius: var(--card-radius);
+  background: var(--surface);
+}
+
+/* -- callout ---------------------------------------------------------------- */
+
+.callout {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--p-space-3);
+  padding: var(--p-space-3) var(--p-space-4);
+  border: 1px solid var(--callout-border);
+  border-radius: var(--p-radius-m);
+  background: var(--callout-surface);
+}
+
+.callout > .icon {
+  margin-top: 0.15em;
+  color: var(--callout-ink);
+}
+
+.callout-body {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.callout--danger {
+  --callout-ink: var(--danger);
+  --callout-surface: var(--danger-surface);
+  --callout-border: var(--danger-border);
+}
+
+.callout--warning {
+  --callout-ink: var(--warning);
+  --callout-surface: var(--warning-surface);
+  --callout-border: var(--warning-border);
+}
+
+.callout--success {
+  --callout-ink: var(--success);
+  --callout-surface: var(--success-surface);
+  --callout-border: var(--success-border);
+}
+
+.callout--info {
+  --callout-ink: var(--info);
+  --callout-surface: var(--info-surface);
+  --callout-border: var(--info-border);
+}
+
+.said-detail {
+  color: var(--text-quiet);
+  font-size: var(--p-text-s);
+}
+
+/* -- identity logo ------------------------------------------------------------ */
+
+.identity-logo {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--logo-size, 2.5rem);
+  height: var(--logo-size, 2.5rem);
+  border: 1px solid var(--border);
+  border-radius: 30%;
+  background: var(--surface-raised);
+  color: var(--accent);
+}
+
+.identity-logo .icon {
+  width: 60%;
+  height: 60%;
+}
+
+.identity-logo--s {
+  --logo-size: 2rem;
+}
+
+.identity-logo--l {
+  --logo-size: 3rem;
+}
+
+.language-switch {
+  color: var(--text-quiet);
+  font-size: var(--p-text-s);
+}

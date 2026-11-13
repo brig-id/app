@@ -1,32 +1,25 @@
 /**
- * WHAT IS THIS FILE?
- *
- * SSR entry point, in all cases the application is rendered outside the browser, this
- * entry point will be the common one.
- *
- * - Server (express, cloudflare...)
- * - npm run start
- * - npm run preview
- * - npm run build
- *
+ * The entry point of server-side rendering. brig·id's interface is built once,
+ * as static files (see `adapters/static`), and served by the server as they
+ * are: this runs at build time and in `pnpm dev`, never in production.
  */
-import {
-  renderToStream,
-  type RenderToStreamOptions,
-} from "@builder.io/qwik/server";
+import { createRenderer } from "@qwik.dev/router";
 import Root from "./root";
 
-export default function (opts: RenderToStreamOptions) {
-  return renderToStream(<Root />, {
-    ...opts,
-    // Use container attributes to set attributes on the html tag.
-    containerAttributes: {
-      lang: "en-us",
-      class: "wa-theme-tailspin wa-palette-shoelace wa-brand-indigo wa-dark",
-      ...opts.containerAttributes,
+export default createRenderer((opts) => {
+  return {
+    jsx: <Root />,
+    options: {
+      ...opts,
+      containerAttributes: {
+        // English is what the static files hold; the script in the document
+        // head switches to French before the first paint (`src/i18n`).
+        lang: "en",
+        ...opts.containerAttributes,
+      },
+      serverData: {
+        ...opts.serverData,
+      },
     },
-    serverData: {
-      ...opts.serverData,
-    },
-  });
-}
+  };
+});

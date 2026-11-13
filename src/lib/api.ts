@@ -2,7 +2,7 @@
  * Calls to brigid-api from the signed-in pages. The account session is an
  * HttpOnly cookie the browser sends by itself (ADR-005): nothing here holds a
  * token or an account id. A 401 means the session is over (expired, signed
- * out, or the account is gone): the caller sends the user to /login/.
+ * out, or the account is gone): the caller sends the person to the sign-in page.
  */
 import type {
   AuthorizationAnswer,
@@ -14,6 +14,7 @@ import type {
   RecoveryCodeResponse,
   RecoveryStatus,
   RenamePasskeyRequest,
+  ServerInfo,
   SessionResponse,
   UpdateIdentityRequest,
 } from "./api-types";
@@ -27,10 +28,14 @@ export class SessionEndedError extends Error {
 }
 
 export class ApiError extends Error {
+  /** The HTTP status; 0 when the server could not be reached. */
   status: number;
-  constructor(status: number, message: string) {
+  /** The server's own explanation, when it gave one (in English). */
+  detail: string | null;
+  constructor(status: number, message: string, detail: string | null = null) {
     super(message);
     this.status = status;
+    this.detail = detail;
     this.name = "ApiError";
   }
 }
@@ -53,14 +58,18 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
   if (response.status === 401) throw new SessionEndedError();
   const text = await response.text();
   if (!response.ok) {
-    let message = `Request failed (${response.status}).`;
+    let detail: string | null = null;
     try {
       const data = JSON.parse(text) as { error?: string };
-      if (data.error) message = data.error;
+      if (data.error) detail = data.error;
     } catch {
-      // keep the generic message
+      // no explanation given
     }
-    throw new ApiError(response.status, message);
+    throw new ApiError(
+      response.status,
+      detail ?? `Request failed (${response.status}).`,
+      detail,
+    );
   }
   return (text.length ? JSON.parse(text) : undefined) as T;
 }
@@ -79,6 +88,18 @@ export async function signOut(): Promise<void> {
   } catch (err) {
     // Already signed out is fine.
     if (!(err instanceof SessionEndedError)) throw err;
+  }
+}
+
+// -- this server --------------------------------------------------------------
+
+/** What differs from one server to another and the pages need to know.
+ * A server that does not say (an older one) is taken to accept sign-ups. */
+export async function serverInfo(): Promise<ServerInfo> {
+  try {
+    return await call<ServerInfo>("GET", "/auth/server");
+  } catch {
+    return { sign_up: true };
   }
 }
 

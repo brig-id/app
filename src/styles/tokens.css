@@ -1,0 +1,122 @@
+/* Tokens, on three levels. Components use the semantic level only.
+
+   Primitive: the palette, spacing, radii, the type scale, durations. Never
+   used by a component.
+   Semantic: what a value is for. One set per theme: the dark theme is the
+   only one today; the light theme will be a second set of these same
+   names, and no component changes.
+   Component: a few values a component exposes, set from semantic ones. */
+
+:root {
+  /* -- primitive ---------------------------------------------------------- */
+
+  /* Neutrals lean slightly blue; the same family as the public site. */
+  --p-ink-0: oklch(0.123 0.011 271);
+  --p-ink-1: oklch(0.155 0.013 270);
+  --p-ink-2: oklch(0.187 0.017 269);
+  --p-ink-3: oklch(0.223 0.022 269);
+  --p-ink-4: oklch(0.3 0.024 269);
+  --p-ink-5: oklch(0.42 0.026 270);
+  --p-mist-1: oklch(0.955 0.007 269);
+  --p-mist-2: oklch(0.8 0.018 267);
+  --p-mist-3: oklch(0.68 0.028 270);
+
+  /* White light, then the colours it splits into. */
+  --p-light: oklch(0.968 0.029 81);
+  --p-light-ink: oklch(0.179 0.013 84);
+  --p-amber: oklch(0.828 0.136 70);
+  --p-coral: oklch(0.736 0.162 30);
+  --p-rose: oklch(0.773 0.164 348);
+  --p-violet: oklch(0.712 0.166 293);
+  --p-cyan: oklch(0.819 0.115 213);
+  --p-green: oklch(0.827 0.146 159);
+
+  --p-space-1: 0.25rem;
+  --p-space-2: 0.5rem;
+  --p-space-3: 0.75rem;
+  --p-space-4: 1rem;
+  --p-space-5: 1.5rem;
+  --p-space-6: 2rem;
+  --p-space-7: 3rem;
+
+  --p-radius-s: 0.5rem;
+  --p-radius-m: 0.75rem;
+  --p-radius-l: 1.375rem;
+  --p-radius-full: 999px;
+
+  --p-text-s: 0.875rem;
+  --p-text-m: 1rem;
+  --p-text-l: 1.125rem;
+  --p-text-xl: 1.5rem;
+  --p-text-2xl: 1.875rem;
+
+  --p-fast: 120ms;
+  --p-slow: 240ms;
+  --p-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  --p-font-sans:
+    "Geist", "Geist Fallback", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --p-font-mono:
+    "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* -- semantic: dark ----------------------------------------------------- */
+  color-scheme: dark;
+
+  --surface-page: var(--p-ink-0);
+  --surface: var(--p-ink-1);
+  --surface-raised: var(--p-ink-2);
+  --surface-hover: var(--p-ink-3);
+  --surface-sunken: var(--p-ink-0);
+
+  --border: var(--p-ink-4);
+  --border-strong: var(--p-ink-5);
+
+  --text: var(--p-mist-1);
+  --text-quiet: var(--p-mist-2);
+  --text-faint: var(--p-mist-3);
+
+  /* The one action of a page: white light. */
+  --accent: var(--p-light);
+  --on-accent: var(--p-light-ink);
+  --accent-glow: oklch(0.85 0.1 70 / 0.28);
+
+  --danger: var(--p-coral);
+  --danger-surface: oklch(0.736 0.162 30 / 0.1);
+  --danger-border: oklch(0.736 0.162 30 / 0.45);
+  --warning: var(--p-amber);
+  --warning-surface: oklch(0.828 0.136 70 / 0.1);
+  --warning-border: oklch(0.828 0.136 70 / 0.4);
+  --success: var(--p-green);
+  --success-surface: oklch(0.827 0.146 159 / 0.1);
+  --success-border: oklch(0.827 0.146 159 / 0.4);
+  --info: var(--p-cyan);
+  --info-surface: oklch(0.819 0.115 213 / 0.1);
+  --info-border: oklch(0.819 0.115 213 / 0.4);
+
+  --focus-ring: var(--p-cyan);
+  --selected: var(--p-cyan);
+  --selected-surface: oklch(0.819 0.115 213 / 0.12);
+  --scrim: oklch(0.123 0.011 271 / 0.72);
+  --shadow: 0 1.5rem 4rem oklch(0 0 0 / 0.55);
+
+  --font: var(--p-font-sans);
+  --font-mono: var(--p-font-mono);
+  --ease: var(--p-ease);
+
+  /* -- component ------------------------------------------------------------ */
+  --control-height: 2.75rem;
+  --control-radius: var(--p-radius-m);
+  --button-radius: var(--p-radius-full);
+  --card-radius: var(--p-radius-l);
+  --card-padding: clamp(var(--p-space-5), 5vw, var(--p-space-6));
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --border: var(--p-ink-5);
+    --border-strong: var(--p-mist-3);
+    --text-quiet: var(--p-mist-1);
+    --text-faint: var(--p-mist-2);
+  }
+}

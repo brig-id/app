@@ -1,0 +1,212 @@
+/* The sign-in part: one card over a still image. */
+
+.signin {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  isolation: isolate;
+}
+
+/* Decoration only: the page reads the same without it, and the card is
+   opaque, so its contrast does not depend on the image. */
+.signin-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--surface-page);
+  background-position: 32% center;
+  background-size: cover;
+}
+
+/* No image when the browser asks to save data: the script in the head notes
+   it (`src/i18n`), and the media query covers browsers that say it in CSS. */
+html:not([data-save-data]) .signin-bg {
+  background-image: url("../assets/backgrounds/prism-960.jpg");
+  background-image: image-set(
+    url("../assets/backgrounds/prism-960.avif") type("image/avif"),
+    url("../assets/backgrounds/prism-960.jpg") type("image/jpeg")
+  );
+}
+
+@media (min-width: 60rem) {
+  html:not([data-save-data]) .signin-bg {
+    background-image: url("../assets/backgrounds/prism-1920.jpg");
+    background-image: image-set(
+      url("../assets/backgrounds/prism-1920.avif") type("image/avif"),
+      url("../assets/backgrounds/prism-1920.jpg") type("image/jpeg")
+    );
+  }
+}
+
+@media (prefers-reduced-data: reduce) {
+  html .signin-bg {
+    background-image: none;
+  }
+}
+
+.signin-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, transparent 35%, var(--scrim) 100%);
+}
+
+.signin-header {
+  padding: var(--p-space-5) clamp(var(--p-space-4), 4vw, var(--p-space-7));
+}
+
+.brand {
+  color: var(--text);
+  font-size: var(--p-text-l);
+  font-weight: 640;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+
+.signin-main {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: var(--p-space-4);
+}
+
+/* On a wide screen the card stands to the right, and leaves the prism in
+   view. */
+@media (min-width: 64rem) {
+  .signin-main {
+    justify-content: flex-end;
+    padding-inline-end: clamp(var(--p-space-7), 12vw, 14rem);
+  }
+}
+
+.signin-card {
+  width: 100%;
+  max-width: 25rem;
+  box-shadow: var(--shadow);
+}
+
+.signin-card--wide {
+  max-width: 30rem;
+}
+
+.signin-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--p-space-2) var(--p-space-5);
+  align-items: center;
+  justify-content: center;
+  padding: var(--p-space-4);
+  color: var(--text-quiet);
+  font-size: var(--p-text-s);
+}
+
+.signin-footer > * {
+  padding: var(--p-space-1) var(--p-space-3);
+  border-radius: var(--p-radius-full);
+  background: var(--scrim);
+}
+
+.signin-footer a {
+  color: inherit;
+}
+
+.server-hint {
+  color: var(--text-quiet);
+}
+
+/* A server's name is compared character by character: telling l, I and 1
+   apart there is a phishing matter. */
+.server-hint strong {
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.signin-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--p-space-2) var(--p-space-4);
+  justify-content: space-between;
+  font-size: var(--p-text-s);
+}
+
+.signin-links--center {
+  justify-content: center;
+}
+
+.signin-title strong {
+  font-weight: inherit;
+  overflow-wrap: anywhere;
+}
+
+/* -- the linking page ------------------------------------------------------ */
+
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-2);
+}
+
+.choices legend {
+  margin-bottom: var(--p-space-3);
+  font-weight: 560;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: var(--p-space-3);
+  min-height: 3.5rem;
+  padding: var(--p-space-2) var(--p-space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--p-radius-m);
+  cursor: pointer;
+  transition:
+    background-color var(--p-fast) var(--ease),
+    border-color var(--p-fast) var(--ease);
+}
+
+.choice:hover {
+  background: var(--surface-hover);
+}
+
+.choice:has(input:checked) {
+  border-color: var(--selected);
+  background: var(--selected-surface);
+}
+
+.choice:has(input:focus-visible) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.choice input {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  accent-color: var(--selected);
+}
+
+.choice input:focus-visible {
+  outline: none;
+}
+
+.choice-name {
+  min-width: 0;
+  font-weight: 560;
+  overflow-wrap: anywhere;
+}
+
+/* -- about -------------------------------------------------------------------- */
+
+.credits {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-3);
+  color: var(--text-quiet);
+  font-size: var(--p-text-s);
+}

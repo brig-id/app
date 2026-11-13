@@ -5,7 +5,7 @@ import { continueStep, requestErrorMessage } from "./continue";
 const identity = (id: string): Identity => ({
   id,
   name: `Identity ${id}`,
-  logo: "icon:solid:user",
+  logo: "icon:ph:user",
   description: null,
   created_at: "2026-11-13T00:00:00Z",
   updated_at: "2026-11-13T00:00:00Z",
@@ -68,8 +68,9 @@ describe("continueStep", () => {
 
 describe("requestErrorMessage", () => {
   it("explains the two refusals and falls back for anything else", () => {
-    expect(requestErrorMessage("unknown_client")).toContain("not registered");
-    expect(requestErrorMessage("invalid_redirect_uri")).toContain("did not register");
-    expect(requestErrorMessage("<script>")).toBe("This sign-in request is not valid.");
+    expect(requestErrorMessage("unknown_client")).toBe("continue.unknown-client");
+    expect(requestErrorMessage("invalid_redirect_uri")).toBe("continue.bad-redirect");
+    expect(requestErrorMessage("<script>")).toBe("continue.invalid");
+    expect(requestErrorMessage("")).toBe("continue.invalid");
   });
 });

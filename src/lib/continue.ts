@@ -1,28 +1,30 @@
 /**
- * The linking page (`/continue/`): what a site's request looks like to the
- * person, as plain data, so the wording can be tested without a browser.
+ * The linking page (`/continue/`): what an application's request looks like to
+ * the person, as plain data, so the wording can be tested without a browser.
  */
+import type { MessageId } from "~/i18n/messages";
 import type { AuthorizationRequest } from "./api-types";
 
-/** A request this server refused to send back to the site (ADR-005 §2: the
- * site or its return address is not registered, so nothing is sent there). */
-export function requestErrorMessage(code: string): string {
+/** Why this server refused to send a request back to the application that
+ * made it: the application or its return address is not registered, so
+ * nothing is sent there. The code comes from the address of the page. */
+export function requestErrorMessage(code: string): MessageId {
   switch (code) {
     case "unknown_client":
-      return "The site that sent you here is not registered on this server.";
+      return "continue.unknown-client";
     case "invalid_redirect_uri":
-      return "The site asked to send you back to an address it did not register.";
+      return "continue.bad-redirect";
     default:
-      return "This sign-in request is not valid.";
+      return "continue.invalid";
   }
 }
 
 export type ContinueStep =
-  /** Nothing to show: answer for the site and leave. */
+  /** Nothing to show: answer for the application and leave. */
   | { kind: "silent" }
   /** A passkey ceremony first. */
   | { kind: "sign-in" }
-  /** Choose the identity the site will meet. */
+  /** Choose the identity the application will meet. */
   | { kind: "choose"; selected: string | null };
 
 /** What the page does with a request. */
