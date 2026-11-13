@@ -14,5 +14,20 @@ jobs:
     uses: brig-id/.github/.github/workflows/ci-web.yml@5e019131d735e4ed0bd3598b5a61137bdae7eff3
     with:
       working-directory: .
-    secrets:
-      WEBAWESOME_NPM_TOKEN: ${{ secrets.WEBAWESOME_NPM_TOKEN }}
+
+  self-contained:
+    # The reusable workflow builds the pages; this runs the whole `pnpm build`,
+    # which ends with the check that the built files name no other origin.
+    name: Nothing external in the build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: helpers4/action/setup-pnpm@6fddd178620e7325d446a246c38a44f979569fc4 # main @ 2026-07-29
+        with:
+          node-version: "24"
+
+      - name: Build, hash the inline blocks, check the origins
+        run: pnpm run build

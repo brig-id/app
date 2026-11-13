@@ -1,10 +1,8 @@
 name: E2E
 
-# Custom (not a brig-id/.github reusable workflow): this suite drives a real
-# `leaf` binary from the sibling brig-id/server-leaf repo, which itself pulls
-# brig-id/core and brig-id/crypto as git dependencies at build time — that
-# multi-repo shape is specific to this suite, not something a generic JS/web
-# reusable template should carry.
+# Its own workflow, not a reusable one of brig-id/.github: the suite drives a
+# real server from the sibling brig-id/server-seedling repository, which pulls
+# brig-id/core and brig-id/crypto at build time. That shape is this suite's.
 
 on:
   push:
@@ -21,7 +19,7 @@ permissions:
 
 jobs:
   e2e:
-    name: Playwright (register/login/passkeys against a real leaf)
+    name: Playwright (sign-up, sign-in, passkeys against a real server)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout web
@@ -30,13 +28,13 @@ jobs:
           persist-credentials: false
           path: web
 
-      - name: Checkout server-leaf
+      - name: Checkout server-seedling
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          repository: brig-id/server-leaf
+          repository: brig-id/server-seedling
           ref: main
-          path: server-leaf
+          path: server-seedling
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master @ 2026-08-05
@@ -52,26 +50,18 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-          key: ${{ runner.os }}-cargo-${{ hashFiles('server-leaf/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('server-seedling/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
-
-      - name: Configure Web Awesome Pro registry auth
-        env:
-          WEBAWESOME_NPM_TOKEN: ${{ secrets.WEBAWESOME_NPM_TOKEN }}
-        run: |
-          # Empty on pull requests from forks and from Dependabot: nothing to configure.
-          [ -n "$WEBAWESOME_NPM_TOKEN" ] || exit 0
-          echo "//npm.cloudsmith.io/fortawesome/webawesome-pro/:_authToken=$WEBAWESOME_NPM_TOKEN" >> ~/.npmrc
 
       - uses: helpers4/action/setup-pnpm@6fddd178620e7325d446a246c38a44f979569fc4 # main @ 2026-07-29
         with:
           node-version: "24"
           working-directory: web
 
-      - name: Build leaf
-        # Playwright starts leaf with `cargo run` and waits 60 s for its port:
+      - name: Build the server
+        # Playwright starts it with `cargo run` and waits 60 s for its port:
         # enough to start a binary, not to compile one. Build it beforehand.
-        run: cargo build --manifest-path server-leaf/Cargo.toml
+        run: cargo build --manifest-path server-seedling/Cargo.toml
 
       - name: Install Playwright browsers
         working-directory: web
@@ -80,7 +70,7 @@ jobs:
       - name: Run Playwright E2E suite
         working-directory: web
         env:
-          SERVER_LEAF_DIR: ${{ github.workspace }}/server-leaf
+          BRIGID_SERVER_DIR: ${{ github.workspace }}/server-seedling
           CI: "true"
         run: pnpm run test.e2e
 
