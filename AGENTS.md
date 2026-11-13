@@ -1,30 +1,45 @@
 # AGENTS.md — brig·id `app`
 
-This repository is the **Qwik UI** for brig·id: login, register, and passkey
-(WebAuthn) management. It consumes `brigid-api` over the same origin — in
-production that means a single `server-leaf` process serves both the API and
-this app's static build (see `LEAF_SERVER__UI_DIST_DIR`); locally, `pnpm dev`
-proxies `/auth` and `/.well-known` to a `server-leaf` instance running on
-`:8080` (see `vite.config.ts`).
+This repository is the **web interface** of brig·id: sign-in, account and passkeys, on
+Qwik 2. It is built once as static files; a brig·id server (`server-seedling`) serves
+them and the API from one origin. Locally, `pnpm dev` proxies `/auth`, `/account` and
+`/.well-known` to a server on `:8080` (see `vite.config.ts`).
+
+What the interface is made of, and why, is specified in `brig-id/spec`,
+[`interface.md`](https://github.com/brig-id/spec/blob/main/interface.md). Read it before
+changing how the interface is built.
 
 ## Language
 
 **All content must be in English** — code, comments, doc-comments, commit
-messages, issues, pull requests. No exceptions.
+messages, issues, pull requests. No exceptions. The interface itself speaks English
+and French (see below).
 
-## Scope
+## Rules of the interface
 
-- Qwik City app: `/`, `/login/`, `/register/`, `/passkeys/` routes
-- Static (SSG) production build — no server-side app code ships; `server-leaf`
-  serves the built output as static files
-- `src/lib/webauthn.ts` — client-side WebAuthn ceremonies (`register`,
-  `login`, `addCredential`, `deletePasskey`) against `brigid-api`
-- `src/lib/unsplash.ts` — the daily rotating login/register background photo
-- Playwright E2E suite (`e2e/`) — drives a real `leaf` binary from the
-  sibling `server-leaf` repo
+Each is held by a test or a build step; do not work around one.
+
+- **Nothing external.** No request leaves the server's origin at run time, and the app
+  builds from the public npm registry with no token. No CDN, font host, icon kit,
+  analytics or image API. `scripts/check-origins.mjs` reads the built files.
+- **No component library.** Native elements and the classes of `src/styles/`. Components
+  use semantic tokens only (`--surface`, `--text`, `--accent`…), never a primitive or a
+  literal colour. A widget the platform does not give is written when a page needs it,
+  following its WAI-ARIA pattern.
+- **Every text is in `src/i18n/messages.ts`, in English and French.** A component holds
+  none: `<T id="…" />`, or `tr("…")` at run time. No translated attribute
+  (`aria-label`, `title`, `placeholder`): use a visible label, or a `sr-only` text.
+- **Sign-in imports nothing from the account part** (`routes/(sign-in)`,
+  `components/sign-in` against `routes/(account)`, `components/account`). What both need
+  lives in `components/ui` or `lib`.
+- **Icons are Phosphor, inlined**: add the name to `scripts/icons.mjs` (interface) or to
+  `src/lib/icons.ts` (identity logos), then run `pnpm icons` and commit the result.
+- Anything shipped that the project did not make is credited in `CREDITS.md` and on the
+  About page, and must be redistributable under the AGPL.
 
 This repository contains **no business logic** — that lives in `brig-id/core`
-behind `brigid-api`.
+behind the API. The interface hiding a page is not a control: the server authorises
+every request.
 
 ## Roadmap & planning
 
@@ -35,18 +50,15 @@ in local files.
 ## Commands
 
 ```bash
-pnpm dev              # vite dev server (SSR), proxies /auth + /.well-known to :8080
-pnpm build            # full production build (SSG) + dist/csp-hashes.json
+pnpm dev              # vite dev server, proxies the API to :8080
+pnpm build            # static build + dist/csp-hashes.json + the origin check
 pnpm typecheck
 pnpm lint             # oxlint
 pnpm fmt.check        # prettier --check
-pnpm test             # vitest unit tests
-pnpm test.e2e         # playwright, drives a real leaf from ../server-leaf
+pnpm test             # vitest: unit tests and the rules above
+pnpm test.e2e         # playwright, against a server built from ../server-seedling
+pnpm icons            # regenerate src/components/ui/icons.gen.ts
 ```
-
-`UNSPLASH_ACCESS_KEY` must be exported (or set via `envPrefix`-matched env)
-for the login/register background photo to load during a local build —
-without it, `src/lib/unsplash.ts` degrades gracefully to no photo.
 
 ## Commit conventions
 
@@ -61,6 +73,8 @@ Format: `type(scope): <emoji> description`. Full type→emoji mapping:
 | `e2e`  | `e2e/` — the Playwright suite                                |
 | `ci`   | `.github/workflows/`                                         |
 | `deps` | Dependency bumps                                             |
+| `ai`   | Instructions for coding agents (this file)                   |
+| `docs` | README, CHANGELOG, CREDITS                                   |
 
 **Do not use a scope outside this list.** Update this table and
 `scopes.json` together if a new scope is needed.
@@ -69,13 +83,13 @@ Format: `type(scope): <emoji> description`. Full type→emoji mapping:
 feat(app): ✨ add conditional UI passkey login
 fix(e2e): 🐛 back off after a 429 before retrying delete-passkey
 ci(ci): 👷 add Lighthouse accessibility check
-chore(deps): 📦 bump @builder.io/qwik to 1.21.0
+chore(deps): 📦 bump @qwik.dev/core to 2.0.0
 ```
 
 ## CSP hash manifest
 
-`pnpm build` ends with `scripts/csp-hashes.mjs`, which writes `dist/csp-hashes.json`: the
-`'sha256-…'` source of every inline `<script>` and `<style>` in the static pages. A server
-serving `dist/` (`server-leaf`) reads it to allow exactly those instead of `'unsafe-inline'`.
-The hashes change from one build to the next (Qwik's inline state differs), so the manifest
-is produced with each build and shipped inside `dist/`, never committed.
+`pnpm build` runs `scripts/csp-hashes.mjs`, which writes `dist/csp-hashes.json`: the
+`'sha256-…'` source of every inline `<script>` and `<style>` in the static pages. The
+server reads it to allow exactly those and nothing else inline. The hashes change from
+one build to the next (the framework's inline state differs), so the manifest is
+produced with each build and shipped inside `dist/`, never committed.

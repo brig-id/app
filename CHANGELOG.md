@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- **The interface is rewritten on Qwik 2** (`@qwik.dev/core`, Vite 8), with its own
+  design system: native elements, one stylesheet, tokens on three levels, the dark
+  theme. No component library.
+- **English and French.** Every text lives in `src/i18n/messages.ts`; the language
+  follows the browser, with a switch that is remembered.
+- **Nothing external.** Icons are Phosphor drawings inlined at build time, the fonts
+  (Geist, Geist Mono) and the background image are embedded, and a build step fails
+  when the built files name another origin.
+- The pages are sorted into parts: sign-in (`/`, `/signup/`, `/recover/`,
+  `/continue/`, `/about/`) and account (`/welcome/`, `/identities/`, `/passkeys/`).
+  `/login/` and `/register/` redirect.
+- Identity logos are `icon:ph:<name>` references; the picker is rebuilt on Phosphor.
+- Deleting an identity and replacing a recovery code ask for confirmation in the
+  page, not in a browser dialog.
+- The sign-up page and the link to it follow the server's setting: a server that
+  closed sign-up says so.
+- Licence: AGPL-3.0-or-later (was LGPL-3.0-or-later).
+
+### Added
+
+- An About page: what runs here, its licence, where its source is, credits.
+- `CREDITS.md`.
+
+### Removed
+
+- Web Awesome Pro and its private npm registry: the app builds from a clean clone
+  with no token.
+- The Unsplash background and its API key: no third party learns who opens a
+  sign-in page.
+
 ## [0.1.0] - 2026-09-04
 
 First tagged release, alongside `crypto`, `core`, and `server-leaf`.
