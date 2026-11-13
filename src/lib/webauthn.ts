@@ -56,10 +56,21 @@ export type WebAuthnErrorKind = "network" | "browser" | "api";
 
 export class WebAuthnError extends Error {
   kind: WebAuthnErrorKind;
+  /** The HTTP status of an `api` error. */
+  status: number | null;
+  /** The server's own explanation, when it gave one (in English). */
+  detail: string | null;
 
-  constructor(kind: WebAuthnErrorKind, message: string) {
+  constructor(
+    kind: WebAuthnErrorKind,
+    message: string,
+    status: number | null = null,
+    detail: string | null = null,
+  ) {
     super(message);
     this.kind = kind;
+    this.status = status;
+    this.detail = detail;
     this.name = "WebAuthnError";
   }
 }
@@ -99,14 +110,19 @@ async function apiRequest<T>(
   }
 
   if (!response.ok) {
-    let message = `Request failed with status ${response.status}`;
+    let detail: string | null = null;
     try {
       const data = JSON.parse(await response.text()) as { error?: string };
-      if (data.error) message = data.error;
+      if (data.error) detail = data.error;
     } catch {
-      // ignore — keep the generic message
+      // no explanation given
     }
-    throw new WebAuthnError("api", message);
+    throw new WebAuthnError(
+      "api",
+      detail ?? `Request failed with status ${response.status}`,
+      response.status,
+      detail,
+    );
   }
 
   const text = await response.text();

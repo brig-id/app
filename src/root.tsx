@@ -1,41 +1,42 @@
-import { component$, isDev } from "@builder.io/qwik";
-import { QwikCityProvider, RouterOutlet } from "@builder.io/qwik-city";
-import { RouterHead } from "./components/router-head/router-head";
+import { component$ } from "@qwik.dev/core";
+import {
+  DocumentHeadTags,
+  RouterOutlet,
+  useQwikRouter,
+} from "@qwik.dev/router";
+import { HEAD_SCRIPT } from "./i18n";
+import geist from "./assets/fonts/geist-latin-wght-normal.woff2?url";
 
 import "./global.css";
 
-// Web Awesome Pro — theme, palette, native HTML reset, and cloak/layout
-// utilities. Imported as JS (not CSS @import) so Vite bundles each
-// stylesheet independently instead of concatenating raw @import chains,
-// which the bundler can silently reorder.
-import "@web.awesome.me/webawesome-pro/dist/styles/themes/tailspin.css";
-import "@web.awesome.me/webawesome-pro/dist/styles/color/palettes/shoelace.css";
-import "@web.awesome.me/webawesome-pro/dist/styles/native.css";
-import "@web.awesome.me/webawesome-pro/dist/styles/utilities.css";
-
 export default component$(() => {
-  /**
-   * The root of a QwikCity site always start with the <QwikCityProvider> component,
-   * immediately followed by the document's <head> and <body>.
-   *
-   * Don't remove the `<head>` and `<body>` elements.
-   */
+  useQwikRouter();
 
   return (
-    <QwikCityProvider>
+    <>
       <head>
         <meta charset="utf-8" />
-        {!isDev && (
-          <link
-            rel="manifest"
-            href={`${import.meta.env.BASE_URL}manifest.json`}
-          />
-        )}
-        <RouterHead />
+        {/* Before anything is painted: the language, and whether to save
+            data. Its content is fixed at build time. */}
+        <script dangerouslySetInnerHTML={HEAD_SCRIPT} />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="color-scheme" content="dark" />
+        {/* The pages of a sign-in server have nothing to offer a search engine. */}
+        <meta name="robots" content="noindex" />
+        <link
+          rel="preload"
+          href={geist}
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="manifest" href="/manifest.json" />
+        <DocumentHeadTags />
       </head>
-      <body lang="en">
+      <body>
         <RouterOutlet />
       </body>
-    </QwikCityProvider>
+    </>
   );
 });

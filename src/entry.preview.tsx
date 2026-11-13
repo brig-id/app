@@ -1,21 +1,8 @@
-/*
- * WHAT IS THIS FILE?
- *
- * It's the bundle entry point for `npm run preview`.
- * That is, serving your app built in production mode.
- *
- * Feel free to modify this file, but don't remove it!
- *
- * Learn more about Vite's preview command:
- * - https://vitejs.dev/config/preview-options.html#preview-options
- *
+/**
+ * The entry point of `pnpm preview`: a Node server over the built files, for
+ * looking at a production build locally.
  */
-import { createQwikCity } from "@builder.io/qwik-city/middleware/node";
-import qwikCityPlan from "@qwik-city-plan";
-// make sure qwikCityPlan is imported before entry
+import { createQwikRouter } from "@qwik.dev/router/middleware/node";
 import render from "./entry.ssr";
 
-/**
- * The default export is the QwikCity adapter used by Vite preview.
- */
-export default createQwikCity({ render, qwikCityPlan });
+export default createQwikRouter({ render });

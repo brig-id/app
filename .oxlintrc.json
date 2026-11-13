@@ -7,7 +7,8 @@
   },
   "plugins": ["typescript", "unicorn", "oxc", "vitest", "jsx-a11y"],
   "rules": {
-    "typescript/no-explicit-any": "off"
+    "typescript/no-explicit-any": "off",
+    "vitest/valid-expect": ["error", { "maxArgs": 2 }]
   },
   "ignorePatterns": [
     "dist",
