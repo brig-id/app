@@ -327,3 +327,51 @@ wa-page.app-shell::part(main-content) {
   font-family: var(--wa-font-family-code);
   letter-spacing: 0.05em;
 }
+
+/* Linking page (/continue/): the site's name, and the identities to choose from. */
+.continue-site {
+  overflow-wrap: anywhere;
+}
+
+.continue-identities {
+  display: grid;
+  gap: var(--wa-space-2xs);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.continue-identities legend {
+  margin-bottom: var(--wa-space-xs);
+  padding: 0;
+  font-weight: var(--wa-font-weight-heading);
+}
+
+.continue-identity {
+  display: flex;
+  box-sizing: border-box;
+  width: 100%;
+  align-items: center;
+  gap: var(--wa-space-s);
+  min-height: 2.75rem;
+  padding: var(--wa-space-xs) var(--wa-space-s);
+  border: solid var(--wa-border-width-s) var(--wa-color-surface-border);
+  border-radius: var(--wa-border-radius-m);
+  cursor: pointer;
+}
+
+.continue-identity:has(input:checked) {
+  border-color: var(--wa-color-brand-border-loud);
+  background: var(--wa-color-brand-fill-quiet);
+}
+
+.continue-identity:has(input:focus-visible) {
+  outline: var(--wa-focus-ring);
+}
+
+.continue-shared {
+  margin: 0;
+  font-size: var(--wa-font-size-s);
+  color: var(--wa-color-text-quiet);
+}

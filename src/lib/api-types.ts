@@ -180,3 +180,29 @@ export interface UpdateIdentityRequest {
 export interface ApiErrorBody {
   error: string;
 }
+
+// -- authorization requests of relying parties (ADR-005 §2) -------------------
+
+/** What the linking page shows for a request. Mirrors `RequestView` in
+ * `brigid-api/src/routes/authorize.rs`. */
+export interface AuthorizationRequest {
+  /** The site, by the name it was registered with. */
+  client: { name: string };
+  signed_in: boolean;
+  /** A passkey ceremony is needed before answering. */
+  must_sign_in: boolean;
+  /** The site asked for an answer without any page (`prompt=none`). */
+  silent: boolean;
+  /** The site asked for the choice to be shown even if one is remembered. */
+  force_choice: boolean;
+  /** Empty until signed in. Names and logos are for the person only: the
+   * site receives none of this. */
+  identities: Identity[];
+  /** The identity last presented to this site. */
+  chosen: string | null;
+}
+
+/** Where to send the browser next. */
+export interface AuthorizationAnswer {
+  redirect_to: string;
+}

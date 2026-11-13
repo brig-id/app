@@ -9,7 +9,14 @@ import {
 import { wa } from "~/lib/wa";
 
 /** Pages shown signed out: centered card layout, no navigation. */
-const PUBLIC_PATHS = new Set(["/", "/login/", "/register/", "/recover/"]);
+const PUBLIC_PATHS = new Set([
+  "/",
+  "/login/",
+  "/register/",
+  "/recover/",
+  // A site's request: the page signs the person in itself when needed.
+  "/continue/",
+]);
 
 /** How often an open signed-in page checks its session, so one that ended
  * (idle, lifetime, signed out elsewhere) sends the user to sign in. Each
