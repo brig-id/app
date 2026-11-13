@@ -16,5 +16,3 @@ jobs:
     uses: brig-id/.github/.github/workflows/security-audit-web.yml@5e019131d735e4ed0bd3598b5a61137bdae7eff3
     with:
       working-directory: .
-    secrets:
-      WEBAWESOME_NPM_TOKEN: ${{ secrets.WEBAWESOME_NPM_TOKEN }}
