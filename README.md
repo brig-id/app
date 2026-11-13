@@ -1,23 +1,74 @@
 # brig·id — app
 
-Qwik UI for brig·id: login, register, and passkey management (WebAuthn).
-Consumes `brigid-api` (served by `server-leaf`) over the same origin.
+The web interface of brig·id: sign-in, account and passkeys. It is built once, as static
+files, and served by a brig·id server from its own origin.
 
-- [Qwik Docs](https://qwik.dev/)
-- [Qwik GitHub](https://github.com/QwikDev/qwik)
+It loads **nothing from anywhere else**: no CDN, font host, icon kit, image API or
+analytics, and it builds from a clean clone with the public npm registry only. What it is
+made of, and why, is specified in
+[`interface.md`](https://github.com/brig-id/spec/blob/main/interface.md).
 
----
-
-## Project structure
+## Structure
 
 ```
-├── public/
-│   └── ...
+├── adapters/ssg/         # the static build
+├── e2e/                  # Playwright, against a real server
+├── scripts/              # icons.mjs, csp-hashes.mjs, check-origins.mjs
 └── src/
-    ├── components/       # PasskeyItem
-    ├── lib/              # api-types.ts, webauthn.ts, validation.ts, wa.ts
-    └── routes/           # /, /login, /register, /passkeys (native WebAwesome, no wrapper components)
+    ├── assets/           # fonts and the background image, with their licences
+    ├── components/
+    │   ├── ui/           # icon, callout, identity logo, language switch
+    │   ├── sign-in/      # used by the sign-in part only
+    │   └── account/      # used by the account part only
+    ├── i18n/             # every text, in English and French
+    ├── lib/              # calls to the server, passkey ceremonies, validation
+    ├── routes/
+    │   ├── (sign-in)/    # /, /signup/, /recover/, /continue/, /about/
+    │   └── (account)/    # /welcome/, /identities/, /passkeys/
+    └── styles/           # tokens, fonts, base, components, the two layouts
 ```
+
+The interface has **parts**, called what they are: _sign-in_ (someone arriving) and
+_account_ (someone at home); _administration_ comes later. Sign-in imports nothing from
+the others, so that its pages can be reviewed in one sitting; `src/architecture.spec.ts`
+checks it.
+
+## Design system
+
+Our own, with no component library: native elements, one stylesheet.
+
+- **Tokens** are CSS custom properties on three levels (`src/styles/tokens.css`):
+  _primitive_ (the palette in `oklch`, spacing, radii, type scale), _semantic_
+  (`--surface`, `--text`, `--accent`, `--danger`… the only ones a component uses) and a
+  few _component_ values. The dark theme is the only set of semantic values today; the
+  light theme will add a second set and change no component.
+- **Components**: page layouts, card, input, button, callout, icon. Classes on native
+  elements (`button`, `input`, `fieldset`…), which bring their keyboard and screen-reader
+  behaviour with them.
+- **Icons** are [Phosphor](https://phosphoricons.com) drawings inlined at build time:
+  `scripts/icons.mjs` copies the ones the interface uses from `@iconify-json/ph` into
+  `src/components/ui/icons.gen.ts` (committed). After adding an icon to that script or to
+  the logo library (`src/lib/icons.ts`), run `pnpm icons`.
+- **Fonts**: Geist and Geist Mono, embedded (`src/assets/fonts/`). Geist Mono is for what
+  a person compares character by character: server names, recovery codes.
+
+## Languages
+
+English and French. **No component holds a text**: every one is in
+`src/i18n/messages.ts`, in both languages, and a test fails on a text left in a component
+or written in one language only.
+
+The pages are static, so both languages are in each page and the stylesheet shows the one
+of the document. A script in the head sets it before the first paint, from the person's
+remembered choice, else from the browser's languages. In a component:
+
+```tsx
+<T id="signin.title" />
+<T id="continue.title" p={{ app: request.client.name }} />
+```
+
+`tr("…")` gives a text at run time, for what cannot hold markup (the document's title, a
+downloaded file).
 
 ## Development
 
@@ -26,15 +77,15 @@ pnpm install
 pnpm dev       # Vite dev server; open https://brigid.localhost:5173 (see HTTPS below)
 ```
 
-Vite proxies `/auth/*` and `/.well-known/*` to `http://localhost:8080` (server-leaf),
-mirroring how leaf serves both the UI and these routes from one origin in production.
-`*.localhost` resolves to 127.0.0.1 in every modern browser with no `/etc/hosts` entry
-needed, and counts as a secure context, so WebAuthn works on it over plain HTTP.
+Vite proxies `/auth/*`, `/account/*` and `/.well-known/*` to `http://localhost:8080`, a
+brig·id server ([`server-seedling`](https://github.com/brig-id/server-seedling)), as in
+production where the server serves the interface and these routes from one origin.
+`*.localhost` resolves to 127.0.0.1 in every modern browser and counts as a secure
+context, so passkeys work on it over plain HTTP.
 
-If server-leaf runs with a different RP ID/domain (`LEAF_SERVER__DOMAIN` /
-`LEAF_SERVER__PUBLIC_URL`), point it at `brigid.localhost` (and port 5173 for
-`PUBLIC_URL`, `https://` once you've generated the dev cert below) to match, or
-WebAuthn ceremonies will fail on an origin mismatch.
+The server must be told the same domain and address (`BRIGID_SERVER__DOMAIN`,
+`BRIGID_SERVER__PUBLIC_URL`: `brigid.localhost`, port 5173, `https://` once the
+certificate below exists), or the passkey ceremonies fail on an origin mismatch.
 
 ### HTTPS in dev
 
@@ -78,13 +129,29 @@ needed.
 ```shell
 pnpm typecheck
 pnpm lint
-pnpm test
-pnpm build     # production build (type check + client modules + SSG + lint)
+pnpm test       # unit tests, and the rules of src/architecture.spec.ts
+pnpm build      # static build, then the two checks below
+pnpm test.e2e   # Playwright, against a server built from ../server-seedling
 pnpm audit --audit-level=moderate
 ```
 
+`pnpm build` ends with two scripts:
+
+- `scripts/csp-hashes.mjs` writes `dist/csp-hashes.json`, the hash of every inline script
+  and style of the pages. The server allows exactly these in its Content Security Policy,
+  and nothing inline otherwise.
+- `scripts/check-origins.mjs` fails when the built files name an origin that is not on
+  its short list (links a person chooses to follow, XML namespaces).
+
+The end-to-end suite needs the sibling repository: by default `../server-seedling`, or
+the directory named by `BRIGID_SERVER_DIR`.
+
 ## Production
 
-Qwik builds the UI to static files (SSG for `/login` and `/register`, CSR
-for `/passkeys`). No Node.js runtime in production — `server-leaf` serves
-`dist/` directly.
+`pnpm build` produces `dist/`: static pages, with no Node.js at run time. A brig·id
+server serves it as it is.
+
+## Licence and credits
+
+[AGPL-3.0-or-later](LICENSE). The image, fonts and icons shipped with the interface are
+credited in [`CREDITS.md`](CREDITS.md), and on the interface's own About page.
