@@ -5,6 +5,8 @@
  * out, or the account is gone): the caller sends the user to /login/.
  */
 import type {
+  AuthorizationAnswer,
+  AuthorizationRequest,
   CreateIdentityRequest,
   Identity,
   IdentityTemplate,
@@ -133,4 +135,54 @@ export async function updateIdentity(
 
 export async function deleteIdentity(id: string): Promise<void> {
   await call<void>("DELETE", `/account/identities/${encodeURIComponent(id)}`);
+}
+
+// -- authorization requests of relying parties (ADR-005 §2) -------------------
+
+const authorizationPath = (request: string) =>
+  `/auth/authorize/${encodeURIComponent(request)}`;
+
+/** The request a site sent, or `null` when it is unknown, expired or
+ * already answered. Works signed out: the site's name is then all it says. */
+export async function authorizationRequest(
+  request: string,
+): Promise<AuthorizationRequest | null> {
+  try {
+    return await call<AuthorizationRequest>("GET", authorizationPath(request));
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
+}
+
+/** Continue to the site as `identityId`. Returns where to send the browser.
+ * Throws SessionEndedError when a passkey ceremony is needed first. */
+export async function approveAuthorization(
+  request: string,
+  identityId: string,
+): Promise<string> {
+  const answer = await call<AuthorizationAnswer>(
+    "POST",
+    `${authorizationPath(request)}/approve`,
+    { identity_id: identityId },
+  );
+  return answer.redirect_to;
+}
+
+/** Go back to the site without signing in. */
+export async function denyAuthorization(request: string): Promise<string> {
+  const answer = await call<AuthorizationAnswer>(
+    "POST",
+    `${authorizationPath(request)}/deny`,
+  );
+  return answer.redirect_to;
+}
+
+/** The answer to a request that asked for no page at all. */
+export async function answerSilently(request: string): Promise<string> {
+  const answer = await call<AuthorizationAnswer>(
+    "POST",
+    `${authorizationPath(request)}/silent`,
+  );
+  return answer.redirect_to;
 }
