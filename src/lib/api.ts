@@ -40,7 +40,23 @@ export class ApiError extends Error {
   }
 }
 
-async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
+/** How many times a read refused for "too many requests" is asked again. */
+const READ_RETRIES = 2;
+
+/** How long to wait before asking again: what the server says, within
+ * reason, or two seconds. */
+function retryDelay(response: Response): number {
+  const seconds = Number(response.headers.get("retry-after"));
+  const wait = Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : 2000;
+  return Math.min(wait, 5000);
+}
+
+async function call<T>(
+  method: string,
+  path: string,
+  body?: unknown,
+  attempt = 0,
+): Promise<T> {
   let response: Response;
   try {
     response = await fetch(path, {
@@ -56,6 +72,14 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
     throw new ApiError(0, "Unable to reach the server.");
   }
   if (response.status === 401) throw new SessionEndedError();
+  // A page reads several things at once, often right after a change: a read
+  // that hits the rate limit is asked again after a pause, so that the page
+  // never shows what was true before the change. A write is not repeated:
+  // the person sees the refusal and decides.
+  if (response.status === 429 && method === "GET" && attempt < READ_RETRIES) {
+    await new Promise((resolve) => setTimeout(resolve, retryDelay(response)));
+    return call<T>(method, path, body, attempt + 1);
+  }
   const text = await response.text();
   if (!response.ok) {
     let detail: string | null = null;
@@ -93,8 +117,9 @@ export async function signOut(): Promise<void> {
 
 // -- this server --------------------------------------------------------------
 
-/** What differs from one server to another and the pages need to know.
- * A server that does not say (an older one) is taken to accept sign-ups. */
+/** What differs from one server to another and the pages need to know. If
+ * the server cannot be asked, sign-up is offered all the same: a server
+ * that closed it refuses it in any case. */
 export async function serverInfo(): Promise<ServerInfo> {
   try {
     return await call<ServerInfo>("GET", "/auth/server");
@@ -138,9 +163,7 @@ export async function listIdentities(): Promise<Identity[]> {
 }
 
 export async function listTemplates(): Promise<IdentityTemplate[]> {
-  const response = await fetch("/account/identity-templates");
-  if (!response.ok) throw new ApiError(response.status, "Unable to load templates.");
-  return (await response.json()) as IdentityTemplate[];
+  return call<IdentityTemplate[]>("GET", "/account/identity-templates");
 }
 
 export async function createIdentity(input: CreateIdentityRequest): Promise<Identity> {
