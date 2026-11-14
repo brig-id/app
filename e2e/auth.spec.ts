@@ -72,7 +72,13 @@ async function signUp(page: Page) {
 /** Onboarding: reads the recovery code shown, confirms it, continues. */
 async function finishOnboarding(page: Page): Promise<string> {
   const code = page.getByRole("group", { name: "Your recovery code" }).locator("code");
-  await expect(code).toHaveText(/^([A-Z2-7]{4}-){9}[A-Z2-7]{4}$/, { timeout: 10000 });
+  // The page creates the code by itself. When that request falls on the rate
+  // limit, it says so and offers the button: clicked here as a person would.
+  const create = page.getByRole("button", { name: "Create a recovery code" });
+  await expect(async () => {
+    if (await create.isVisible()) await create.click();
+    await expect(code).toHaveText(/^([A-Z2-7]{4}-){9}[A-Z2-7]{4}$/, { timeout: 4000 });
+  }).toPass({ timeout: 40_000 });
   const value = (await code.textContent()) ?? "";
   const next = page.getByRole("button", { name: "Continue to my identities" });
   await expect(next).toBeDisabled();
