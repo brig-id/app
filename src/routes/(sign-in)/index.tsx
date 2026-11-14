@@ -59,7 +59,7 @@ export default component$(() => {
     error.value = null;
     busy.value = true;
     try {
-      await login(null);
+      await login();
       await nav("/identities/");
     } catch (err) {
       error.value =
