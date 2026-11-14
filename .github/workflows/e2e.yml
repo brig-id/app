@@ -33,7 +33,9 @@ jobs:
         with:
           persist-credentials: false
           repository: brig-id/server-seedling
-          ref: main
+          # Pinned, so that a run says something about this repository and
+          # not about what moved in the server. Bump it deliberately.
+          ref: 7413d6d4bb881c9fec86d7197fae03a97d2da704 # feat/relying-parties @ 2026-11-14 (server-seedling#79)
           path: server-seedling
 
       - name: Install Rust stable
