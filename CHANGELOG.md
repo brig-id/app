@@ -7,6 +7,32 @@ From 0.2.0 on, each entry is written by release-please from the commits merged
 since the last release: there is no "Unreleased" section to keep by hand. What
 a list of commits does not say is in the pull requests it links to.
 
+## [0.2.0](https://github.com/brig-id/app/compare/v0.1.0...v0.2.0) (2026-11-14)
+
+
+### Features
+
+* ✨ "Add a passkey" now adds a credential to the current identity ([fed712d](https://github.com/brig-id/app/commit/fed712d3a84bba78632e271f28eb2f7bdc31cb8d))
+* ✨ visual redesign of login/register — daily photo + gradient accent ([78cbf57](https://github.com/brig-id/app/commit/78cbf571bb8f3d32c1cc18814f849a94c1b0a0ac))
+* **app:** ✨ linking page: continue to a site as the identity you choose ([056f957](https://github.com/brig-id/app/commit/056f9570d60831d5734f6697cbd5e0c3c2a74360)), closes [#43](https://github.com/brig-id/app/issues/43)
+* **app:** ✨ passkey-only signup with onboarding, sign-in without username, account recovery ([580f8ab](https://github.com/brig-id/app/commit/580f8abb256a6178f4be6c0d3f057a4070a0cfa3))
+* **app:** ✨ rewrite the interface on qwik 2, self-contained, in two languages ([392048f](https://github.com/brig-id/app/commit/392048f8247c31b283421e3c8248a3a045b2e934))
+* **app:** ✨ say why passkeys can't work here and what to do ([15b6ece](https://github.com/brig-id/app/commit/15b6ece9af006dc32eef32d88091c013b0ad432c))
+* **app:** ✨ signed-in shell, identities page, icon library, passkey names, passkey autofill ([ce8170f](https://github.com/brig-id/app/commit/ce8170fae712cb814007903ba692df9037683617))
+* **app:** ✨ the light theme, following the system, with a remembered switch ([5d46858](https://github.com/brig-id/app/commit/5d46858e521ffd507f8f9aa8054626edcca8db2b))
+* **app:** ✨ the session is an HttpOnly cookie: no token or account id in the browser ([c788e00](https://github.com/brig-id/app/commit/c788e0075d0efae251328130d50b705b578e51c5))
+* **app:** ✨ write the CSP hash manifest of inline scripts and styles at build ([3d56e05](https://github.com/brig-id/app/commit/3d56e05062b625d0aa57e45052482edd2b0b02a1))
+
+
+### Bug Fixes
+
+* 🐛 disable "Remove" for a user's only passkey ([376100e](https://github.com/brig-id/app/commit/376100ef93005a136e70dd36ecc0991ef89f81d5))
+* 🐛 drop custom brand gradient, apply the org's WA Kit overrides ([c910036](https://github.com/brig-id/app/commit/c910036d22decbec72461b47ba6cf782acacfbc0))
+* **app:** 🐛 a read that hits the rate limit is asked again, not shown stale ([50799b7](https://github.com/brig-id/app/commit/50799b70ca51b1f695ae64c2993ff8e20424fc5f))
+* **app:** 🐛 distinguish each passkey's Remove button by accessible name ([19da6ef](https://github.com/brig-id/app/commit/19da6ef1b0e26c9de1b0ecddf4471703f1c4873e))
+* **ci:** 🐛 match dev/* branches in workflow triggers ([6cceb38](https://github.com/brig-id/app/commit/6cceb387a97d52679fe8a390f6f1470a6a8945c4))
+* **deps:** 🔒️ refresh dependencies to clear pnpm audit advisories ([44f1f6e](https://github.com/brig-id/app/commit/44f1f6e646762afbf41dd511497ac7c4e819f0b5))
+
 ## [0.2.0] in words
 
 Written by hand while 0.2.0 was being made; the generated entry is above.
