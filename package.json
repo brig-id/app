@@ -33,6 +33,7 @@
     "check-origins": "node scripts/check-origins.mjs"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@iconify-json/ph": "^1.2.2",
     "@playwright/test": "^1.62.1",
     "@qwik.dev/core": "2.0.0-rc.5",
