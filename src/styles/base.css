@@ -15,7 +15,6 @@ html {
   line-height: 1.55;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  scrollbar-gutter: stable;
 }
 
 body {
@@ -100,7 +99,7 @@ a:hover {
 
 ::selection {
   background: var(--selected);
-  color: var(--p-ink-0);
+  color: var(--on-selected);
 }
 
 code,
@@ -116,6 +115,37 @@ code,
 
 .small {
   font-size: var(--p-text-s);
+}
+
+/* What is said differs with the theme in use (the theme switch names the
+   other one). Same conditions as the tokens. */
+.when-dark,
+.when-light {
+  display: inline-flex;
+  gap: var(--p-space-2);
+  align-items: center;
+}
+
+.when-light {
+  display: none !important;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .when-light {
+    display: inline-flex !important;
+  }
+
+  :root:not([data-theme="dark"]) .when-dark {
+    display: none !important;
+  }
+}
+
+:root[data-theme="light"] .when-light {
+  display: inline-flex !important;
+}
+
+:root[data-theme="light"] .when-dark {
+  display: none !important;
 }
 
 /* Read by a screen reader, not shown. */

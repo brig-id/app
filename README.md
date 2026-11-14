@@ -40,8 +40,9 @@ Our own, with no component library: native elements, one stylesheet.
 - **Tokens** are CSS custom properties on three levels (`src/styles/tokens.css`):
   _primitive_ (the palette in `oklch`, spacing, radii, type scale), _semantic_
   (`--surface`, `--text`, `--accent`, `--danger`… the only ones a component uses) and a
-  few _component_ values. The dark theme is the only set of semantic values today; the
-  light theme will add a second set and change no component.
+  few _component_ values. There are two sets of semantic values, **dark and light**,
+  under the same names: a component never knows which theme it is in. The theme follows
+  the system's preference until the person chooses one.
 - **Components**: page layouts, card, input, button, callout, icon. Classes on native
   elements (`button`, `input`, `fieldset`…), which bring their keyboard and screen-reader
   behaviour with them.

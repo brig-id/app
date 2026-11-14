@@ -2,6 +2,7 @@ import { $, component$, Slot, useVisibleTask$ } from "@qwik.dev/core";
 import { Link, useLocation, useNavigate } from "@qwik.dev/router";
 import { Icon, type IconName } from "~/components/ui/icon";
 import { LanguageSwitch } from "~/components/ui/language-switch";
+import { ThemeSwitch } from "~/components/ui/theme-switch";
 import { type MessageId, T } from "~/i18n";
 import {
   checkSession,
@@ -62,6 +63,7 @@ export default component$(() => {
         </Link>
         <div class="cluster">
           <LanguageSwitch />
+          <ThemeSwitch />
           <button type="button" class="button button--small" onClick$={signOut}>
             <Icon name="sign-out" />
             <T id="nav.signout" />

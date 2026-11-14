@@ -4,16 +4,19 @@ What the interface ships that the project did not make. Each is redistributable 
 the interface's licence; the About page of the interface (`/about/`) says the same to the
 people who use it.
 
-## Background image
+## Background images
 
-| File                                        | Work              | Author     | Licence                                                                                  | Source                                                                           |
-| ------------------------------------------- | ----------------- | ---------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `src/assets/backgrounds/prism-*.{avif,jpg}` | _Prism tribeam 1_ | Kelvinsong | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (public domain dedication) | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Prism_tribeam_1.jpg) |
+| File                                        | Work              | Author        | Licence                                                                                  | Source                                                                                       | Used by         |
+| ------------------------------------------- | ----------------- | ------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | --------------- |
+| `src/assets/backgrounds/prism-*.{avif,jpg}` | _Prism tribeam 1_ | Kelvinsong    | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (public domain dedication) | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Prism_tribeam_1.jpg)             | The dark theme  |
+| `src/assets/backgrounds/cliff-*.{avif,jpg}` | _Dingle cliff_    | Ian Schneider | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (public domain dedication) | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Dingle_cliff_%28Unsplash%29.jpg) | The light theme |
 
-Checked on the file's page on 2026-11-13. The original (4592 × 3056) was cropped to 3:2
-and resized to 960 and 1920 pixels wide, as AVIF with a JPEG fallback. Decoration only:
-the pages read the same without it, and it is not loaded when the browser asks to save
-data.
+Checked on each file's page, on 2026-11-13 and 2026-11-14. The second was published on
+Unsplash in October 2015, while that site's licence was CC0, and imported to Commons with
+it; a dedication to the public domain cannot be withdrawn. The originals were cropped to
+3:2 and resized to 960 and 1920 pixels wide, as AVIF with a JPEG fallback. Decoration
+only: the pages read the same without them, and none is loaded when the browser asks to
+save data.
 
 ## Fonts
 

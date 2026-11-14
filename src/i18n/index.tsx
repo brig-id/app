@@ -163,12 +163,9 @@ export function titled(id: MessageId): () => void {
 }
 
 /**
- * Runs in the document's head, before anything is painted: the remembered
- * language, else the first of the browser's languages the interface speaks,
- * else English. It also notes a request to save data, so that the
- * stylesheet loads no background image (`styles/sign-in.css`).
- *
- * Plain ES5 on purpose: it is inlined as written, and allowed by its hash in
- * the Content Security Policy.
+ * The language part of the script that runs in the document's head, before
+ * anything is painted: the remembered language, else the first of the
+ * browser's languages the interface speaks, else English. `d` is the
+ * document element (`src/head-script.ts`).
  */
-export const HEAD_SCRIPT = `(function(){var d=document.documentElement,l=null;try{l=localStorage.getItem(${JSON.stringify(STORAGE_KEY)})}catch(e){}if(l!=="en"&&l!=="fr"){l=null;var n=navigator.languages||[navigator.language||""];for(var i=0;i<n.length&&!l;i++){var c=String(n[i]).slice(0,2).toLowerCase();if(c==="en"||c==="fr")l=c}}d.lang=l||"en";var c=navigator.connection;if(c&&c.saveData)d.setAttribute("data-save-data","")})();`;
+export const LOCALE_SCRIPT = `var l=null;try{l=localStorage.getItem(${JSON.stringify(STORAGE_KEY)})}catch(e){}if(l!=="en"&&l!=="fr"){l=null;var n=navigator.languages||[navigator.language||""];for(var i=0;i<n.length&&!l;i++){var c=String(n[i]).slice(0,2).toLowerCase();if(c==="en"||c==="fr")l=c}}d.lang=l||"en";`;

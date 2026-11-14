@@ -64,6 +64,14 @@ export default component$(() => {
             >
               <T id="about.credit.file" />
               <NewTab />
+            </a>{" "}
+            <a
+              href="https://commons.wikimedia.org/wiki/File:Dingle_cliff_%28Unsplash%29.jpg"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <T id="about.credit.file-light" />
+              <NewTab />
             </a>
           </li>
           <li>

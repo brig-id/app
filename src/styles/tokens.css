@@ -2,9 +2,8 @@
 
    Primitive: the palette, spacing, radii, the type scale, durations. Never
    used by a component.
-   Semantic: what a value is for. One set per theme: the dark theme is the
-   only one today; the light theme will be a second set of these same
-   names, and no component changes.
+   Semantic: what a value is for. One set per theme, dark then light, under
+   the same names: a component never knows which theme it is in.
    Component: a few values a component exposes, set from semantic ones. */
 
 :root {
@@ -20,6 +19,17 @@
   --p-mist-1: oklch(0.955 0.007 269);
   --p-mist-2: oklch(0.8 0.018 267);
   --p-mist-3: oklch(0.68 0.028 270);
+
+  /* Paper and ink, for the light theme: warm whites, blue-black text. */
+  --p-paper-0: oklch(0.995 0.003 85);
+  --p-paper-1: oklch(0.972 0.007 85);
+  --p-paper-2: oklch(0.948 0.009 85);
+  --p-paper-3: oklch(0.92 0.011 85);
+  --p-paper-4: oklch(0.86 0.012 270);
+  --p-slate-0: oklch(0.21 0.02 270);
+  --p-slate-1: oklch(0.4 0.025 270);
+  --p-slate-2: oklch(0.49 0.025 270);
+  --p-slate-3: oklch(0.6 0.02 270);
 
   /* White light, then the colours it splits into. */
   --p-light: oklch(0.968 0.029 81);
@@ -96,6 +106,7 @@
 
   --focus-ring: var(--p-cyan);
   --selected: var(--p-cyan);
+  --on-selected: var(--p-ink-0);
   --selected-surface: oklch(0.819 0.115 213 / 0.12);
   --scrim: oklch(0.123 0.011 271 / 0.72);
   --shadow: 0 1.5rem 4rem oklch(0 0 0 / 0.55);
@@ -112,11 +123,102 @@
   --card-padding: clamp(var(--p-space-5), 5vw, var(--p-space-6));
 }
 
+/* -- semantic: light ---------------------------------------------------------
+   A second, designed set of values, not an inversion. It follows the system's
+   preference, unless the person chose a theme (`data-theme`, set before the
+   first paint by the script in the head). The same block twice: CSS has no
+   way to say "this media query, or that attribute". */
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+
+    --surface-page: var(--p-paper-1);
+    --surface: var(--p-paper-0);
+    --surface-raised: var(--p-paper-2);
+    --surface-hover: var(--p-paper-3);
+    --surface-sunken: var(--p-paper-0);
+
+    --border: var(--p-paper-4);
+    --border-strong: var(--p-slate-3);
+
+    --text: var(--p-slate-0);
+    --text-quiet: var(--p-slate-1);
+    --text-faint: var(--p-slate-2);
+
+    /* On paper the one action is ink, with the same warm halo. */
+    --accent: var(--p-slate-0);
+    --on-accent: var(--p-paper-1);
+    --accent-glow: oklch(0.75 0.13 70 / 0.35);
+
+    --danger: oklch(0.5 0.19 28);
+    --danger-surface: oklch(0.5 0.19 28 / 0.07);
+    --danger-border: oklch(0.5 0.19 28 / 0.45);
+    --warning: oklch(0.48 0.11 65);
+    --warning-surface: oklch(0.75 0.14 70 / 0.14);
+    --warning-border: oklch(0.55 0.12 65 / 0.5);
+    --success: oklch(0.43 0.11 155);
+    --success-surface: oklch(0.6 0.14 155 / 0.1);
+    --success-border: oklch(0.45 0.11 155 / 0.45);
+    --info: oklch(0.45 0.12 240);
+    --info-surface: oklch(0.6 0.12 235 / 0.1);
+    --info-border: oklch(0.45 0.12 240 / 0.45);
+
+    --focus-ring: oklch(0.5 0.17 250);
+    --selected: oklch(0.47 0.14 245);
+    --on-selected: var(--p-paper-0);
+    --selected-surface: oklch(0.55 0.14 245 / 0.1);
+    --scrim: oklch(0.975 0.006 85 / 0.82);
+    --shadow: 0 1.5rem 4rem oklch(0.2 0.02 270 / 0.22);
+  }
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --surface-page: var(--p-paper-1);
+  --surface: var(--p-paper-0);
+  --surface-raised: var(--p-paper-2);
+  --surface-hover: var(--p-paper-3);
+  --surface-sunken: var(--p-paper-0);
+
+  --border: var(--p-paper-4);
+  --border-strong: var(--p-slate-3);
+
+  --text: var(--p-slate-0);
+  --text-quiet: var(--p-slate-1);
+  --text-faint: var(--p-slate-2);
+
+  /* On paper the one action is ink, with the same warm halo. */
+  --accent: var(--p-slate-0);
+  --on-accent: var(--p-paper-1);
+  --accent-glow: oklch(0.75 0.13 70 / 0.35);
+
+  --danger: oklch(0.5 0.19 28);
+  --danger-surface: oklch(0.5 0.19 28 / 0.07);
+  --danger-border: oklch(0.5 0.19 28 / 0.45);
+  --warning: oklch(0.48 0.11 65);
+  --warning-surface: oklch(0.75 0.14 70 / 0.14);
+  --warning-border: oklch(0.55 0.12 65 / 0.5);
+  --success: oklch(0.43 0.11 155);
+  --success-surface: oklch(0.6 0.14 155 / 0.1);
+  --success-border: oklch(0.45 0.11 155 / 0.45);
+  --info: oklch(0.45 0.12 240);
+  --info-surface: oklch(0.6 0.12 235 / 0.1);
+  --info-border: oklch(0.45 0.12 240 / 0.45);
+
+  --focus-ring: oklch(0.5 0.17 250);
+  --selected: oklch(0.47 0.14 245);
+  --on-selected: var(--p-paper-0);
+  --selected-surface: oklch(0.55 0.14 245 / 0.1);
+  --scrim: oklch(0.975 0.006 85 / 0.82);
+  --shadow: 0 1.5rem 4rem oklch(0.2 0.02 270 / 0.22);
+}
+
 @media (prefers-contrast: more) {
   :root {
-    --border: var(--p-ink-5);
-    --border-strong: var(--p-mist-3);
-    --text-quiet: var(--p-mist-1);
-    --text-faint: var(--p-mist-2);
+    --border: var(--border-strong);
+    --text-quiet: var(--text);
+    --text-faint: var(--text);
   }
 }
