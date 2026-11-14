@@ -39,6 +39,47 @@ html:not([data-save-data]) .signin-bg {
   }
 }
 
+/* The light theme has its own image: the Irish coast. */
+@media (prefers-color-scheme: light) {
+  html:not([data-save-data]):not([data-theme="dark"]) .signin-bg {
+    background-image: url("../assets/backgrounds/cliff-960.jpg");
+    background-image: image-set(
+      url("../assets/backgrounds/cliff-960.avif") type("image/avif"),
+      url("../assets/backgrounds/cliff-960.jpg") type("image/jpeg")
+    );
+    background-position: center;
+  }
+}
+
+html[data-theme="light"]:not([data-save-data]) .signin-bg {
+  background-image: url("../assets/backgrounds/cliff-960.jpg");
+  background-image: image-set(
+    url("../assets/backgrounds/cliff-960.avif") type("image/avif"),
+    url("../assets/backgrounds/cliff-960.jpg") type("image/jpeg")
+  );
+  background-position: center;
+}
+
+@media (min-width: 60rem) {
+  html[data-theme="light"]:not([data-save-data]) .signin-bg {
+    background-image: url("../assets/backgrounds/cliff-1920.jpg");
+    background-image: image-set(
+      url("../assets/backgrounds/cliff-1920.avif") type("image/avif"),
+      url("../assets/backgrounds/cliff-1920.jpg") type("image/jpeg")
+    );
+  }
+}
+
+@media (min-width: 60rem) and (prefers-color-scheme: light) {
+  html:not([data-save-data]):not([data-theme="dark"]) .signin-bg {
+    background-image: url("../assets/backgrounds/cliff-1920.jpg");
+    background-image: image-set(
+      url("../assets/backgrounds/cliff-1920.avif") type("image/avif"),
+      url("../assets/backgrounds/cliff-1920.jpg") type("image/jpeg")
+    );
+  }
+}
+
 @media (prefers-reduced-data: reduce) {
   html .signin-bg {
     background-image: none;
@@ -54,6 +95,15 @@ html:not([data-save-data]) .signin-bg {
 
 .signin-header {
   padding: var(--p-space-5) clamp(var(--p-space-4), 4vw, var(--p-space-7));
+}
+
+/* Over the image, the name sits on its own plate, like the footer: its
+   contrast cannot depend on the picture behind it. */
+.signin-header .brand {
+  display: inline-block;
+  padding: var(--p-space-1) var(--p-space-3);
+  border-radius: var(--p-radius-full);
+  background: var(--scrim);
 }
 
 .brand {

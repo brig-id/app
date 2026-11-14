@@ -1,5 +1,6 @@
 import { component$, Slot } from "@qwik.dev/core";
 import { LanguageSwitch } from "~/components/ui/language-switch";
+import { ThemeSwitch } from "~/components/ui/theme-switch";
 import { T } from "~/i18n";
 
 /**
@@ -23,6 +24,7 @@ export default component$(() => (
         <T id="nav.about" />
       </a>
       <LanguageSwitch />
+      <ThemeSwitch />
     </footer>
   </div>
 ));

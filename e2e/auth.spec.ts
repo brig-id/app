@@ -439,6 +439,35 @@ test.describe("languages", () => {
   });
 });
 
+test.describe("themes", () => {
+  test("the theme follows the system, and a choice is remembered", async ({ browser }) => {
+    const context = await browser.newContext({
+      baseURL: E2E_ORIGIN,
+      ignoreHTTPSErrors: true,
+      colorScheme: "light",
+    });
+    const page = await context.newPage();
+    const background = () =>
+      page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor);
+
+    await page.goto("/");
+    const light = await background();
+    await expect(page.locator("html")).not.toHaveAttribute("data-theme");
+
+    // The button names the other theme.
+    await clickUntil(page, page.getByRole("button", { name: "Dark theme" }), () =>
+      expect(page.locator("html")).toHaveAttribute("data-theme", "dark", { timeout: 2000 }),
+    );
+    expect(await background()).not.toBe(light);
+    await expect(page.getByRole("button", { name: "Light theme" })).toBeVisible();
+
+    // Remembered on another page, before anything is painted.
+    await page.goto("/recover/");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    await context.close();
+  });
+});
+
 test.describe("nothing external", () => {
   test("the pages load nothing from another origin, and nothing is refused", async ({
     page,

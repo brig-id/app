@@ -14,6 +14,7 @@ const dist = process.argv[2] ?? "dist";
 const LINKS = [
   "https://github.com/brig-id",
   "https://commons.wikimedia.org/wiki/File:Prism_tribeam_1.jpg",
+  "https://commons.wikimedia.org/wiki/File:Dingle_cliff_%28Unsplash%29.jpg",
   "https://passkeys.dev/docs/intro/what-are-passkeys/",
 ];
 
