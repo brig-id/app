@@ -23,7 +23,7 @@ Written by hand while 0.2.0 was being made; the generated entry is above.
   when the built files name another origin.
 - The pages are sorted into parts: sign-in (`/`, `/signup/`, `/recover/`,
   `/continue/`, `/about/`) and account (`/welcome/`, `/identities/`, `/passkeys/`).
-  `/login/` and `/register/` redirect.
+  `/login/` and `/register/` are gone.
 - Identity logos are `icon:ph:<name>` references; the picker is rebuilt on Phosphor.
 - Deleting an identity and replacing a recovery code ask for confirmation in the
   page, not in a browser dialog.

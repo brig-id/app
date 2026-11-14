@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  isPasskeySupported,
   passkeySupport,
   login,
   recover,
@@ -213,7 +212,7 @@ describe("register/login", () => {
     expect((error as WebAuthnError).message).toBe("this recovery code has a typo");
   });
 
-  it("login() sends the username only, and finishes", async () => {
+  it("login() sends no username, and finishes", async () => {
     const fetchMock = vi
       .fn<FakeFetch>()
       .mockResolvedValueOnce(
@@ -232,19 +231,11 @@ describe("register/login", () => {
       },
     });
 
-    await login("alice@example.com");
+    await login();
 
     const beginBody = JSON.parse(fetchMock.mock.calls[0]![1]!.body as string);
-    expect(beginBody).toEqual({ username: "alice@example.com" });
+    expect(beginBody).toEqual({});
     expect(fetchMock.mock.calls[1]?.[0]).toBe("/auth/login/finish");
-  });
-
-  it("isPasskeySupported() reflects PublicKeyCredential availability", () => {
-    vi.stubGlobal("window", { PublicKeyCredential: {} });
-    expect(isPasskeySupported()).toBe(true);
-
-    vi.stubGlobal("window", {});
-    expect(isPasskeySupported()).toBe(false);
   });
 
   it("passkeySupport() tells an insecure context from a missing API", () => {
@@ -274,7 +265,7 @@ describe("register/login", () => {
           .mockResolvedValue(fakeCredential("assertion")),
       },
     });
-    await login(null);
+    await login();
     expect(memory.size).toBe(0);
   });
 });
