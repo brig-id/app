@@ -1,5 +1,6 @@
 {
   "name": "@brig-id/app",
+  "version": "0.1.0",
   "description": "brig·id — the web interface: sign-in, account and passkeys",
   "license": "AGPL-3.0-or-later",
   "engines": {

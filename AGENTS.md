@@ -86,6 +86,19 @@ ci(ci): 👷 add Lighthouse accessibility check
 chore(deps): 📦 bump @qwik.dev/core to 2.0.0
 ```
 
+## Releases
+
+Nobody tags by hand. `.github/workflows/release.yml` (release-please) keeps a release
+pull request up to date: the next version (from the commit types since the last
+release) and its `CHANGELOG.md` entry. **Merging that pull request is the release**: the
+tag `vX.Y.Z` and the GitHub Release follow. So:
+
+- the commit type decides the version: `feat` is a minor, `fix` a patch, a `!` or a
+  `BREAKING CHANGE:` footer a minor too while the version is 0.x;
+- the commit subject is the changelog line: write it for someone reading the release;
+- do not edit `CHANGELOG.md`, `.release-please-manifest.json` or the version of
+  `package.json` by hand.
+
 ## CSP hash manifest
 
 `pnpm build` runs `scripts/csp-hashes.mjs`, which writes `dist/csp-hashes.json`: the

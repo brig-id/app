@@ -1,11 +1,15 @@
 # Changelog
 
-All notable changes to `@brig-id/app` are documented in this file.
+All notable changes to `@brig-id/app` are documented in this file. This project
+adheres to [Semantic Versioning](https://semver.org/).
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/).
+From 0.2.0 on, each entry is written by release-please from the commits merged
+since the last release: there is no "Unreleased" section to keep by hand. What
+a list of commits does not say is in the pull requests it links to.
 
-## [Unreleased]
+## [0.2.0] in words
+
+Written by hand while 0.2.0 was being made; the generated entry is above.
 
 ### Changed
 
