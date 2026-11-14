@@ -1,6 +1,5 @@
 import { $, component$, useSignal, useVisibleTask$ } from "@qwik.dev/core";
 import { type DocumentHead, useNavigate } from "@qwik.dev/router";
-import { delay } from "helpers4/promise";
 import { PasskeyItem } from "~/components/account/passkey-item";
 import { RecoveryCodePanel } from "~/components/account/recovery-code";
 import { Callout } from "~/components/ui/callout";
@@ -25,26 +24,16 @@ export default component$(() => {
   const adding = useSignal(false);
 
   const refresh = $(async () => {
-    const load = async () => {
-      try {
-        passkeys.value = await listPasskeys();
-        return true;
-      } catch (err) {
-        if (err instanceof SessionEndedError) {
-          await nav("/");
-          return true;
-        }
-        return false;
+    try {
+      passkeys.value = await listPasskeys();
+    } catch (err) {
+      if (err instanceof SessionEndedError) {
+        await nav("/");
+        return;
       }
-    };
-    if (await load()) return;
-    // One more try after a pause: the first can fall on a rate limit right
-    // after a ceremony.
-    await delay(3500);
-    if (!(await load())) {
       notice.value = {
         kind: "danger",
-        message: { id: "passkeys.load-failed" },
+        message: failure(err, "passkeys.load-failed"),
       };
     }
   });
