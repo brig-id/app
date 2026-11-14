@@ -85,10 +85,8 @@ export interface FinishRegisterRequest {
 
 // -- /auth/login --
 
-export interface BeginLoginRequest {
-  /** Absent: username-less login (discoverable credential). */
-  username?: string;
-}
+/** Empty: signing in sends no username, the passkey names the account. */
+export type BeginLoginRequest = Record<string, never>;
 
 export interface BeginLoginResponse {
   session_id: string;
@@ -180,12 +178,6 @@ export interface UpdateIdentityRequest {
   logo?: string;
   /** Empty clears it. */
   description?: string;
-}
-
-// -- errors --
-
-export interface ApiErrorBody {
-  error: string;
 }
 
 // -- authorization requests of relying parties (ADR-005 §2) -------------------

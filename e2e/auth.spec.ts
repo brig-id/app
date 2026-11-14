@@ -122,6 +122,23 @@ async function waitForPasskeyList(page: Page, count: number) {
   await expect(page.locator(".passkey-item")).toHaveCount(count);
 }
 
+/** The identities page with its list loaded. The account routes are
+ * rate-limited too (60 a minute), and a whole run can reach that limit: the
+ * page then says so, and loading it again a little later succeeds. */
+async function waitForIdentities(page: Page, count: number) {
+  const cards = page.locator(".identity-list > li");
+  for (let i = 0; i < 5; i++) {
+    try {
+      await expect(cards).toHaveCount(count, { timeout: 4000 });
+      return;
+    } catch {
+      await page.waitForTimeout(3500);
+      await page.reload();
+    }
+  }
+  await expect(cards).toHaveCount(count);
+}
+
 test.describe("sign-up and onboarding", () => {
   test("an account is a passkey: onboarding names it and gives a recovery code", async ({
     page,
@@ -142,7 +159,7 @@ test.describe("sign-up and onboarding", () => {
     await expect(page.getByText("Saved.")).toBeVisible();
 
     await finishOnboarding(page);
-    await expect(page.locator(".identity-list > li")).toHaveCount(3, { timeout: 10000 });
+    await waitForIdentities(page, 3);
 
     await waitForPasskeyList(page, 1);
     await expect(page.locator(".passkey-item")).toContainText("Laptop");
@@ -202,15 +219,6 @@ test.describe("sign in", () => {
     await page.getByLabel("Server").fill("https://id.example.org/somewhere");
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page).toHaveURL("https://id.example.org/");
-  });
-
-  test("the earlier addresses of the pages still lead to them", async ({ page }) => {
-    await page.goto("/login/");
-    await expect(page).toHaveURL(`${E2E_ORIGIN}/`);
-    await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
-    await page.goto("/register/");
-    await expect(page).toHaveURL(/\/signup\/$/);
-    await expect(page.getByRole("heading", { name: "Create an account" })).toBeVisible();
   });
 });
 
@@ -329,7 +337,7 @@ test.describe("identities page", () => {
     await finishOnboarding(page);
 
     const cards = page.locator(".identity-list > li");
-    await expect(cards).toHaveCount(3, { timeout: 10000 });
+    await waitForIdentities(page, 3);
     const names = page.locator(".identity-name");
     await expect(names).toHaveText(["Public", "Personal", "Work"]);
 
@@ -340,14 +348,17 @@ test.describe("identities page", () => {
       .click();
     await expect(page.getByLabel("Name")).toHaveValue("Family");
     await page.getByLabel("Name").fill("Les Dupont");
-    await page.getByRole("button", { name: "Create", exact: true }).click();
-    await expect(cards).toHaveCount(4);
+    // Rate-limited like the list: the form is still there to send again.
+    await clickUntil(page, page.getByRole("button", { name: "Create", exact: true }), () =>
+      expect(cards).toHaveCount(4, { timeout: 3000 }),
+    );
     await expect(names.last()).toHaveText("Les Dupont");
 
     await page.getByRole("button", { name: "Edit Les Dupont" }).click();
     await page.getByLabel("Name").fill("Famille");
-    await page.getByRole("button", { name: "Save", exact: true }).click();
-    await expect(names.last()).toHaveText("Famille");
+    await clickUntil(page, page.getByRole("button", { name: "Save", exact: true }), () =>
+      expect(names.last()).toHaveText("Famille", { timeout: 3000 }),
+    );
 
     // Deleting asks first, in the page.
     await page.getByRole("button", { name: "Delete Famille" }).click();

@@ -13,11 +13,6 @@ import type {
   RegisterPublicKeyCredentialJSON,
 } from "./api-types";
 
-/** Feature-detects WebAuthn/passkey support in the current browser. */
-export function isPasskeySupported(): boolean {
-  return passkeySupport() === "supported";
-}
-
 /**
  * Why passkeys can or can't work here (app#13):
  * - `insecure-context`: the page isn't served over HTTPS (or localhost), so
@@ -32,24 +27,6 @@ export function passkeySupport(): PasskeySupport {
   if (typeof window === "undefined") return "no-webauthn";
   if (window.isSecureContext === false) return "insecure-context";
   return "PublicKeyCredential" in window ? "supported" : "no-webauthn";
-}
-
-/** True when this device has a built-in authenticator (Touch ID, Windows
- * Hello, Android screen lock…). False only means "use a phone or a key". */
-export async function hasPlatformAuthenticator(): Promise<boolean> {
-  const pkc = (
-    globalThis as {
-      PublicKeyCredential?: {
-        isUserVerifyingPlatformAuthenticatorAvailable?: () => Promise<boolean>;
-      };
-    }
-  ).PublicKeyCredential;
-  if (!pkc?.isUserVerifyingPlatformAuthenticatorAvailable) return false;
-  try {
-    return await pkc.isUserVerifyingPlatformAuthenticatorAvailable();
-  } catch {
-    return false;
-  }
 }
 
 export type WebAuthnErrorKind = "network" | "browser" | "api";
@@ -191,21 +168,6 @@ async function createPasskey(
   };
 }
 
-/** True when the browser can offer passkeys as autofill (conditional UI). */
-export async function isAutofillSupported(): Promise<boolean> {
-  const pkc = (
-    globalThis as {
-      PublicKeyCredential?: { isConditionalMediationAvailable?: () => Promise<boolean> };
-    }
-  ).PublicKeyCredential;
-  if (!pkc?.isConditionalMediationAvailable) return false;
-  try {
-    return await pkc.isConditionalMediationAvailable();
-  } catch {
-    return false;
-  }
-}
-
 /**
  * Creates an account: one passkey, no username (the server generates a
  * hidden one, ADR-003), and opens its session (an HttpOnly cookie) with the same ceremony. The passkey
@@ -258,27 +220,20 @@ export async function addCredential(): Promise<void> {
 
 
 /**
- * Passkey sign-in. With a `username`, the server names the allowed passkeys.
- * Without one (`null`), it is username-less: the authenticator picks the
- * passkey and the server learns the user from it. `conditional` runs it as
- * passkey autofill on the username field; `signal` aborts it (a conditional
- * request stays pending until the user picks a passkey or it is aborted).
+ * Signs in with a passkey, and nothing else: no username is sent. The
+ * authenticator offers the passkeys it holds for this server, and the server
+ * learns the account from the one that answers.
  */
-export async function login(
-  username: string | null,
-  opts: { conditional?: boolean; signal?: AbortSignal } = {},
-): Promise<void> {
+export async function login(): Promise<void> {
   const begin = await apiRequest<BeginLoginResponse>(
     "/auth/login/begin",
-    (username ? { username } : {}) satisfies BeginLoginRequest,
+    {} satisfies BeginLoginRequest,
   );
 
   const options = begin.challenge.publicKey;
   let credential: PublicKeyCredential | null;
   try {
     credential = (await navigator.credentials.get({
-      ...(opts.conditional ? { mediation: "conditional" } : {}),
-      ...(opts.signal ? { signal: opts.signal } : {}),
       publicKey: {
         ...options,
         challenge: base64UrlToBuffer(options.challenge),
@@ -288,7 +243,7 @@ export async function login(
           transports: cred.transports as AuthenticatorTransport[] | undefined,
         })),
       } as PublicKeyCredentialRequestOptions,
-    } as CredentialRequestOptions)) as PublicKeyCredential | null;
+    })) as PublicKeyCredential | null;
   } catch {
     throw new WebAuthnError("browser", "Passkey sign-in was cancelled or failed.");
   }

@@ -16,9 +16,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // and the static build of the interface, one origin, no proxy.
 export const SERVER_DIR =
   process.env.BRIGID_SERVER_DIR ??
-  ["../server-seedling", "../server-leaf"]
-    .map((dir) => path.resolve(__dirname, dir))
-    .find((dir) => existsSync(dir)) ??
   path.resolve(__dirname, "../server-seedling");
 
 const CERT_DIR = path.join(__dirname, ".cert");
@@ -85,38 +82,30 @@ export default defineConfig({
       timeout: 60_000,
       env: {
         BRIGID_MASTER_KEY: E2E_MASTER_KEY,
-        ...serverSettings({
-          SERVER__DOMAIN: "brigid.localhost",
-          SERVER__HOST: "127.0.0.1",
-          SERVER__PORT: String(PORT),
-          SERVER__PUBLIC_URL: E2E_ORIGIN,
-          SERVER__UI_DIST_DIR: path.join(__dirname, "dist"),
-          // A new file per run: accounts and passkeys left by an earlier run
-          // would change what the tests see.
-          DATABASE__PATH: path.join(os.tmpdir(), `brigid-e2e-${Date.now()}.db`),
-          ...(HAS_CERT
-            ? {
-                SERVER__TLS_CERT: path.join(CERT_DIR, "brigid.localhost.pem"),
-                SERVER__TLS_KEY: path.join(
-                  CERT_DIR,
-                  "brigid.localhost-key.pem",
-                ),
-              }
-            : {}),
-        }),
+        BRIGID_SERVER__DOMAIN: "brigid.localhost",
+        BRIGID_SERVER__HOST: "127.0.0.1",
+        BRIGID_SERVER__PORT: String(PORT),
+        BRIGID_SERVER__PUBLIC_URL: E2E_ORIGIN,
+        BRIGID_SERVER__UI_DIST_DIR: path.join(__dirname, "dist"),
+        // A new file per run: accounts and passkeys left by an earlier run
+        // would change what the tests see.
+        BRIGID_DATABASE__PATH: path.join(
+          os.tmpdir(),
+          `brigid-e2e-${Date.now()}.db`,
+        ),
+        ...(HAS_CERT
+          ? {
+              BRIGID_SERVER__TLS_CERT: path.join(
+                CERT_DIR,
+                "brigid.localhost.pem",
+              ),
+              BRIGID_SERVER__TLS_KEY: path.join(
+                CERT_DIR,
+                "brigid.localhost-key.pem",
+              ),
+            }
+          : {}),
       },
     },
   ],
 });
-
-/** The server reads its settings from `BRIGID_…`; before its rename it read
- * them from `LEAF_…`. Both are set until that version is no longer tested
- * against. */
-function serverSettings(settings: Record<string, string>) {
-  return Object.fromEntries(
-    Object.entries(settings).flatMap(([key, value]) => [
-      [`BRIGID_${key}`, value],
-      [`LEAF_${key}`, value],
-    ]),
-  );
-}

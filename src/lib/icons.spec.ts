@@ -42,7 +42,7 @@ describe("logo library", () => {
 
   it("reads a reference, and nothing else", () => {
     expect(logoName("icon:ph:briefcase")).toBe("briefcase");
-    // The earlier form: the server converted every stored one.
+    // The form references had before Phosphor: not a logo of the library.
     expect(logoName("icon:solid:briefcase")).toBeNull();
     expect(logoName("icon:ph:not-in-the-library")).toBeNull();
     expect(logoName("upload:123")).toBeNull();
