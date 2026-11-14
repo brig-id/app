@@ -8,7 +8,8 @@ The interface aims at WCAG 2.2 AA, and holds it by tests rather than by intentio
 `e2e/accessibility.spec.ts` runs [axe](https://github.com/dequelabs/axe-core) in the
 end-to-end suite, on **every page and on the states a page can be in** (an error shown, a
 form open, a deletion being confirmed, a browser without passkeys), **in English and in
-French**. One violation fails the suite, and so the pull request.
+French, in the dark and in the light theme**. One violation fails the suite, and so the
+pull request.
 
 A new page, or a new state of a page, is added to that file in the same change.
 
@@ -43,7 +44,8 @@ Before a release, with the built interface served by a server:
 
 **What axe cannot see**
 
-- [ ] The text of the footer over the background image stays readable (it sits on its own
-      dark plate; check it when an image is added).
+- [ ] The name at the top and the links at the bottom of the sign-in pages stay readable
+      over the background image, in both themes (each sits on its own plate; check it when
+      an image is added).
 
 Note what was checked, with which browser and screen reader, in the release pull request.

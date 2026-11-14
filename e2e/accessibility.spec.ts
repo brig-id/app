@@ -3,7 +3,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { E2E_ORIGIN } from "../playwright.config";
 import { addVirtualAuthenticator, skipIfNoVirtualAuthenticator } from "./webauthn";
 
-// WCAG 2.2 AA, held by tests: axe on every page, in both languages. A
+// WCAG 2.2 AA, held by tests: axe on every page, in both languages and both
+// themes (the theme follows the system's preference, which is set here). A
 // violation fails the suite. What axe cannot judge (the order of focus, what
 // a screen reader says) is the manual pass of each release.
 const RULES = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"];
@@ -16,11 +17,18 @@ async function expectNoViolation(page: Page, what: string) {
   expect(found).toEqual([]);
 }
 
-for (const locale of ["en-GB", "fr-FR"]) {
+const CASES = [
+  { locale: "en-GB", colorScheme: "dark" },
+  { locale: "fr-FR", colorScheme: "dark" },
+  { locale: "en-GB", colorScheme: "light" },
+  { locale: "fr-FR", colorScheme: "light" },
+] as const;
+
+for (const { locale, colorScheme } of CASES) {
   const language = locale.slice(0, 2);
 
-  test.describe(`accessibility, in ${language}`, () => {
-    test.use({ locale });
+  test.describe(`accessibility, in ${language}, ${colorScheme} theme`, () => {
+    test.use({ locale, colorScheme });
 
     test.beforeEach(async () => {
       await new Promise((resolve) => setTimeout(resolve, 4000));

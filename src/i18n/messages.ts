@@ -37,6 +37,8 @@ export const MESSAGES = {
   "error.server-said": ["The server answered:", "Le serveur a répondu :"],
 
   "language.switch": ["Français", "English"],
+  "theme.light": ["Light theme", "Thème clair"],
+  "theme.dark": ["Dark theme", "Thème sombre"],
 
   // -- document titles ---------------------------------------------------------
   "title.signin": ["Sign in", "Se connecter"],
@@ -211,8 +213,8 @@ export const MESSAGES = {
   "about.source": ["Source code", "Code source"],
   "about.credits": ["Credits", "Crédits"],
   "about.credit.background": [
-    "Background image: “Prism tribeam 1”, by Kelvinsong, placed in the public domain (CC0 1.0), from Wikimedia Commons.",
-    "Image de fond : « Prism tribeam 1 », par Kelvinsong, versée au domaine public (CC0 1.0), depuis Wikimedia Commons.",
+    "Background images: “Prism tribeam 1”, by Kelvinsong, and “Dingle cliff”, by Ian Schneider, both placed in the public domain (CC0 1.0), from Wikimedia Commons.",
+    "Images de fond : « Prism tribeam 1 », par Kelvinsong, et « Dingle cliff », par Ian Schneider, toutes deux versées au domaine public (CC0 1.0), depuis Wikimedia Commons.",
   ],
   "about.credit.fonts": [
     "Typefaces: Geist and Geist Mono, by Vercel, SIL Open Font License 1.1.",
@@ -226,7 +228,8 @@ export const MESSAGES = {
     "These pages load nothing from any other server: no font, image, script or measurement from a third party.",
     "Ces pages ne chargent rien depuis un autre serveur : ni police, ni image, ni script, ni mesure d’audience d’un tiers.",
   ],
-  "about.credit.file": ["See the file", "Voir le fichier"],
+  "about.credit.file": ["The prism", "Le prisme"],
+  "about.credit.file-light": ["The cliff", "La falaise"],
   "about.back": ["Back", "Retour"],
 
   // -- account navigation ------------------------------------------------------

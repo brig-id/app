@@ -291,7 +291,8 @@ textarea.input {
   --logo-size: 3rem;
 }
 
-.language-switch {
+.language-switch,
+.theme-switch {
   color: var(--text-quiet);
   font-size: var(--p-text-s);
 }
