@@ -27,7 +27,10 @@ import { failure } from "~/lib/errors";
 export const RecoveryCodePanel = component$<{
   onboarding?: boolean;
   onKept$?: QRL<(kept: boolean) => void>;
-}>(({ onboarding = false, onKept$ }) => {
+  /** Called once the account has a code: from then on its identities and
+   * the applications are open to it. */
+  onReady$?: QRL<() => void>;
+}>(({ onboarding = false, onKept$, onReady$ }) => {
   const nav = useNavigate();
   const status = useSignal<RecoveryStatus | null>(null);
   const code = useSignal<string | null>(null);
@@ -55,6 +58,7 @@ export const RecoveryCodePanel = component$<{
       kept.value = false;
       if (onKept$) await onKept$(false);
       status.value = await recoveryStatus();
+      if (onReady$) await onReady$();
     } catch (err) {
       await fail(err);
     } finally {
@@ -65,7 +69,11 @@ export const RecoveryCodePanel = component$<{
   useVisibleTask$(async () => {
     try {
       status.value = await recoveryStatus();
-      if (onboarding && !status.value.code_created_at) await create();
+      if (!status.value.code_created_at) {
+        if (onboarding) await create();
+      } else if (onReady$) {
+        await onReady$();
+      }
     } catch (err) {
       await fail(err);
     }

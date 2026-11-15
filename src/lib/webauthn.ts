@@ -229,8 +229,32 @@ export async function login(): Promise<void> {
     "/auth/login/begin",
     {} satisfies BeginLoginRequest,
   );
+  await apiRequest<void>("/auth/login/finish", {
+    session_id: begin.session_id,
+    credential: await usePasskey(begin.challenge.publicKey),
+  } satisfies FinishLoginRequest);
+}
 
-  const options = begin.challenge.publicKey;
+/**
+ * Deletes the signed-in account, with a passkey ceremony done for that
+ * purpose: the session alone is not enough. Nothing is deleted if the
+ * ceremony is cancelled.
+ */
+export async function deleteAccount(): Promise<void> {
+  const begin = await apiRequest<BeginLoginResponse>(
+    "/account/delete/begin",
+    undefined,
+  );
+  await apiRequest<void>("/account/delete/finish", {
+    session_id: begin.session_id,
+    credential: await usePasskey(begin.challenge.publicKey),
+  } satisfies FinishLoginRequest);
+}
+
+/** Asks the authenticator to answer a challenge with one of its passkeys. */
+async function usePasskey(
+  options: BeginLoginResponse["challenge"]["publicKey"],
+): Promise<PublicKeyCredentialJSON> {
   let credential: PublicKeyCredential | null;
   try {
     credential = (await navigator.credentials.get({
@@ -245,14 +269,14 @@ export async function login(): Promise<void> {
       } as PublicKeyCredentialRequestOptions,
     })) as PublicKeyCredential | null;
   } catch {
-    throw new WebAuthnError("browser", "Passkey sign-in was cancelled or failed.");
+    throw new WebAuthnError("browser", "The passkey was not used: cancelled, or it failed.");
   }
   if (!credential) {
     throw new WebAuthnError("browser", "No passkey was selected.");
   }
 
   const response = credential.response as AuthenticatorAssertionResponse;
-  const finishCredential: PublicKeyCredentialJSON = {
+  return {
     id: credential.id,
     rawId: bufferToBase64Url(credential.rawId),
     type: "public-key",
@@ -269,13 +293,22 @@ export async function login(): Promise<void> {
       unknown
     >,
   };
-
-  await apiRequest<void>("/auth/login/finish", {
-    session_id: begin.session_id,
-    credential: finishCredential,
-  } satisfies FinishLoginRequest);
 }
 
+const DELETED_KEY = "brigid.deleted";
+
+/** Marks the next sign-in page as following the deletion of the account
+ * (read once). */
+export function markDeleted(): void {
+  sessionStorage.setItem(DELETED_KEY, "1");
+}
+
+/** Whether the account was just deleted from this tab; clears the mark. */
+export function takeDeletedFlag(): boolean {
+  const deleted = sessionStorage.getItem(DELETED_KEY) === "1";
+  sessionStorage.removeItem(DELETED_KEY);
+  return deleted;
+}
 
 const RECOVERED_KEY = "brigid.recovered";
 

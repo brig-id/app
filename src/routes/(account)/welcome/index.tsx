@@ -2,21 +2,47 @@ import {
   $,
   component$,
   useSignal,
+  useStore,
   useTask$,
   useVisibleTask$,
 } from "@qwik.dev/core";
 import { type DocumentHead, useNavigate } from "@qwik.dev/router";
 import { RecoveryCodePanel } from "~/components/account/recovery-code";
 import { Callout } from "~/components/ui/callout";
-import { type Message, Said, T, titled } from "~/i18n";
-import { listPasskeys, renamePasskey, SessionEndedError } from "~/lib/api";
+import { IdentityLogo } from "~/components/ui/identity-logo";
+import { isMessage, type Message, Said, T, titled, tr } from "~/i18n";
+import {
+  createIdentity,
+  listIdentities,
+  listPasskeys,
+  listTemplates,
+  renamePasskey,
+  SessionEndedError,
+} from "~/lib/api";
 import type { PasskeySummary } from "~/lib/api-types";
 import { failure } from "~/lib/errors";
 import { takeRecoveredFlag } from "~/lib/webauthn";
 
+/** An identity the onboarding proposes: kept unless unticked, under the
+ * name the person leaves or types. */
+interface Starter {
+  key: string;
+  logo: string;
+  name: string;
+  keep: boolean;
+  /** Created already: a second press on "Continue" does not create it twice. */
+  created: boolean;
+}
+
 /**
  * Onboarding, after sign-up or recovery: name the passkey (pre-filled with
- * its provider), keep the recovery code, then the account.
+ * its provider), keep the recovery code, choose the first identities, then
+ * the account.
+ *
+ * The recovery code comes first for the server too: until it exists, the
+ * account's identities are closed. The identities proposed are created by
+ * this page, the ones the person kept, when they continue; the server
+ * creates none.
  */
 export default component$(() => {
   const nav = useNavigate();
@@ -26,6 +52,15 @@ export default component$(() => {
   const nameSaved = useSignal(false);
   const codeKept = useSignal(false);
   const error = useSignal<Message | null>(null);
+  /** The identities proposed; empty for an account that already has some. */
+  const starters = useStore<{ list: Starter[] }>({ list: [] });
+  const startersAsked = useSignal(false);
+  /** Whether it is known what to propose, even if that is nothing: until
+   * then the person cannot continue, or they would leave before the
+   * proposal reached them. */
+  const startersKnown = useSignal(false);
+  const continuing = useSignal(false);
+  const identitiesError = useSignal<Message | null>(null);
 
   // Editing the name again un-marks it as saved.
   useTask$(({ track }) => {
@@ -44,6 +79,58 @@ export default component$(() => {
       if (!name.value) name.value = passkey.value?.label ?? "";
     } catch (err) {
       if (err instanceof SessionEndedError) await nav("/");
+    }
+  });
+
+  /** Once the recovery code exists: an account without any identity is
+   * proposed the starters, named in the page's language. */
+  const proposeStarters = $(async () => {
+    if (startersAsked.value) return;
+    startersAsked.value = true;
+    try {
+      if ((await listIdentities()).length > 0) return;
+      const templates = await listTemplates();
+      starters.list = templates
+        .filter((t) => t.starter)
+        .map((t) => {
+          const title = `template.${t.key}`;
+          return {
+            key: t.key,
+            logo: t.logo,
+            name: isMessage(title) ? tr(title) : t.name,
+            keep: true,
+            created: false,
+          };
+        });
+    } catch (err) {
+      if (err instanceof SessionEndedError) await nav("/");
+      // Otherwise nothing is proposed: identities are created from their page.
+    } finally {
+      startersKnown.value = true;
+    }
+  });
+
+  /** Creates the identities kept, then goes to the account. */
+  const finish = $(async () => {
+    identitiesError.value = null;
+    continuing.value = true;
+    try {
+      for (const starter of starters.list) {
+        if (!starter.keep || starter.created || !starter.name.trim()) continue;
+        // One at a time: the list of identities keeps this order.
+        // oxlint-disable-next-line no-await-in-loop
+        await createIdentity({ template: starter.key, name: starter.name });
+        starter.created = true;
+      }
+      await nav("/identities/");
+    } catch (err) {
+      if (err instanceof SessionEndedError) {
+        await nav("/");
+        return;
+      }
+      identitiesError.value = failure(err, "welcome.identities.failed");
+    } finally {
+      continuing.value = false;
     }
   });
 
@@ -125,16 +212,73 @@ export default component$(() => {
           onKept$={$((kept: boolean) => {
             codeKept.value = kept;
           })}
+          onReady$={proposeStarters}
         />
       </section>
+
+      {starters.list.length > 0 && (
+        <section class="card stack" aria-labelledby="starters-title">
+          <div class="stack stack--tight">
+            <h2 id="starters-title">
+              <T id="welcome.identities.title" />
+            </h2>
+            <p class="quiet">
+              <T id="welcome.identities.lead" />
+            </p>
+          </div>
+          <ul class="starters">
+            {starters.list.map((starter) => (
+              <li key={starter.key} class="starter">
+                <label class="starter-keep">
+                  <input
+                    type="checkbox"
+                    checked={starter.keep}
+                    disabled={starter.created}
+                    onChange$={(_, input) => {
+                      starter.keep = input.checked;
+                    }}
+                  />
+                  <IdentityLogo logo={starter.logo} size="s" />
+                  <span class="sr-only">
+                    <T
+                      id="welcome.identities.keep"
+                      p={{ name: starter.name }}
+                    />
+                  </span>
+                </label>
+                <label class="field-control grow">
+                  <span class="sr-only">
+                    <T id="identity.form.name" />
+                  </span>
+                  <input
+                    class="input"
+                    value={starter.name}
+                    maxLength={64}
+                    autoComplete="off"
+                    disabled={!starter.keep || starter.created}
+                    onInput$={(_, input) => {
+                      starter.name = input.value;
+                    }}
+                  />
+                </label>
+              </li>
+            ))}
+          </ul>
+          {identitiesError.value && (
+            <Callout kind="danger" alert>
+              <Said message={identitiesError.value} />
+            </Callout>
+          )}
+        </section>
+      )}
 
       <div class="cluster">
         <button
           type="button"
           class="button button--primary"
-          disabled={!codeKept.value}
+          disabled={!codeKept.value || !startersKnown.value || continuing.value}
           aria-describedby={codeKept.value ? undefined : "continue-hint"}
-          onClick$={() => nav("/identities/")}
+          onClick$={finish}
         >
           <T id="welcome.continue" />
         </button>

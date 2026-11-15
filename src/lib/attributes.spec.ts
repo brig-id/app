@@ -35,6 +35,7 @@ const request = (
   must_sign_in: false,
   silent: false,
   force_choice: false,
+  needs_recovery_code: false,
   identities: [
     identity("work", { email: "ada@work.example", given_name: "Ada" }),
     identity("bare"),

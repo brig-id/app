@@ -242,6 +242,13 @@ export default component$(() => {
             <T id={busy.value ? "common.waiting-passkey" : "signin.button"} />
           </button>
         </>
+      ) : r.needs_recovery_code ? (
+        <Callout kind="info">
+          <T id="continue.setup" />{" "}
+          <a href="/welcome/">
+            <T id="continue.setup.link" />
+          </a>
+        </Callout>
       ) : r.identities.length === 0 ? (
         <Callout kind="info">
           <T id="continue.none" />{" "}

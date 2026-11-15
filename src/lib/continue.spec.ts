@@ -18,6 +18,7 @@ const request = (over: Partial<AuthorizationRequest>): AuthorizationRequest => (
   must_sign_in: false,
   silent: false,
   force_choice: false,
+  needs_recovery_code: false,
   identities: [identity("a"), identity("b")],
   chosen: null,
   asked: [],

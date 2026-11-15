@@ -41,8 +41,13 @@ async function continueAndReadToken(
   request: APIRequestContext,
   clientId: string,
 ): Promise<Record<string, unknown>> {
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
-  await page.waitForURL(/application\.example\/back\?/);
+  // Refused for going too fast, the page says so and stays.
+  await expect(async () => {
+    await page
+      .getByRole("button", { name: "Continue", exact: true })
+      .click({ timeout: 2000 });
+    await page.waitForURL(/application\.example\/back\?/, { timeout: 3000 });
+  }).toPass({ timeout: 40_000 });
   const code = new URL(page.url()).searchParams.get("code");
   expect(code).toBeTruthy();
   const response = await request.post(TOKEN_ENDPOINT, {
@@ -107,16 +112,26 @@ test("an application receives what was ticked, nothing else, and it can be withd
   await expect(next).toBeDisabled();
   await expect(page.getByText(/does not work without/)).toBeVisible();
 
-  // Put on the identity from here, a value is shown, and not ticked.
-  const add = asked.getByRole("button", { name: "Add to this identity" });
-  await asked.getByLabel("E-mail address of this identity").fill("ada@work.example");
-  await add.last().click();
+  // Put on the identity from here, a value is shown, and not ticked. (The
+  // server limits how fast an account's pages may write; refused, the page
+  // says so and keeps the field, and a person would press again.)
+  const addToIdentity = (label: string, value: string) =>
+    expect(async () => {
+      await asked.getByLabel(`${label} of this identity`).fill(value);
+      await asked
+        .locator(".asked-row", { hasText: label })
+        .getByRole("button", { name: "Add to this identity" })
+        .click({ timeout: 2000 });
+      await expect(
+        asked.getByRole("checkbox", { name: new RegExp(label) }),
+      ).toBeVisible({ timeout: 3000 });
+    }).toPass({ timeout: 40_000 });
   const email = asked.getByRole("checkbox", { name: /E-mail address/ });
+  const firstName = asked.getByRole("checkbox", { name: /First name/ });
+  await addToIdentity("E-mail address", "ada@work.example");
   await expect(email).not.toBeChecked();
   await expect(asked.getByText("ada@work.example")).toBeVisible();
-  await asked.getByLabel("First name of this identity").fill("Ada");
-  await add.click();
-  const firstName = asked.getByRole("checkbox", { name: /First name/ });
+  await addToIdentity("First name", "Ada");
   await expect(firstName).not.toBeChecked();
   await expect(next).toBeDisabled();
 

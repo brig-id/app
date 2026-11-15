@@ -75,6 +75,8 @@ for (const { locale, colorScheme } of CASES) {
       }).toPass({ timeout: 40_000 });
 
       await expect(page.locator(".recovery-value")).toBeVisible({ timeout: 15_000 });
+      // With the code, the first identities are proposed.
+      await expect(page.locator(".starter")).toHaveCount(3, { timeout: 15_000 });
       await expectNoViolation(page, "/welcome/");
 
       await page.locator(".check input").check();
@@ -96,6 +98,12 @@ for (const { locale, colorScheme } of CASES) {
       await expectNoViolation(page, "/passkeys/");
       await page.locator(".passkey-item .button").first().click();
       await expectNoViolation(page, "/passkeys/ renaming a passkey");
+
+      await page.goto(`${E2E_ORIGIN}/account/`, { waitUntil: "networkidle" });
+      await expect(page.locator(".button--danger")).toBeDisabled();
+      await expectNoViolation(page, "/account/");
+      await page.locator(".check input").check();
+      await expectNoViolation(page, "/account/ ready to delete");
     });
 
     test("what an identity shares, and with whom", async ({ page, context, browserName }) => {
@@ -115,6 +123,9 @@ for (const { locale, colorScheme } of CASES) {
         await expect(page).toHaveURL(/\/welcome\//, { timeout: 4000 });
       }).toPass({ timeout: 40_000 });
       await expect(page.locator(".recovery-value")).toBeVisible({ timeout: 15_000 });
+      await page.locator(".check input").check();
+      await page.locator(".page > .cluster .button--primary").click();
+      await expect(page.locator(".identity-list > li")).toHaveCount(3, { timeout: 10_000 });
 
       // The linking page: attributes the identity lacks, then one it has,
       // then ticked.
