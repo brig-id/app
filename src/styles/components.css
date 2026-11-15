@@ -296,3 +296,22 @@ textarea.input {
   color: var(--text-quiet);
   font-size: var(--p-text-s);
 }
+
+/* -- a short qualifier next to a name ------------------------------------------ */
+
+.tag {
+  flex: none;
+  padding: 0 var(--p-space-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--p-radius-full);
+  color: var(--text-quiet);
+  font-size: var(--p-text-s);
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.tag--strong {
+  border-color: var(--text);
+  color: var(--text);
+  font-weight: 560;
+}

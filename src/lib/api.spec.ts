@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiError, createIdentity, listIdentities, SessionEndedError } from "./api";
+import {
+  ApiError,
+  createIdentity,
+  listIdentities,
+  SessionEndedError,
+  signOut,
+} from "./api";
 
 const response = (status: number, body: unknown = "", headers: Record<string, string> = {}) =>
   new Response(typeof body === "string" ? body : JSON.stringify(body), { status, headers });
@@ -52,6 +58,22 @@ describe("a write refused for too many requests", () => {
       detail: "slow down",
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("signing out refused for too many requests", () => {
+  it("is asked again: a session the person believes closed must be", async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(response(429, { error: "slow down" }, { "retry-after": "1" }))
+      .mockResolvedValueOnce(response(200));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const done = signOut();
+    await vi.advanceTimersByTimeAsync(1000);
+    await expect(done).resolves.toBeUndefined();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });
 

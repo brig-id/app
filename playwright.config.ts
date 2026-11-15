@@ -32,6 +32,16 @@ export const E2E_ORIGIN = `${WEB_PROTOCOL}://brigid.localhost:${PORT}`;
 export const E2E_MASTER_KEY =
   "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0";
 
+// A new database per run: accounts and passkeys left by an earlier run would
+// change what the tests see. Kept in the environment, so that the test
+// workers (which read this file again) name the same file as the server: a
+// suite registers an application in it with the server's command line.
+process.env.BRIGID_E2E_DATABASE ??= path.join(
+  os.tmpdir(),
+  `brigid-e2e-${Date.now()}.db`,
+);
+export const E2E_DATABASE = process.env.BRIGID_E2E_DATABASE;
+
 export default defineConfig({
   testDir: "./e2e",
   // A rate-limit backoff can stack across the steps of one test (sign-up,
@@ -87,12 +97,7 @@ export default defineConfig({
         BRIGID_SERVER__PORT: String(PORT),
         BRIGID_SERVER__PUBLIC_URL: E2E_ORIGIN,
         BRIGID_SERVER__UI_DIST_DIR: path.join(__dirname, "dist"),
-        // A new file per run: accounts and passkeys left by an earlier run
-        // would change what the tests see.
-        BRIGID_DATABASE__PATH: path.join(
-          os.tmpdir(),
-          `brigid-e2e-${Date.now()}.db`,
-        ),
+        BRIGID_DATABASE__PATH: E2E_DATABASE,
         ...(HAS_CERT
           ? {
               BRIGID_SERVER__TLS_CERT: path.join(

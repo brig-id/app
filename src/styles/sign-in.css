@@ -260,3 +260,109 @@ html[data-theme="light"]:not([data-save-data]) .signin-bg {
   color: var(--text-quiet);
   font-size: var(--p-text-s);
 }
+
+/* -- what an application asks for ---------------------------------------------- */
+
+.asked {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-2);
+}
+
+.asked legend {
+  margin-bottom: var(--p-space-2);
+  font-weight: 560;
+  overflow-wrap: anywhere;
+}
+
+.asked-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-2);
+}
+
+.asked-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-2);
+  padding: var(--p-space-3) var(--p-space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--p-radius-m);
+}
+
+.asked-row:has(input:checked) {
+  border-color: var(--selected);
+  background: var(--selected-surface);
+}
+
+.asked-row:has(input[type="checkbox"]:focus-visible) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.asked-row--missing {
+  border-style: dashed;
+}
+
+.asked-choice,
+.asked-head {
+  display: flex;
+  align-items: center;
+  gap: var(--p-space-3);
+}
+
+.asked-choice {
+  min-height: 2.75rem;
+  cursor: pointer;
+}
+
+.asked-choice input {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  accent-color: var(--selected);
+}
+
+.asked-choice input:focus-visible {
+  outline: none;
+}
+
+.asked-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.asked-head .asked-name {
+  flex: 1;
+}
+
+.asked-name {
+  font-weight: 560;
+}
+
+.asked-value {
+  color: var(--text-quiet);
+  overflow-wrap: anywhere;
+}
+
+.asked-note {
+  padding-left: calc(1.25rem + var(--p-space-3));
+}
+
+.asked-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--p-space-2);
+}
+
+.asked-add .button {
+  white-space: nowrap;
+}
+
+.blocked {
+  color: var(--text-quiet);
+}

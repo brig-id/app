@@ -254,3 +254,79 @@
   border-radius: var(--p-radius-m);
   background: var(--danger-surface);
 }
+
+/* -- one identity: what it shares, and with whom ------------------------------- */
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--p-space-2);
+}
+
+.identity-title {
+  overflow-wrap: anywhere;
+}
+
+.attributes {
+  display: grid;
+  grid-template-columns: minmax(8rem, max-content) minmax(0, 1fr);
+  gap: var(--p-space-2) var(--p-space-5);
+  margin: 0;
+}
+
+.attribute {
+  display: contents;
+}
+
+.attribute dt {
+  color: var(--text-quiet);
+}
+
+.attribute dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.shared-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-2);
+}
+
+.shared-row {
+  display: flex;
+  align-items: center;
+  gap: var(--p-space-3);
+  padding: var(--p-space-3) var(--p-space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--p-radius-m);
+}
+
+.shared-row .asked-name {
+  font-weight: 560;
+}
+
+.shared-value {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 30rem) {
+  .attributes {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .attribute dd {
+    margin-bottom: var(--p-space-3);
+  }
+
+  .shared-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* In a column, the width `.grow` asks for would be a height. */
+  .shared-row > .grow {
+    flex: none;
+  }
+}

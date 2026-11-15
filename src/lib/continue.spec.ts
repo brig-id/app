@@ -7,6 +7,7 @@ const identity = (id: string): Identity => ({
   name: `Identity ${id}`,
   logo: "icon:ph:user",
   description: null,
+  attributes: {},
   created_at: "2026-11-13T00:00:00Z",
   updated_at: "2026-11-13T00:00:00Z",
 });
@@ -19,6 +20,8 @@ const request = (over: Partial<AuthorizationRequest>): AuthorizationRequest => (
   force_choice: false,
   identities: [identity("a"), identity("b")],
   chosen: null,
+  asked: [],
+  decisions: {},
   ...over,
 });
 

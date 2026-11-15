@@ -9,6 +9,7 @@ import type {
   AuthorizationRequest,
   CreateIdentityRequest,
   Identity,
+  IdentityApplication,
   IdentityTemplate,
   PasskeySummary,
   RecoveryCodeResponse,
@@ -43,6 +44,8 @@ export class ApiError extends Error {
 /** How many times a read refused for "too many requests" is asked again. */
 const READ_RETRIES = 2;
 
+const SIGN_OUT = "/auth/logout";
+
 /** How long to wait before asking again: what the server says, within
  * reason, or two seconds. */
 function retryDelay(response: Response): number {
@@ -75,8 +78,11 @@ async function call<T>(
   // A page reads several things at once, often right after a change: a read
   // that hits the rate limit is asked again after a pause, so that the page
   // never shows what was true before the change. A write is not repeated:
-  // the person sees the refusal and decides.
-  if (response.status === 429 && method === "GET" && attempt < READ_RETRIES) {
+  // the person sees the refusal and decides. Signing out is the exception:
+  // repeating it changes nothing, and one that did not happen would leave
+  // open a session the person believes closed.
+  const repeatable = method === "GET" || path === SIGN_OUT;
+  if (response.status === 429 && repeatable && attempt < READ_RETRIES) {
     await new Promise((resolve) => setTimeout(resolve, retryDelay(response)));
     return call<T>(method, path, body, attempt + 1);
   }
@@ -108,7 +114,7 @@ export async function checkSession(): Promise<SessionResponse> {
 /** Ends the session (the server also clears the cookie). */
 export async function signOut(): Promise<void> {
   try {
-    await call<void>("POST", "/auth/logout");
+    await call<void>("POST", SIGN_OUT);
   } catch (err) {
     // Already signed out is fine.
     if (!(err instanceof SessionEndedError)) throw err;
@@ -181,7 +187,43 @@ export async function deleteIdentity(id: string): Promise<void> {
   await call<void>("DELETE", `/account/identities/${encodeURIComponent(id)}`);
 }
 
-// -- authorization requests of relying parties (ADR-005 §2) -------------------
+// -- what an identity gave applications ---------------------------------------
+
+const applicationsPath = (identityId: string) =>
+  `/account/identities/${encodeURIComponent(identityId)}/applications`;
+
+/** The applications an identity signed in to, and what each one was given. */
+export async function listApplications(
+  identityId: string,
+): Promise<IdentityApplication[]> {
+  return call<IdentityApplication[]>("GET", applicationsPath(identityId));
+}
+
+/** Withdraw everything an identity gave an application. */
+export async function withdrawApplication(
+  identityId: string,
+  clientId: string,
+): Promise<void> {
+  await call<void>(
+    "DELETE",
+    `${applicationsPath(identityId)}/${encodeURIComponent(clientId)}`,
+  );
+}
+
+/** Forget what was decided about one attribute for an application: it is no
+ * longer sent, and the person is asked again. */
+export async function withdrawAttribute(
+  identityId: string,
+  clientId: string,
+  attribute: string,
+): Promise<void> {
+  await call<void>(
+    "DELETE",
+    `${applicationsPath(identityId)}/${encodeURIComponent(clientId)}/attributes/${encodeURIComponent(attribute)}`,
+  );
+}
+
+// -- authorization requests of relying parties --------------------------------
 
 const authorizationPath = (request: string) =>
   `/auth/authorize/${encodeURIComponent(request)}`;
@@ -199,16 +241,18 @@ export async function authorizationRequest(
   }
 }
 
-/** Continue to the site as `identityId`. Returns where to send the browser.
- * Throws SessionEndedError when a passkey ceremony is needed first. */
+/** Continue to the site as `identityId`, sharing `attributes`: of what the
+ * site asked for, the ones the person accepts. Returns where to send the
+ * browser. Throws SessionEndedError when a passkey ceremony is needed first. */
 export async function approveAuthorization(
   request: string,
   identityId: string,
+  attributes: readonly string[] = [],
 ): Promise<string> {
   const answer = await call<AuthorizationAnswer>(
     "POST",
     `${authorizationPath(request)}/approve`,
-    { identity_id: identityId },
+    { identity_id: identityId, attributes },
   );
   return answer.redirect_to;
 }
