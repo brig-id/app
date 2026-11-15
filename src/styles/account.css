@@ -330,3 +330,33 @@
     flex: none;
   }
 }
+
+/* -- onboarding: the identities proposed ------------------------------------- */
+
+.starters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-2);
+}
+
+.starter {
+  display: flex;
+  align-items: center;
+  gap: var(--p-space-3);
+}
+
+.starter-keep {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--p-space-3);
+  min-height: var(--control-height);
+  cursor: pointer;
+}
+
+.starter-keep input {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  accent-color: var(--selected);
+}

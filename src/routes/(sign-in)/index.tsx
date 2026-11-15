@@ -12,6 +12,7 @@ import {
   login,
   passkeySupport,
   type PasskeySupport,
+  takeDeletedFlag,
   WebAuthnError,
 } from "~/lib/webauthn";
 
@@ -32,10 +33,13 @@ export default component$(() => {
   const choosingServer = useSignal(false);
   const otherServer = useSignal("");
   const otherServerInvalid = useSignal(false);
+  /** The account was deleted a moment ago, from this tab. */
+  const deleted = useSignal(false);
 
   useVisibleTask$(async ({ cleanup }) => {
     cleanup(titled("title.signin"));
     server.value = currentServer();
+    deleted.value = takeDeletedFlag();
     const support = passkeySupport();
     if (support !== "supported") {
       unsupported.value = support;
@@ -118,6 +122,12 @@ export default component$(() => {
           </p>
         )}
       </div>
+
+      {deleted.value && (
+        <Callout kind="success" alert>
+          <T id="signin.deleted" />
+        </Callout>
+      )}
 
       {choosingServer.value && (
         <form class="stack" preventdefault:submit onSubmit$={goToServer}>

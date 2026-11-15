@@ -138,6 +138,9 @@ export interface SessionResponse {
   idle_expires_at: number;
   /** Unix time the session ends in any case. */
   expires_at: number;
+  /** Whether the account has a recovery code. Without one it is still in
+   * its onboarding: identities and applications are closed to it. */
+  recovery_code: boolean;
 }
 
 // -- /auth/server --
@@ -167,6 +170,8 @@ export interface IdentityTemplate {
   name: string;
   logo: string;
   description: string;
+  /** One of the identities the onboarding proposes to a new account. */
+  starter: boolean;
 }
 
 export interface CreateIdentityRequest {
@@ -215,6 +220,9 @@ export interface AuthorizationRequest {
   silent: boolean;
   /** The site asked for the choice to be shown even if one is remembered. */
   force_choice: boolean;
+  /** The account has no recovery code yet: it finishes its onboarding
+   * before it can present an identity anywhere. */
+  needs_recovery_code: boolean;
   /** Empty until signed in. Names and logos are for the person only: the
    * site receives none of this. */
   identities: Identity[];

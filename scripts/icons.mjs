@@ -32,6 +32,7 @@ const UI = [
   "sun",
   "translate",
   "trash",
+  "user-circle",
   "warning",
   "warning-circle",
   "x",

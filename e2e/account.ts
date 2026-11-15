@@ -89,8 +89,12 @@ export async function finishOnboarding(page: Page): Promise<string> {
   const next = page.getByRole("button", { name: "Continue to my identities" });
   await expect(next).toBeDisabled();
   await page.getByLabel("I kept my recovery code").check();
-  await next.click();
-  await expect(page).toHaveURL(/\/identities\/?$/);
+  // Continuing creates the identities kept (all of those proposed, here).
+  // Refused for going too fast, the page says so and stays: the ones that
+  // exist are not created twice.
+  await clickUntil(page, next, () =>
+    expect(page).toHaveURL(/\/identities\/?$/, { timeout: 5000 }),
+  );
   return value;
 }
 

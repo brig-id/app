@@ -52,10 +52,15 @@ export const MESSAGES = {
   "title.welcome": ["Welcome", "Bienvenue"],
   "title.identities": ["Identities", "Identités"],
   "title.identity": ["Identity", "Identité"],
+  "title.account": ["Account", "Compte"],
   "title.passkeys": ["Passkeys", "Clés d’accès"],
 
   // -- sign-in -----------------------------------------------------------------
   "signin.title": ["Sign in", "Se connecter"],
+  "signin.deleted": [
+    "Your account and everything about it were deleted from this server.",
+    "Votre compte et tout ce qui le concernait ont été supprimés de ce serveur.",
+  ],
   "signin.on": ["on **{server}**", "sur **{server}**"],
   "signin.other-server": ["Another server", "Un autre serveur"],
   "signin.server.label": ["Server", "Serveur"],
@@ -225,6 +230,14 @@ export const MESSAGES = {
     "{app} receives an identifier that exists for this application and this identity only, and what you tick, with the values shown. It never receives the identity’s name, icon or description.",
     "{app} reçoit un identifiant qui n’existe que pour cette application et cette identité, et ce que vous cochez, avec les valeurs affichées. Elle ne reçoit jamais le nom, l’icône ni la description de l’identité.",
   ],
+  "continue.setup": [
+    "Your account is not ready yet: it needs its recovery code. Finish setting it up, then start again from the application.",
+    "Votre compte n’est pas encore prêt : il lui faut son code de récupération. Terminez sa mise en place, puis recommencez depuis l’application.",
+  ],
+  "continue.setup.link": [
+    "Finish setting up my account",
+    "Terminer la mise en place de mon compte",
+  ],
   "continue.cancel": [
     "Cancel and go back to {app}",
     "Annuler et retourner à {app}",
@@ -274,6 +287,7 @@ export const MESSAGES = {
   "nav.label": ["Account", "Compte"],
   "nav.identities": ["Identities", "Identités"],
   "nav.passkeys": ["Passkeys", "Clés d’accès"],
+  "nav.account": ["Account", "Compte"],
   "nav.signout": ["Sign out", "Se déconnecter"],
   "nav.signout.failed": [
     "You are still signed in: the server could not be told. Try again.",
@@ -284,8 +298,8 @@ export const MESSAGES = {
   // -- onboarding --------------------------------------------------------------
   "welcome.title": ["Welcome to brig·id", "Bienvenue sur brig·id"],
   "welcome.lead": [
-    "Your account exists. Two things before you start.",
-    "Votre compte existe. Deux choses avant de commencer.",
+    "Your account exists. A few things before you start.",
+    "Votre compte existe. Quelques réglages avant de commencer.",
   ],
   "welcome.back.title": ["Your account is back", "Votre compte est de retour"],
   "welcome.back.lead": [
@@ -298,6 +312,19 @@ export const MESSAGES = {
     "Un nom vous aidera à la reconnaître plus tard, par exemple l’endroit où elle est conservée.",
   ],
   "welcome.passkey.save": ["Save the name", "Enregistrer le nom"],
+  "welcome.identities.title": [
+    "Your first identities",
+    "Vos premières identités",
+  ],
+  "welcome.identities.lead": [
+    "An identity is what an application meets in your place. Keep the ones that suit you, rename them or untick them: you can create others at any time.",
+    "Une identité est ce qu’une application rencontre à votre place. Gardez celles qui vous conviennent, renommez-les ou décochez-les : vous pourrez en créer d’autres à tout moment.",
+  ],
+  "welcome.identities.keep": ["Create “{name}”", "Créer « {name} »"],
+  "welcome.identities.failed": [
+    "Not every identity could be created. Try again: the ones that exist are not created twice.",
+    "Toutes les identités n’ont pas pu être créées. Réessayez : celles qui existent ne sont pas créées deux fois.",
+  ],
   "welcome.continue": [
     "Continue to my identities",
     "Continuer vers mes identités",
@@ -350,6 +377,53 @@ export const MESSAGES = {
   "recovery.file": [
     "brig·id recovery code\n\n{code}\n\nServer: {server}\n\nIf you lose every passkey of your account, open\nhttps://{server}/recover/ and enter this code to add a new passkey.\nIt works once; you will then get a new one.\nAnyone with this code can add a passkey to your account: keep it private.\n",
     "Code de récupération brig·id\n\n{code}\n\nServeur : {server}\n\nSi vous perdez toutes les clés d’accès de votre compte, ouvrez\nhttps://{server}/recover/ et saisissez ce code pour ajouter une nouvelle clé d’accès.\nIl ne sert qu’une fois ; vous en recevrez alors un nouveau.\nQuiconque détient ce code peut ajouter une clé d’accès à votre compte : gardez-le secret.\n",
+  ],
+
+  // -- the account: export, deletion ---------------------------------------------
+  "account.title": ["Your account", "Votre compte"],
+  "account.lead": [
+    "Your account is your private way in: passkeys and a recovery code. It holds nothing that describes you, and no application ever sees it.",
+    "Votre compte est votre entrée privée : des clés d’accès et un code de récupération. Il ne contient rien qui vous décrive, et aucune application ne le voit.",
+  ],
+  "account.export.title": ["Export your data", "Exporter vos données"],
+  "account.export.lead": [
+    "A file with your identities, their names and what they can share, and the applications each one signed in to. It is made here, in your browser, and anyone can read it: keep it somewhere private.",
+    "Un fichier avec vos identités, leurs noms et ce qu’elles peuvent partager, ainsi que les applications auxquelles chacune s’est connectée. Il est produit ici, dans votre navigateur, et n’importe qui peut le lire : rangez-le dans un endroit privé.",
+  ],
+  "account.export.button": ["Download my data", "Télécharger mes données"],
+  "account.export.done": ["Downloaded: {file}", "Téléchargé : {file}"],
+  "account.export.failed": [
+    "The export could not be made. Try again.",
+    "L’export n’a pas pu être produit. Réessayez.",
+  ],
+  "account.delete.title": ["Delete your account", "Supprimer votre compte"],
+  "account.delete.removes": [
+    "This removes from this server, for good: your account, your passkeys and your recovery code, every identity with what it can share, and what was recorded about the applications they signed in to.",
+    "Cela retire de ce serveur, définitivement : votre compte, vos clés d’accès et votre code de récupération, chaque identité avec ce qu’elle peut partager, et ce qui a été enregistré sur les applications auxquelles elles se sont connectées.",
+  ],
+  "account.delete.keeps": [
+    "It cannot reach the applications: each one keeps what it received, and the account you have there. Nobody can restore a deleted account, not even the administrator of this server.",
+    "Cela n’atteint pas les applications : chacune conserve ce qu’elle a reçu, et le compte que vous y avez. Personne ne peut restaurer un compte supprimé, pas même l’administrateur de ce serveur.",
+  ],
+  "account.delete.passkey": [
+    "The passkey kept by your password manager is not removed by this page: delete it there afterwards.",
+    "La clé d’accès conservée par votre gestionnaire de mots de passe n’est pas retirée par cette page : supprimez-la ensuite dans ce gestionnaire.",
+  ],
+  "account.delete.understood": [
+    "I understand that this cannot be undone",
+    "Je comprends que c’est définitif",
+  ],
+  "account.delete.button": [
+    "Delete my account with my passkey",
+    "Supprimer mon compte avec ma clé d’accès",
+  ],
+  "account.delete.cancelled": [
+    "Nothing was deleted: the passkey was not used.",
+    "Rien n’a été supprimé : la clé d’accès n’a pas été utilisée.",
+  ],
+  "account.delete.failed": [
+    "The account was not deleted. Try again.",
+    "Le compte n’a pas été supprimé. Réessayez.",
   ],
 
   // -- identities --------------------------------------------------------------

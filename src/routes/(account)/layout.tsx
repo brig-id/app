@@ -24,7 +24,11 @@ const LINKS: readonly { href: string; label: MessageId; icon: IconName }[] = [
     icon: "identification-card",
   },
   { href: "/passkeys/", label: "nav.passkeys", icon: "key" },
+  { href: "/account/", label: "nav.account", icon: "user-circle" },
 ];
+
+/** Where an account finishes being set up. */
+const ONBOARDING = "/welcome/";
 
 /** How often an open page checks its session, so that one that ended (left
  * unused, at the end of its life, signed out elsewhere) sends the person to
@@ -44,7 +48,12 @@ export default component$(() => {
     track(() => loc.url.pathname);
     const check = async () => {
       try {
-        await checkSession();
+        const session = await checkSession();
+        // An account without its recovery code is still in its onboarding,
+        // whichever page it opened: the server closes the others to it.
+        if (!session.recovery_code && loc.url.pathname !== ONBOARDING) {
+          await nav(ONBOARDING);
+        }
       } catch (err) {
         if (err instanceof SessionEndedError) await nav("/");
       }
