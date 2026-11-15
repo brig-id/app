@@ -112,9 +112,15 @@ export const Said = (props: { message: Message }) => (
   </>
 );
 
+/** A message as a parameter of another one, in each language. */
+export function both(id: MessageId, params?: Params): Record<Locale, string> {
+  return { en: format(id, "en", params), fr: format(id, "fr", params) };
+}
+
 /** A date, written out in each language. */
-export function dateParam(iso: string): Record<Locale, string> {
-  const date = new Date(iso);
+export function dateParam(when: string | number): Record<Locale, string> {
+  // A number is Unix seconds, as the server counts its newer dates.
+  const date = new Date(typeof when === "number" ? when * 1000 : when);
   const write = (locale: Locale) =>
     date.toLocaleDateString(locale === "fr" ? "fr-FR" : "en-GB", {
       year: "numeric",

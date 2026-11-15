@@ -340,6 +340,13 @@ export default component$(() => {
                       {identity.description && (
                         <span class="quiet small">{identity.description}</span>
                       )}
+                      <a
+                        class="small"
+                        href={`/identities/details/?id=${encodeURIComponent(identity.id)}`}
+                      >
+                        <T id="identity.open" />
+                        <span class="sr-only"> ({identity.name})</span>
+                      </a>
                     </div>
                   </div>
                   <div class="cluster">

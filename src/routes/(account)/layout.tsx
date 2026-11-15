@@ -1,5 +1,12 @@
-import { $, component$, Slot, useVisibleTask$ } from "@qwik.dev/core";
+import {
+  $,
+  component$,
+  Slot,
+  useSignal,
+  useVisibleTask$,
+} from "@qwik.dev/core";
 import { Link, useLocation, useNavigate } from "@qwik.dev/router";
+import { Callout } from "~/components/ui/callout";
 import { Icon, type IconName } from "~/components/ui/icon";
 import { LanguageSwitch } from "~/components/ui/language-switch";
 import { ThemeSwitch } from "~/components/ui/theme-switch";
@@ -47,8 +54,18 @@ export default component$(() => {
     await check();
   });
 
+  /** Signing out failed: the session is still open, and the person is
+   * told, not sent to the sign-in page as if it were closed. */
+  const stillSignedIn = useSignal(false);
+
   const signOut = $(async () => {
-    await endSession().catch(() => undefined);
+    stillSignedIn.value = false;
+    try {
+      await endSession();
+    } catch {
+      stillSignedIn.value = true;
+      return;
+    }
     await nav("/");
   });
 
@@ -97,6 +114,13 @@ export default component$(() => {
         </ul>
       </nav>
       <main id="content" class="account-main" tabIndex={-1}>
+        {stillSignedIn.value && (
+          <div class="page">
+            <Callout kind="danger" alert>
+              <T id="nav.signout.failed" />
+            </Callout>
+          </div>
+        )}
         <Slot />
       </main>
     </div>

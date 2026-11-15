@@ -155,6 +155,9 @@ export interface Identity {
   /** `icon:<style>:<name>` */
   logo: string;
   description: string | null;
+  /** What the identity can share, claim name to value. An attribute
+   * without a value is absent. */
+  attributes: Partial<Record<string, string>>;
   created_at: string;
   updated_at: string;
 }
@@ -171,6 +174,7 @@ export interface CreateIdentityRequest {
   name?: string;
   logo?: string;
   description?: string;
+  attributes?: Record<string, string>;
 }
 
 export interface UpdateIdentityRequest {
@@ -178,6 +182,23 @@ export interface UpdateIdentityRequest {
   logo?: string;
   /** Empty clears it. */
   description?: string;
+  /** The attributes to change: a value sets one, an empty value removes
+   * it, the ones left out stay. */
+  attributes?: Record<string, string>;
+}
+
+/** What an identity gave one application. Mirrors `ApplicationView` in
+ * `brigid-api/src/routes/identities.rs`. Dates are Unix seconds. */
+export interface IdentityApplication {
+  client_id: string;
+  /** The name the application is registered under. */
+  name: string;
+  linked_at: number;
+  last_used_at: number;
+  /** What the person accepted to share, with the value accepted. */
+  shared: Array<{ name: string; value: string; since: number }>;
+  /** What the person refused to share. */
+  refused: string[];
 }
 
 // -- authorization requests of relying parties (ADR-005 §2) -------------------
@@ -199,6 +220,13 @@ export interface AuthorizationRequest {
   identities: Identity[];
   /** The identity last presented to this site. */
   chosen: string | null;
+  /** The attributes the site asks for. Empty when it asks for the
+   * identifier only. */
+  asked: Array<{ name: string; required: boolean }>;
+  /** Per identity, what the person already decided about the attributes
+   * asked for: `true` when they accepted the value the identity has now,
+   * `false` when they refused. Absent: undecided. */
+  decisions: Partial<Record<string, Partial<Record<string, boolean>>>>;
 }
 
 /** Where to send the browser next. */

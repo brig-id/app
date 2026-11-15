@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { E2E_ORIGIN } from "../playwright.config";
+import { answerReturnAddress, ask, registerApplication } from "./application";
 import { addVirtualAuthenticator, skipIfNoVirtualAuthenticator } from "./webauthn";
 
 // WCAG 2.2 AA, held by tests: axe on every page, in both languages and both
@@ -95,6 +96,54 @@ for (const { locale, colorScheme } of CASES) {
       await expectNoViolation(page, "/passkeys/");
       await page.locator(".passkey-item .button").first().click();
       await expectNoViolation(page, "/passkeys/ renaming a passkey");
+    });
+
+    test("what an identity shares, and with whom", async ({ page, context, browserName }) => {
+      skipIfNoVirtualAuthenticator(browserName);
+      await addVirtualAuthenticator(context, page);
+      await answerReturnAddress(page);
+      const clientId = registerApplication(
+        `Field Notes ${language} ${colorScheme}`,
+        "--required",
+        "email",
+        "--optional",
+        "given_name",
+      );
+      await page.goto("/signup/");
+      await expect(async () => {
+        await page.locator(".button--primary").click({ timeout: 2000 });
+        await expect(page).toHaveURL(/\/welcome\//, { timeout: 4000 });
+      }).toPass({ timeout: 40_000 });
+      await expect(page.locator(".recovery-value")).toBeVisible({ timeout: 15_000 });
+
+      // The linking page: attributes the identity lacks, then one it has,
+      // then ticked.
+      await ask(page, clientId, "openid profile email");
+      await page.locator(".choice input").last().check();
+      await expect(page.locator(".asked-row--missing")).toHaveCount(2);
+      await expectNoViolation(page, "/continue/ asked for what the identity lacks");
+      await page.locator('input[data-add="email"]').fill("ada@work.example");
+      await page.locator(".asked-add .button").last().click();
+      const box = page.locator(".asked-choice input");
+      await expect(box).toHaveCount(1);
+      await expectNoViolation(page, "/continue/ with a value to accept");
+      await box.check();
+      await expectNoViolation(page, "/continue/ with a value accepted");
+      await page.locator("form > .button--primary").click();
+      await page.waitForURL(/application\.example/);
+
+      // The identity's page: what it gave, the form, a withdrawal confirmed.
+      await page.goto(`${E2E_ORIGIN}/identities/`, { waitUntil: "networkidle" });
+      await page.locator(".identity-list > li a").last().click();
+      await expect(page.locator(".shared-row")).toHaveCount(1, { timeout: 10_000 });
+      await expectNoViolation(page, "/identities/details/");
+      await page.locator("[data-application] .button--danger").click();
+      await expect(page.locator(".confirm")).toBeVisible();
+      await expectNoViolation(page, "/identities/details/ confirming a withdrawal");
+      await page.locator("section.card .split .button").click();
+      // The same address as another identity would be a warning: none here.
+      await expect(page.locator("form .input")).toHaveCount(6);
+      await expectNoViolation(page, "/identities/details/ editing what it can share");
     });
   });
 }

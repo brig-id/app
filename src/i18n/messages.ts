@@ -51,6 +51,7 @@ export const MESSAGES = {
   "title.about": ["About", "À propos"],
   "title.welcome": ["Welcome", "Bienvenue"],
   "title.identities": ["Identities", "Identités"],
+  "title.identity": ["Identity", "Identité"],
   "title.passkeys": ["Passkeys", "Clés d’accès"],
 
   // -- sign-in -----------------------------------------------------------------
@@ -187,6 +188,43 @@ export const MESSAGES = {
     "{app} receives an identifier that exists for this application and this identity only. It receives neither the identity’s name nor its icon, and it cannot connect it to your other identities.",
     "{app} reçoit un identifiant qui n’existe que pour cette application et cette identité. Elle ne reçoit ni le nom ni l’icône de l’identité, et ne peut pas la relier à vos autres identités.",
   ],
+  "continue.asks": ["{app} asks for", "{app} demande"],
+  "continue.asks.hint": [
+    "Tick what you accept to share with it. Nothing is ticked for you.",
+    "Cochez ce que vous acceptez de lui partager. Rien n’est coché à votre place.",
+  ],
+  "continue.required": ["Required", "Requis"],
+  "continue.optional": ["Optional", "Facultatif"],
+  "continue.accepted-before": [
+    "You accepted this before.",
+    "Vous l’avez déjà accepté.",
+  ],
+  "continue.refused-before": [
+    "You refused this before.",
+    "Vous l’avez déjà refusé.",
+  ],
+  "continue.missing": ["This identity has none.", "Cette identité n’en a pas."],
+  "continue.add.label": [
+    "{attribute} of this identity",
+    "{attribute} de cette identité",
+  ],
+  "continue.add": ["Add to this identity", "Ajouter à cette identité"],
+  "continue.add.hint": [
+    "A value you add is saved on this identity. It is sent only if you then tick it.",
+    "Une valeur ajoutée est enregistrée sur cette identité. Elle n’est envoyée que si vous la cochez ensuite.",
+  ],
+  "continue.add.failed": [
+    "This value was not accepted. Check it and try again.",
+    "Cette valeur n’a pas été acceptée. Vérifiez-la, puis réessayez.",
+  ],
+  "continue.blocked": [
+    "{app} does not work without what is marked “Required”. Accept it, choose another identity, or go back.",
+    "{app} ne fonctionne pas sans ce qui est marqué « Requis ». Acceptez-le, choisissez une autre identité, ou revenez en arrière.",
+  ],
+  "continue.shared.attributes": [
+    "{app} receives an identifier that exists for this application and this identity only, and what you tick, with the values shown. It never receives the identity’s name, icon or description.",
+    "{app} reçoit un identifiant qui n’existe que pour cette application et cette identité, et ce que vous cochez, avec les valeurs affichées. Elle ne reçoit jamais le nom, l’icône ni la description de l’identité.",
+  ],
   "continue.cancel": [
     "Cancel and go back to {app}",
     "Annuler et retourner à {app}",
@@ -237,6 +275,10 @@ export const MESSAGES = {
   "nav.identities": ["Identities", "Identités"],
   "nav.passkeys": ["Passkeys", "Clés d’accès"],
   "nav.signout": ["Sign out", "Se déconnecter"],
+  "nav.signout.failed": [
+    "You are still signed in: the server could not be told. Try again.",
+    "Vous êtes toujours connecté : le serveur n’a pas pu être prévenu. Réessayez.",
+  ],
   "nav.about": ["About", "À propos"],
 
   // -- onboarding --------------------------------------------------------------
@@ -345,6 +387,124 @@ export const MESSAGES = {
     "Supprimer « {name} » ? Cette action est définitive.",
   ],
   "identity.delete.yes": ["Yes, delete", "Oui, supprimer"],
+  "identity.open": [
+    "What it shares, and with whom",
+    "Ce qu’elle partage, et avec qui",
+  ],
+
+  // -- one identity: attributes, and what uses it ---------------------------------
+  "identity.back": ["All identities", "Toutes les identités"],
+  "identity.gone": [
+    "This identity does not exist, or no longer does.",
+    "Cette identité n’existe pas, ou plus.",
+  ],
+  "identity.label.note": [
+    "Its name, icon and description are for you only. No application receives them.",
+    "Son nom, son icône et sa description ne sont que pour vous. Aucune application ne les reçoit.",
+  ],
+  "identity.attributes.title": [
+    "What it can share",
+    "Ce qu’elle peut partager",
+  ],
+  "identity.attributes.lead": [
+    "Information you put on this identity so that applications can ask for it. An application receives a piece of it only once you have accepted, with the value you saw.",
+    "Des informations que vous placez sur cette identité pour que des applications puissent les demander. Une application n’en reçoit une que lorsque vous l’avez accepté, avec la valeur que vous avez vue.",
+  ],
+  "identity.attributes.none": [
+    "Nothing yet: applications receive an identifier, and nothing else.",
+    "Rien pour l’instant : les applications reçoivent un identifiant, et rien d’autre.",
+  ],
+  "identity.attributes.edit": [
+    "Edit what it can share",
+    "Modifier ce qu’elle peut partager",
+  ],
+  "identity.attributes.linking": [
+    "The same last name, username or address on two identities lets applications understand that they belong to one person. Nothing can undo that once it is shared.",
+    "Le même nom, le même nom d’utilisateur ou la même adresse sur deux identités permet à des applications de comprendre qu’elles appartiennent à une seule personne. Rien ne peut le défaire une fois l’information partagée.",
+  ],
+  "identity.attributes.username.hint": [
+    "A handle shown to applications. It is not a name to sign in with.",
+    "Un pseudonyme montré aux applications. Ce n’est pas un nom pour se connecter.",
+  ],
+  "identity.attributes.email.hint": [
+    "Recommended: many applications need one. It is shared as not verified.",
+    "Recommandée : beaucoup d’applications en ont besoin. Elle est partagée comme non vérifiée.",
+  ],
+  "identity.attributes.email.same": [
+    "**{name}** already has this address. Shared through both identities, it tells applications that they are one person. A variant of the same mailbox (name+work@…) protects little.",
+    "**{name}** a déjà cette adresse. Partagée par les deux identités, elle indique aux applications qu’il s’agit d’une seule personne. Une variante de la même boîte (nom+travail@…) protège peu.",
+  ],
+  "identity.attributes.locale.hint": [
+    "A language tag, such as en-GB or fr.",
+    "Un code de langue, par exemple fr ou en-GB.",
+  ],
+  "identity.attributes.zoneinfo.hint": [
+    "A time zone name, such as Europe/Paris.",
+    "Un nom de fuseau horaire, par exemple Europe/Paris.",
+  ],
+  "identity.attributes.saved": [
+    "Saved. Where a value changed, an application receives the new one only after asking you again.",
+    "Enregistré. Là où une valeur a changé, une application ne reçoit la nouvelle qu’après vous l’avoir redemandée.",
+  ],
+  "identity.attributes.invalid": [
+    "A value was not accepted. Check what you entered.",
+    "Une valeur n’a pas été acceptée. Vérifiez votre saisie.",
+  ],
+  "identity.used-by": ["Used by", "Utilisée par"],
+  "identity.used-by.applications": ["Applications", "Applications"],
+  "identity.used-by.none": [
+    "No application yet. One appears here the first time you sign in to it with this identity.",
+    "Aucune application pour l’instant. Une application apparaît ici la première fois que vous vous y connectez avec cette identité.",
+  ],
+  "identity.app.dates": [
+    "First sign-in on {first}, latest on {last}.",
+    "Première connexion le {first}, dernière le {last}.",
+  ],
+  "identity.app.identifier-only": [
+    "It received an identifier, and nothing else.",
+    "Elle a reçu un identifiant, et rien d’autre.",
+  ],
+  "identity.app.received": [
+    "It received an identifier, and:",
+    "Elle a reçu un identifiant, et :",
+  ],
+  "identity.app.since": ["accepted on {date}", "accepté le {date}"],
+  "identity.app.outdated": [
+    "You changed this value since. The new one is not sent until you accept it.",
+    "Vous avez changé cette valeur depuis. La nouvelle n’est pas envoyée tant que vous ne l’avez pas acceptée.",
+  ],
+  "identity.app.refused": [
+    "You refused to share it.",
+    "Vous avez refusé de le partager.",
+  ],
+  "identity.app.stop": ["Stop sharing", "Ne plus partager"],
+  "identity.app.ask-again": ["Ask me again", "Me redemander"],
+  "identity.app.stopped": [
+    "Done. {app} keeps what it already received; this server sends it nothing more of it without asking you.",
+    "C’est fait. {app} conserve ce qu’elle a déjà reçu ; ce serveur ne lui en envoie plus rien sans vous le demander.",
+  ],
+  "identity.app.withdraw": ["Withdraw everything", "Tout retirer"],
+  "identity.app.withdraw.confirm": [
+    "Withdraw everything this identity gives **{app}**? This server then sends it nothing until you sign in there again. It cannot take back what {app} already received, and {app} will recognise this identity if you come back with it.",
+    "Retirer tout ce que cette identité donne à **{app}** ? Ce serveur ne lui envoie alors plus rien tant que vous ne vous y reconnectez pas. Il ne peut pas reprendre ce que {app} a déjà reçu, et {app} reconnaîtra cette identité si vous y revenez avec elle.",
+  ],
+  "identity.app.withdraw.yes": ["Yes, withdraw", "Oui, retirer"],
+  "identity.app.withdrawn": [
+    "Withdrawn. {app} keeps what it already received.",
+    "Retiré. {app} conserve ce qu’elle a déjà reçu.",
+  ],
+  "identity.connected-to": ["Connected to", "Reliée à"],
+  "identity.connected-to.none": [
+    "Nothing. This version does not connect an identity to outside services.",
+    "Rien. Cette version ne relie pas une identité à des services extérieurs.",
+  ],
+
+  "attribute.given-name": ["First name", "Prénom"],
+  "attribute.family-name": ["Last name", "Nom de famille"],
+  "attribute.preferred-username": ["Username", "Nom d’utilisateur"],
+  "attribute.email": ["E-mail address", "Adresse e-mail"],
+  "attribute.locale": ["Language", "Langue"],
+  "attribute.zoneinfo": ["Time zone", "Fuseau horaire"],
 
   "template.personal": ["Personal", "Personnelle"],
   "template.personal.about": [
