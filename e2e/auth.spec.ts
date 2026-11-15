@@ -72,8 +72,10 @@ test.describe("sign-up and onboarding", () => {
     // The passkey is loaded once its name can be saved.
     await expect(page.getByRole("button", { name: "Save the name" })).toBeEnabled();
     await page.getByLabel("Name").fill("Laptop");
-    await page.getByRole("button", { name: "Save the name" }).click();
-    await expect(page.getByText("Saved.")).toBeVisible();
+    // Refused for going too fast, the page says so: pressed again.
+    await clickUntil(page, page.getByRole("button", { name: "Save the name" }), () =>
+      expect(page.getByText("Saved.")).toBeVisible({ timeout: 3000 }),
+    );
 
     await finishOnboarding(page);
     await waitForIdentities(page, 3);
