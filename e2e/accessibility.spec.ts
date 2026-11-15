@@ -10,6 +10,17 @@ import { addVirtualAuthenticator, skipIfNoVirtualAuthenticator } from "./webauth
 // a screen reader says) is the manual pass of each release.
 const RULES = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"];
 
+/** Leaves the onboarding: the identities proposed are created on the way.
+ * Refused for going too fast, the page says so and stays; pressed again. */
+async function continueToIdentities(page: Page) {
+  await expect(async () => {
+    if (!/\/identities\/$/.test(page.url())) {
+      await page.locator(".page > .cluster .button--primary").click({ timeout: 2000 });
+    }
+    await expect(page.locator(".identity-list > li")).toHaveCount(3, { timeout: 5000 });
+  }).toPass({ timeout: 60_000 });
+}
+
 async function expectNoViolation(page: Page, what: string) {
   const { violations } = await new AxeBuilder({ page }).withTags(RULES).analyze();
   const found = violations.map(
@@ -80,8 +91,7 @@ for (const { locale, colorScheme } of CASES) {
       await expectNoViolation(page, "/welcome/");
 
       await page.locator(".check input").check();
-      await page.locator(".page > .cluster .button--primary").click();
-      await expect(page.locator(".identity-list > li")).toHaveCount(3, { timeout: 10_000 });
+      await continueToIdentities(page);
       await expectNoViolation(page, "/identities/");
 
       // The form, with a template applied, then a deletion being confirmed.
@@ -124,8 +134,7 @@ for (const { locale, colorScheme } of CASES) {
       }).toPass({ timeout: 40_000 });
       await expect(page.locator(".recovery-value")).toBeVisible({ timeout: 15_000 });
       await page.locator(".check input").check();
-      await page.locator(".page > .cluster .button--primary").click();
-      await expect(page.locator(".identity-list > li")).toHaveCount(3, { timeout: 10_000 });
+      await continueToIdentities(page);
 
       // The linking page: attributes the identity lacks, then one it has,
       // then ticked.
