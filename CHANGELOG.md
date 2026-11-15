@@ -7,6 +7,19 @@ From 0.2.0 on, each entry is written by release-please from the commits merged
 since the last release: there is no "Unreleased" section to keep by hand. What
 a list of commits does not say is in the pull requests it links to.
 
+## [0.3.0](https://github.com/brig-id/app/compare/v0.2.0...v0.3.0) (2026-11-15)
+
+
+### Features
+
+* **app:** ✨ attributes: what an identity can share, asked for and accepted one by one ([b7378ab](https://github.com/brig-id/app/commit/b7378ab1efbb3901d3525198e02be49f0c06abc7)), closes [#55](https://github.com/brig-id/app/issues/55)
+* **app:** ✨ onboarding proposes the first identities; export one's data; delete one's account ([8ef1243](https://github.com/brig-id/app/commit/8ef1243597af95c9e60654c25f2bec9a5170f745)), closes [#61](https://github.com/brig-id/app/issues/61)
+
+
+### Bug Fixes
+
+* **app:** 🐛 a refused "Cancel" on the linking page is not an expired request ([b71d79e](https://github.com/brig-id/app/commit/b71d79edb56431b872d643c7bcade0eb0826ee33))
+
 ## [0.2.0](https://github.com/brig-id/app/compare/v0.1.0...v0.2.0) (2026-11-15)
 
 
