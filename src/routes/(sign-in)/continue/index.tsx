@@ -7,6 +7,7 @@ import { IdentityLogo } from "~/components/ui/identity-logo";
 import { type Message, type MessageId, Said, T, titled } from "~/i18n";
 import {
   answerSilently,
+  ApiError,
   approveAuthorization,
   authorizationRequest,
   denyAuthorization,
@@ -166,8 +167,15 @@ export default component$(() => {
       const to = await denyAuthorization(requestId.value);
       leaving.value = true;
       window.location.assign(to);
-    } catch {
-      dead.value = "continue.expired-close";
+    } catch (err) {
+      // The request is gone: nothing to go back with. Anything else (the
+      // server asks to slow down, the network) is said, and can be tried
+      // again.
+      if (err instanceof ApiError && err.status === 404) {
+        dead.value = "continue.expired-close";
+      } else {
+        error.value = failure(err, "continue.failed");
+      }
     } finally {
       busy.value = false;
     }
