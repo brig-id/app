@@ -1020,6 +1020,48 @@ export const MESSAGES = {
     "Ce qui déverrouille votre compte. Nommez-les pour les distinguer.",
   ],
   "passkeys.add": ["Add a passkey", "Ajouter une clé d’accès"],
+  "passkeys.several": [
+    "You can have several: one per place that keeps them. A second passkey lets you in when the first is out of reach.",
+    "Vous pouvez en avoir plusieurs : une par endroit qui les garde. Une deuxième clé d’accès vous laisse entrer quand la première n’est pas à portée.",
+  ],
+  "passkeys.where.title": [
+    "Where will this passkey be kept?",
+    "Où cette clé d’accès sera-t-elle gardée ?",
+  ],
+  "passkeys.where.lead": [
+    "A password manager, a device or a security key keeps one passkey for your account. Choose a place that has none yet.",
+    "Un gestionnaire de mots de passe, un appareil ou une clé de sécurité garde une seule clé d’accès pour votre compte. Choisissez un endroit qui n’en a pas encore.",
+  ],
+  "passkeys.where.device": ["On this device", "Sur cet appareil"],
+  "passkeys.where.device.about": [
+    "In this computer, phone or tablet, or in the password manager of this browser.",
+    "Dans cet ordinateur, ce téléphone ou cette tablette, ou dans le gestionnaire de mots de passe de ce navigateur.",
+  ],
+  "passkeys.where.phone": [
+    "On another phone or tablet",
+    "Sur un autre téléphone ou une autre tablette",
+  ],
+  "passkeys.where.phone.about": [
+    "Your browser shows a QR code to scan with it.",
+    "Votre navigateur affiche un code QR à scanner avec lui.",
+  ],
+  "passkeys.where.key": ["On a security key", "Sur une clé de sécurité"],
+  "passkeys.where.key.about": [
+    "A key you plug in or hold near the device.",
+    "Une clé que vous branchez ou approchez de l’appareil.",
+  ],
+  "passkeys.where.any": [
+    "Let my browser propose",
+    "Laisser mon navigateur proposer",
+  ],
+  "passkeys.where.any.about": [
+    "It asks where, in its own way.",
+    "Il demande où, à sa façon.",
+  ],
+  "passkeys.exists": [
+    "That place already holds a passkey for your account, and keeps only one. Choose another place: another device, another password manager, or a security key.",
+    "Cet endroit garde déjà une clé d’accès pour votre compte, et n’en garde qu’une. Choisissez un autre endroit : un autre appareil, un autre gestionnaire de mots de passe ou une clé de sécurité.",
+  ],
   "passkeys.added": ["Passkey added.", "Clé d’accès ajoutée."],
   "passkeys.removed": ["Passkey removed.", "Clé d’accès retirée."],
   "passkeys.renamed": ["Passkey renamed.", "Clé d’accès renommée."],

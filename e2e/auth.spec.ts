@@ -223,12 +223,31 @@ test.describe("passkeys page", () => {
     ).toBeDisabled();
     await expect(page.getByText(/Your only passkey/)).toBeVisible();
 
-    // A second, distinct authenticator (Chrome allows one "internal" per
-    // context): the server excludes the account's existing credential.
-    await addVirtualAuthenticator(context, page, "usb");
+    // A place keeps one passkey for an account, and this device has it: asked
+    // for another, it refuses, and the page says why and what to do.
+    const where = page.getByRole("region", {
+      name: "Where will this passkey be kept?",
+    });
     await clickUntil(page, page.getByRole("button", { name: "Add a passkey" }), () =>
-      expect(page.locator(".passkey-item")).toHaveCount(2, { timeout: 2000 }),
+      expect(where).toBeVisible({ timeout: 2000 }),
     );
+    await clickUntil(page, where.getByRole("button", { name: /On this device/ }), () =>
+      expect(
+        page.getByText(/already holds a passkey for your account, and keeps only one/),
+      ).toBeVisible({ timeout: 3000 }),
+    );
+    await expect(page.locator(".passkey-item")).toHaveCount(1);
+    // The choice is still there, for another place.
+    await expect(where).toBeVisible();
+
+    // Somewhere else (a second, distinct authenticator: Chrome allows one
+    // "internal" per context), the passkey is made.
+    await addVirtualAuthenticator(context, page, "usb");
+    await clickUntil(page, where.getByRole("button", { name: /On a security key/ }), () =>
+      expect(page.locator(".passkey-item")).toHaveCount(2, { timeout: 3000 }),
+    );
+    await expect(page.getByText("Passkey added.")).toBeVisible();
+    await expect(where).toHaveCount(0);
     await clickUntil(
       page,
       page.locator(".passkey-item").first().getByRole("button", { name: "Remove" }),

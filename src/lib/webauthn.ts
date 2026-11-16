@@ -117,6 +117,21 @@ async function apiRequest<T>(
   return JSON.parse(text) as T;
 }
 
+/**
+ * Where a new passkey is to be kept. A password manager, a device or a
+ * security key keeps one passkey for an account: a second passkey goes
+ * somewhere else, and the browser is told where the person means, so that it
+ * does not propose the place that already has one.
+ *
+ * These are the `hints` of WebAuthn. A browser that does not know them
+ * ignores them and asks in its own way.
+ */
+export type PasskeyPlace = "client-device" | "hybrid" | "security-key";
+
+/** The refusal of a place that already holds a passkey for the account
+ * (`WebAuthnError.code`). */
+export const PASSKEY_EXISTS = "passkey_exists";
+
 interface CreatedPasskey {
   credential: RegisterPublicKeyCredentialJSON;
   /** The provider's name from its AAGUID, when known (a default passkey name). */
@@ -128,6 +143,7 @@ interface CreatedPasskey {
  * recovery. */
 async function createPasskey(
   options: PublicKeyCredentialCreationOptionsJSON,
+  place?: PasskeyPlace,
 ): Promise<CreatedPasskey> {
   let credential: PublicKeyCredential | null;
   try {
@@ -144,9 +160,21 @@ async function createPasskey(
           id: base64UrlToBuffer(cred.id),
           transports: cred.transports as AuthenticatorTransport[] | undefined,
         })),
+        ...(place ? { hints: [place] } : {}),
       } as PublicKeyCredentialCreationOptions,
     })) as PublicKeyCredential | null;
-  } catch {
+  } catch (err) {
+    // The place chosen holds one of the passkeys the server said the account
+    // already has: it keeps one per account, and says so with this error.
+    if ((err as { name?: unknown } | null)?.name === "InvalidStateError") {
+      throw new WebAuthnError(
+        "browser",
+        "This place already holds a passkey for this account.",
+        null,
+        null,
+        PASSKEY_EXISTS,
+      );
+    }
     throw new WebAuthnError("browser", "Passkey creation was cancelled or failed.");
   }
   if (!credential) {
@@ -214,13 +242,17 @@ export async function recover(code: string): Promise<void> {
 }
 
 /** Adds one more passkey to the signed-in account (the session cookie says
- * which), named after its provider when known. */
-export async function addCredential(): Promise<void> {
+ * which), named after its provider when known. `place` is where the person
+ * means to keep it; without it the browser proposes. */
+export async function addCredential(place?: PasskeyPlace): Promise<void> {
   const begin = await apiRequest<BeginRegisterResponse>(
     "/auth/passkeys/add/begin",
     undefined,
   );
-  const { credential, provider } = await createPasskey(begin.challenge.publicKey);
+  const { credential, provider } = await createPasskey(
+    begin.challenge.publicKey,
+    place,
+  );
   await apiRequest<void>("/auth/passkeys/add/finish", {
     session_id: begin.session_id,
     credential,

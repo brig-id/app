@@ -4,7 +4,7 @@ import { PasskeyItem } from "~/components/account/passkey-item";
 import { RecoveryCodePanel } from "~/components/account/recovery-code";
 import { Callout } from "~/components/ui/callout";
 import { Icon } from "~/components/ui/icon";
-import { type Message, Said, T, titled } from "~/i18n";
+import { type Message, type MessageId, Said, T, titled } from "~/i18n";
 import {
   deletePasskey,
   listPasskeys,
@@ -13,15 +13,54 @@ import {
 } from "~/lib/api";
 import type { PasskeySummary } from "~/lib/api-types";
 import { failure } from "~/lib/errors";
-import { addCredential, WebAuthnError } from "~/lib/webauthn";
+import {
+  addCredential,
+  PASSKEY_EXISTS,
+  type PasskeyPlace,
+  WebAuthnError,
+} from "~/lib/webauthn";
 
-type Notice = { kind: "success" | "danger"; message: Message } | null;
+/** Where a new passkey can be kept. The last choice names no place: the
+ * browser then asks in its own way. */
+const PLACES: readonly {
+  place: PasskeyPlace | null;
+  label: MessageId;
+  about: MessageId;
+}[] = [
+  {
+    place: "client-device",
+    label: "passkeys.where.device",
+    about: "passkeys.where.device.about",
+  },
+  {
+    place: "hybrid",
+    label: "passkeys.where.phone",
+    about: "passkeys.where.phone.about",
+  },
+  {
+    place: "security-key",
+    label: "passkeys.where.key",
+    about: "passkeys.where.key.about",
+  },
+  {
+    place: null,
+    label: "passkeys.where.any",
+    about: "passkeys.where.any.about",
+  },
+];
+
+type Notice = {
+  kind: "success" | "danger" | "info";
+  message: Message;
+} | null;
 
 export default component$(() => {
   const nav = useNavigate();
   const passkeys = useSignal<PasskeySummary[]>([]);
   const notice = useSignal<Notice>(null);
   const adding = useSignal(false);
+  /** Whether the person is being asked where the new passkey will be kept. */
+  const choosing = useSignal(false);
 
   const refresh = $(async () => {
     try {
@@ -77,20 +116,28 @@ export default component$(() => {
     }
   });
 
-  const add = $(async () => {
+  const add = $(async (place: PasskeyPlace | null) => {
     adding.value = true;
+    notice.value = null;
     try {
-      await addCredential();
+      await addCredential(place ?? undefined);
+      choosing.value = false;
       notice.value = { kind: "success", message: { id: "passkeys.added" } };
       await refresh();
     } catch (err) {
-      notice.value = {
-        kind: "danger",
-        message:
-          err instanceof WebAuthnError && err.kind === "browser"
-            ? { id: "passkeys.add-failed" }
-            : failure(err, "passkeys.add-failed"),
-      };
+      if (err instanceof WebAuthnError && err.code === PASSKEY_EXISTS) {
+        // Not a failure of theirs: that place has one already. The choice
+        // stays open for another place.
+        notice.value = { kind: "info", message: { id: "passkeys.exists" } };
+      } else {
+        notice.value = {
+          kind: "danger",
+          message:
+            err instanceof WebAuthnError && err.kind === "browser"
+              ? { id: "passkeys.add-failed" }
+              : failure(err, "passkeys.add-failed"),
+        };
+      }
     } finally {
       adding.value = false;
     }
@@ -104,24 +151,73 @@ export default component$(() => {
             <T id="passkeys.title" />
           </h1>
           <p class="quiet">
-            <T id="passkeys.lead" />
+            <T id="passkeys.lead" /> <T id="passkeys.several" />
           </p>
         </div>
-        <button
-          type="button"
-          class="button button--primary"
-          disabled={adding.value}
-          onClick$={add}
-        >
-          <Icon name="plus" />
-          <T id="passkeys.add" />
-        </button>
+        {!choosing.value && (
+          <button
+            type="button"
+            class="button button--primary"
+            onClick$={() => {
+              choosing.value = true;
+              notice.value = null;
+            }}
+          >
+            <Icon name="plus" />
+            <T id="passkeys.add" />
+          </button>
+        )}
       </div>
 
       {notice.value && (
         <Callout kind={notice.value.kind} alert>
           <Said message={notice.value.message} />
         </Callout>
+      )}
+
+      {choosing.value && (
+        <section class="card stack" aria-labelledby="where-title">
+          <div class="stack stack--tight">
+            <h2 id="where-title">
+              <T id="passkeys.where.title" />
+            </h2>
+            <p class="quiet">
+              <T id="passkeys.where.lead" />
+            </p>
+          </div>
+          <ul class="places">
+            {PLACES.map((option) => (
+              <li key={option.label}>
+                <button
+                  type="button"
+                  class="place"
+                  data-place={option.place ?? "any"}
+                  disabled={adding.value}
+                  onClick$={() => add(option.place)}
+                >
+                  <span class="place-name">
+                    <T id={option.label} />
+                  </span>
+                  <span class="quiet small">
+                    <T id={option.about} />
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <div class="cluster">
+            <button
+              type="button"
+              class="button"
+              disabled={adding.value}
+              onClick$={() => {
+                choosing.value = false;
+              }}
+            >
+              <T id="common.cancel" />
+            </button>
+          </div>
+        </section>
       )}
 
       <section class="card">
