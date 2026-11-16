@@ -7,6 +7,13 @@ From 0.2.0 on, each entry is written by release-please from the commits merged
 since the last release: there is no "Unreleased" section to keep by hand. What
 a list of commits does not say is in the pull requests it links to.
 
+## [0.6.0](https://github.com/brig-id/app/compare/v0.5.0...v0.6.0) (2026-11-16)
+
+
+### Features
+
+* **app:** ✨ a second passkey: the person says where it will be kept, and a place that has one says so ([db77277](https://github.com/brig-id/app/commit/db77277d7b2a816620f5f8e903bfc09f11852505))
+
 ## [0.5.0](https://github.com/brig-id/app/compare/v0.4.0...v0.5.0) (2026-11-16)
 
 
