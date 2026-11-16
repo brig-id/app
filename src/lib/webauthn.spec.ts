@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  addCredential,
+  PASSKEY_EXISTS,
   passkeySupport,
   login,
   recover,
@@ -141,6 +143,104 @@ describe("register/login", () => {
     const error = await signUp().catch((err: unknown) => err);
     expect(error).toBeInstanceOf(WebAuthnError);
     expect((error as WebAuthnError).kind).toBe("browser");
+  });
+
+  const beginAdding = () =>
+    jsonResponse(200, {
+      session_id: "sess-2",
+      challenge: {
+        publicKey: {
+          challenge: "Y2hhbGxlbmdl",
+          user: { id: "dXNlcg", name: "u", displayName: "u" },
+          rp: { name: "brig-id" },
+          pubKeyCredParams: [],
+          excludeCredentials: [{ type: "public-key", id: "ZXhpc3Rpbmc" }],
+        },
+      },
+    });
+
+  it("addCredential() tells the browser where the person means to keep the passkey", async () => {
+    const fetchMock = vi
+      .fn<FakeFetch>()
+      .mockResolvedValueOnce(beginAdding())
+      .mockResolvedValueOnce(emptyOkResponse());
+    vi.stubGlobal("fetch", fetchMock);
+    const create = vi
+      .fn<
+        (options: {
+          publicKey: Record<string, unknown>;
+        }) => Promise<ReturnType<typeof fakeCredential>>
+      >()
+      .mockResolvedValue(fakeCredential("attestation"));
+    vi.stubGlobal("navigator", { credentials: { create } });
+
+    await addCredential("security-key");
+
+    const asked = create.mock.calls[0]![0].publicKey;
+    expect(asked.hints).toEqual(["security-key"]);
+    // The passkeys the account has are named, so that a place holding one
+    // refuses to make another.
+    expect(asked.excludeCredentials).toHaveLength(1);
+    expect(fetchMock.mock.calls[1]?.[0]).toBe("/auth/passkeys/add/finish");
+  });
+
+  it("addCredential() names no place when the browser is left to propose", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn<FakeFetch>()
+        .mockResolvedValueOnce(beginAdding())
+        .mockResolvedValueOnce(emptyOkResponse()),
+    );
+    const create = vi
+      .fn<
+        (options: {
+          publicKey: Record<string, unknown>;
+        }) => Promise<ReturnType<typeof fakeCredential>>
+      >()
+      .mockResolvedValue(fakeCredential("attestation"));
+    vi.stubGlobal("navigator", { credentials: { create } });
+
+    await addCredential();
+
+    expect(create.mock.calls[0]![0].publicKey).not.toHaveProperty("hints");
+  });
+
+  it("addCredential() says so when the place already holds a passkey of the account", async () => {
+    const fetchMock = vi.fn<FakeFetch>().mockResolvedValueOnce(beginAdding());
+    vi.stubGlobal("fetch", fetchMock);
+    const refused = Object.assign(new Error("excluded"), {
+      name: "InvalidStateError",
+    });
+    vi.stubGlobal("navigator", {
+      credentials: {
+        create: vi.fn<() => Promise<never>>().mockRejectedValue(refused),
+      },
+    });
+
+    await expect(addCredential("client-device")).rejects.toMatchObject({
+      kind: "browser",
+      code: PASSKEY_EXISTS,
+    });
+    // Nothing was sent to finish: no passkey was made.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("addCredential() does not take a cancelled ceremony for that", async () => {
+    vi.stubGlobal("fetch", vi.fn<FakeFetch>().mockResolvedValueOnce(beginAdding()));
+    const cancelled = Object.assign(new Error("cancelled"), {
+      name: "NotAllowedError",
+    });
+    vi.stubGlobal("navigator", {
+      credentials: {
+        create: vi.fn<() => Promise<never>>().mockRejectedValue(cancelled),
+      },
+    });
+
+    await expect(addCredential()).rejects.toMatchObject({
+      kind: "browser",
+      code: null,
+    });
   });
 
   it("signUp() throws a network WebAuthnError when fetch fails", async () => {

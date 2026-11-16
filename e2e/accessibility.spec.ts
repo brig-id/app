@@ -117,6 +117,15 @@ for (const { locale, colorScheme } of CASES) {
       await page.goto(`${E2E_ORIGIN}/passkeys/`, { waitUntil: "networkidle" });
       await expect(page.locator(".passkey-item")).toHaveCount(1, { timeout: 10_000 });
       await expectNoViolation(page, "/passkeys/");
+      // Adding one: where it will be kept, then a place that has one already.
+      await page.locator(".split .button--primary").click();
+      await expect(page.locator(".places")).toBeVisible();
+      await expectNoViolation(page, "/passkeys/ choosing where a passkey is kept");
+      await expect(async () => {
+        await page.locator('[data-place="client-device"]').click({ timeout: 2000 });
+        await expect(page.locator(".callout--info")).toBeVisible({ timeout: 3000 });
+      }).toPass({ timeout: 40_000, intervals: [3500] });
+      await expectNoViolation(page, "/passkeys/ a place that already has one");
       await page.locator(".passkey-item .button").first().click();
       await expectNoViolation(page, "/passkeys/ renaming a passkey");
 
