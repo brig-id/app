@@ -13,6 +13,9 @@ import {
 } from "./application";
 import { administratorLink, seedling, startNewServer } from "./server";
 import { addVirtualAuthenticator, skipIfNoVirtualAuthenticator } from "./webauthn";
+import pkg from "../package.json" with { type: "json" };
+
+const INTERFACE_VERSION = pkg.version;
 
 // Administering a server: who gets the role and how, and what it lets them
 // do. An administrator sees accounts, never identities; every change they
@@ -206,6 +209,12 @@ test("an administrator named from the machine registers an application, invites,
   await expect(own).toHaveCount(1);
   const administrator = (await own.getAttribute("data-account")) ?? "";
   await expect(own.getByText("Administrator", { exact: true })).toBeVisible();
+  // What runs is said here, to those who administer: this interface's
+  // version, and the server's when it tells it.
+  await expect(page.locator('[data-value="version"]')).toContainText(
+    INTERFACE_VERSION,
+    { timeout: 20_000 },
+  );
   // Accounts, and nothing of what they hold: no identity is named here.
   await expect(page.getByText(/Work|Personal|Public/)).toHaveCount(0);
 

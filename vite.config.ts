@@ -14,6 +14,17 @@ import { qwikRouter } from "@qwik.dev/router/vite";
 export default defineConfig(() => {
   return {
     plugins: [qwikRouter(), qwikVite()],
+    // The version of this interface, written into the build: the
+    // administration shows it next to the server's (`src/lib/version.ts`).
+    define: {
+      BRIGID_INTERFACE_VERSION: JSON.stringify(
+        (
+          JSON.parse(
+            readFileSync(new URL("package.json", import.meta.url), "utf8"),
+          ) as { version: string }
+        ).version,
+      ),
+    },
     resolve: {
       // `~/…` is `src/…` (tsconfig.json).
       tsconfigPaths: true,
