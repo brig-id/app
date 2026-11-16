@@ -6,7 +6,22 @@ import type { Message, MessageId } from "~/i18n";
 import { ApiError } from "./api";
 import { WebAuthnError } from "./webauthn";
 
+/** What the server's own names for its refusals mean to a person. */
+const REFUSALS: Record<string, MessageId> = {
+  suspended: "error.suspended",
+  invitation_required: "signup.invitation",
+  link_invalid: "error.link-invalid",
+  signup_closed: "signup.closed",
+};
+
 export function failure(err: unknown, fallback: MessageId): Message {
+  if (
+    (err instanceof WebAuthnError || err instanceof ApiError) &&
+    err.code !== null &&
+    Object.hasOwn(REFUSALS, err.code)
+  ) {
+    return { id: REFUSALS[err.code]! };
+  }
   if (err instanceof WebAuthnError) {
     if (err.kind === "network") return { id: "error.network" };
     if (err.status === 429) return { id: "error.rate" };

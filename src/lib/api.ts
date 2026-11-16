@@ -33,10 +33,19 @@ export class ApiError extends Error {
   status: number;
   /** The server's own explanation, when it gave one (in English). */
   detail: string | null;
-  constructor(status: number, message: string, detail: string | null = null) {
+  /** The server's name for a refusal the interface acts on
+   * (`confirmation_required`, `suspended`, `link_invalid`…). */
+  code: string | null;
+  constructor(
+    status: number,
+    message: string,
+    detail: string | null = null,
+    code: string | null = null,
+  ) {
     super(message);
     this.status = status;
     this.detail = detail;
+    this.code = code;
     this.name = "ApiError";
   }
 }
@@ -54,7 +63,7 @@ function retryDelay(response: Response): number {
   return Math.min(wait, 5000);
 }
 
-async function call<T>(
+export async function call<T>(
   method: string,
   path: string,
   body?: unknown,
@@ -89,9 +98,11 @@ async function call<T>(
   const text = await response.text();
   if (!response.ok) {
     let detail: string | null = null;
+    let code: string | null = null;
     try {
-      const data = JSON.parse(text) as { error?: string };
+      const data = JSON.parse(text) as { error?: string; code?: string };
       if (data.error) detail = data.error;
+      if (data.code) code = data.code;
     } catch {
       // no explanation given
     }
@@ -99,6 +110,7 @@ async function call<T>(
       response.status,
       detail ?? `Request failed (${response.status}).`,
       detail,
+      code,
     );
   }
   return (text.length ? JSON.parse(text) : undefined) as T;
@@ -130,7 +142,7 @@ export async function serverInfo(): Promise<ServerInfo> {
   try {
     return await call<ServerInfo>("GET", "/auth/server");
   } catch {
-    return { sign_up: true };
+    return { sign_up: true, policy: "open" };
   }
 }
 

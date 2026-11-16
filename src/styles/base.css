@@ -22,6 +22,11 @@ body {
   margin: 0;
 }
 
+/* What is hidden stays hidden, whatever a class says of its layout. */
+[hidden] {
+  display: none !important;
+}
+
 /* Both languages are in the page (`src/i18n`); the document's is shown. */
 html:not([lang="fr"]) [data-l="fr"],
 html[lang="fr"] [data-l="en"] {

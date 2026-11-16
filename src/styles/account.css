@@ -360,3 +360,117 @@
   margin: 0;
   accent-color: var(--selected);
 }
+
+/* -- administration ------------------------------------------------------------ */
+
+.tabs ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--p-space-2);
+}
+
+.tabs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0 var(--p-space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--p-radius-full);
+  color: var(--text-quiet);
+  text-decoration: none;
+}
+
+.tabs a:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.tabs a[aria-current="page"] {
+  border-color: var(--selected);
+  background: var(--selected-surface);
+  color: var(--text);
+  font-weight: 560;
+}
+
+.needs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-1);
+}
+
+.need {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--p-space-4);
+  min-height: 2.5rem;
+}
+
+.need-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--p-space-2);
+  cursor: pointer;
+}
+
+.need-choice input {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0;
+  accent-color: var(--selected);
+}
+
+.asks {
+  padding: 0;
+  list-style: none;
+}
+
+.once {
+  padding: var(--p-space-3) var(--p-space-4);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--p-radius-m);
+  background: var(--surface-sunken);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.log {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-2);
+}
+
+.log-entry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-1);
+  padding: var(--p-space-3) var(--p-space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--p-radius-m);
+}
+
+.policy {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* A choice and what it means under it. */
+.policy .choice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  row-gap: var(--p-space-1);
+  padding-block: var(--p-space-3);
+}
+
+.policy .choice-about {
+  grid-column: 2;
+}
+
+@media (max-width: 30rem) {
+  .need {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--p-space-1);
+    padding-block: var(--p-space-2);
+  }
+}

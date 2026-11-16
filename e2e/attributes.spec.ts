@@ -1,10 +1,4 @@
-import {
-  expect,
-  test,
-  type APIRequestContext,
-  type Page,
-} from "@playwright/test";
-import { E2E_ORIGIN } from "../playwright.config";
+import { expect, test } from "@playwright/test";
 import {
   clickUntil,
   finishOnboarding,
@@ -14,9 +8,8 @@ import {
 import {
   answerReturnAddress,
   ask,
+  continueAndReadToken,
   registerApplication,
-  RETURN_TO,
-  VERIFIER,
 } from "./application";
 import { addVirtualAuthenticator, skipIfNoVirtualAuthenticator } from "./webauthn";
 
@@ -29,42 +22,6 @@ import { addVirtualAuthenticator, skipIfNoVirtualAuthenticator } from "./webauth
 test.beforeEach(async () => {
   await new Promise((resolve) => setTimeout(resolve, 4000));
 });
-
-// The application's own server calls the token endpoint: not the browser, so
-// without the session cookie, and by an address Node resolves (it does not
-// know `*.localhost`).
-const TOKEN_ENDPOINT = `${E2E_ORIGIN.replace("brigid.localhost", "127.0.0.1")}/token`;
-
-/** Continues to the application and returns what the token it gets says. */
-async function continueAndReadToken(
-  page: Page,
-  request: APIRequestContext,
-  clientId: string,
-): Promise<Record<string, unknown>> {
-  // Refused for going too fast, the page says so and stays.
-  await expect(async () => {
-    await page
-      .getByRole("button", { name: "Continue", exact: true })
-      .click({ timeout: 2000 });
-    await page.waitForURL(/application\.example\/back\?/, { timeout: 3000 });
-  }).toPass({ timeout: 40_000 });
-  const code = new URL(page.url()).searchParams.get("code");
-  expect(code).toBeTruthy();
-  const response = await request.post(TOKEN_ENDPOINT, {
-    form: {
-      grant_type: "authorization_code",
-      client_id: clientId,
-      code: code!,
-      redirect_uri: RETURN_TO,
-      code_verifier: VERIFIER,
-    },
-  });
-  expect(response.status()).toBe(200);
-  const { id_token } = (await response.json()) as { id_token: string };
-  return JSON.parse(
-    Buffer.from(id_token.split(".")[1]!, "base64url").toString("utf8"),
-  ) as Record<string, unknown>;
-}
 
 test("an application receives what was ticked, nothing else, and it can be withdrawn", async ({
   page,

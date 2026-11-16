@@ -90,7 +90,7 @@ test.describe("sign-up and onboarding", () => {
 
   test("a server that closed sign-up says so, and offers no way to it", async ({ page }) => {
     await page.route("**/auth/server", (route) =>
-      route.fulfill({ json: { sign_up: false } }),
+      route.fulfill({ json: { sign_up: false, policy: "closed" } }),
     );
     await page.goto("/");
     await expect(page.getByRole("link", { name: "Lost your passkeys?" })).toBeVisible();

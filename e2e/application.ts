@@ -1,7 +1,6 @@
-import { expect, type Page } from "@playwright/test";
-import { execFileSync } from "node:child_process";
-import path from "node:path";
-import { E2E_DATABASE, E2E_MASTER_KEY, SERVER_DIR } from "../playwright.config";
+import { type APIRequestContext, expect, type Page } from "@playwright/test";
+import { E2E_ORIGIN } from "../playwright.config";
+import { seedling } from "./server";
 
 // An application that signs people in through the server under test. There
 // is none running: a suite plays its part. It registers it with the server's
@@ -15,27 +14,7 @@ export const CHALLENGE = "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM";
 
 /** `seedling client …` on the database of the running server. */
 export function seedlingClient(...args: string[]): string {
-  return execFileSync(
-    "cargo",
-    [
-      "run",
-      "--quiet",
-      "--manifest-path",
-      path.join(SERVER_DIR, "Cargo.toml"),
-      "--",
-      "client",
-      ...args,
-    ],
-    {
-      encoding: "utf8",
-      env: {
-        ...process.env,
-        BRIGID_MASTER_KEY: E2E_MASTER_KEY,
-        BRIGID_DATABASE__PATH: E2E_DATABASE,
-      },
-      stdio: ["ignore", "pipe", "ignore"],
-    },
-  );
+  return seedling("client", ...args);
 }
 
 /** Sends the browser to the server as the application does. */
@@ -79,4 +58,43 @@ export async function answerReturnAddress(page: Page) {
   await page.route(`${new URL(RETURN_TO).origin}/**`, (route) =>
     route.fulfill({ contentType: "text/html", body: "<title>back</title>" }),
   );
+}
+
+// The application's own server calls the token endpoint: not the browser, so
+// without the session cookie, and by an address Node resolves (it does not
+// know `*.localhost`).
+const TOKEN_ENDPOINT = `${E2E_ORIGIN.replace("brigid.localhost", "127.0.0.1")}/token`;
+
+/** Continues to the application and returns what the token it gets says.
+ * An application that has a `secret` proves who it is with it. */
+export async function continueAndReadToken(
+  page: Page,
+  request: APIRequestContext,
+  clientId: string,
+  secret?: string,
+): Promise<Record<string, unknown>> {
+  // Refused for going too fast, the page says so and stays.
+  await expect(async () => {
+    await page
+      .getByRole("button", { name: "Continue", exact: true })
+      .click({ timeout: 2000 });
+    await page.waitForURL(/application\.example\/back\?/, { timeout: 3000 });
+  }).toPass({ timeout: 40_000 });
+  const code = new URL(page.url()).searchParams.get("code");
+  expect(code).toBeTruthy();
+  const response = await request.post(TOKEN_ENDPOINT, {
+    form: {
+      grant_type: "authorization_code",
+      client_id: clientId,
+      code: code!,
+      redirect_uri: RETURN_TO,
+      code_verifier: VERIFIER,
+      ...(secret === undefined ? {} : { client_secret: secret }),
+    },
+  });
+  expect(response.status()).toBe(200);
+  const { id_token } = (await response.json()) as { id_token: string };
+  return JSON.parse(
+    Buffer.from(id_token.split(".")[1]!, "base64url").toString("utf8"),
+  ) as Record<string, unknown>;
 }

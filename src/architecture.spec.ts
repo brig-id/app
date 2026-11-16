@@ -79,7 +79,8 @@ describe("the sign-in part can be reviewed in one sitting", () => {
   const signIn = sources.filter((p) =>
     /[\\/](routes[\\/]\(sign-in\)|components[\\/]sign-in)[\\/]/.test(p),
   );
-  const OTHER_PARTS = /(\(account\)|\(admin\)|components\/account|components\/admin)/;
+  const OTHER_PARTS =
+    /(\(account\)|\(admin\)|components\/account|components\/admin|lib\/admin)/;
 
   it("has pages", () => {
     expect(signIn.length).toBeGreaterThan(4);

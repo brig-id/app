@@ -35,6 +35,14 @@ export const MESSAGES = {
     "Trop de tentatives. Patientez une minute, puis réessayez.",
   ],
   "error.server-said": ["The server answered:", "Le serveur a répondu :"],
+  "error.suspended": [
+    "This account is suspended by an administrator of this server.",
+    "Ce compte est suspendu par un administrateur de ce serveur.",
+  ],
+  "error.link-invalid": [
+    "This link is not valid any more: it was used, it expired, or it was revoked.",
+    "Ce lien n’est plus valable : il a été utilisé, il a expiré ou il a été révoqué.",
+  ],
 
   "language.switch": ["Français", "English"],
   "theme.light": ["Light theme", "Thème clair"],
@@ -53,6 +61,9 @@ export const MESSAGES = {
   "title.identities": ["Identities", "Identités"],
   "title.identity": ["Identity", "Identité"],
   "title.account": ["Account", "Compte"],
+  "title.setup": ["Set up this server", "Mettre en place ce serveur"],
+  "title.claim": ["Become an administrator", "Devenir administrateur"],
+  "title.admin": ["Administration", "Administration"],
   "title.passkeys": ["Passkeys", "Clés d’accès"],
 
   // -- sign-in -----------------------------------------------------------------
@@ -106,6 +117,37 @@ export const MESSAGES = {
   "signup.closed": [
     "This server does not accept new accounts. If you already have one, sign in.",
     "Ce serveur n’accepte pas de nouveaux comptes. Si vous en avez déjà un, connectez-vous.",
+  ],
+  "signup.invitation": [
+    "This server takes new accounts by invitation. Ask its administrator for an invitation link.",
+    "Ce serveur n’accepte de nouveaux comptes que sur invitation. Demandez un lien d’invitation à son administrateur.",
+  ],
+  "signup.invited": [
+    "You were invited to this server.",
+    "Vous êtes invité sur ce serveur.",
+  ],
+
+  // -- the first administrator -------------------------------------------------
+  "setup.title": ["Set up this server", "Mettre en place ce serveur"],
+  "setup.lead": [
+    "This link creates the first account of **{server}**. That account will administer the server.",
+    "Ce lien crée le premier compte de **{server}**. Ce compte administrera le serveur.",
+  ],
+  "setup.then": [
+    "Like any account, it is a passkey and nothing else. Administering a server shows nobody’s identities, not even to you.",
+    "Comme tout compte, c’est une clé d’accès et rien d’autre. Administrer un serveur ne montre les identités de personne, pas même à vous.",
+  ],
+  "setup.button": [
+    "Create the administrator’s account",
+    "Créer le compte de l’administrateur",
+  ],
+  "setup.no-link": [
+    "This page is opened from the link a new server prints when it starts.",
+    "Cette page s’ouvre depuis le lien qu’un nouveau serveur affiche à son démarrage.",
+  ],
+  "setup.invalid": [
+    "This setup link is not valid any more. It works once, for an hour: restart the server to get a new one. If the server already has an administrator, sign in.",
+    "Ce lien de mise en place n’est plus valable. Il sert une fois, pendant une heure : redémarrez le serveur pour en obtenir un nouveau. Si le serveur a déjà un administrateur, connectez-vous.",
   ],
 
   // -- recovery ----------------------------------------------------------------
@@ -288,6 +330,7 @@ export const MESSAGES = {
   "nav.identities": ["Identities", "Identités"],
   "nav.passkeys": ["Passkeys", "Clés d’accès"],
   "nav.account": ["Account", "Compte"],
+  "nav.admin": ["Administration", "Administration"],
   "nav.signout": ["Sign out", "Se déconnecter"],
   "nav.signout.failed": [
     "You are still signed in: the server could not be told. Try again.",
@@ -424,6 +467,302 @@ export const MESSAGES = {
   "account.delete.failed": [
     "The account was not deleted. Try again.",
     "Le compte n’a pas été supprimé. Réessayez.",
+  ],
+
+  // -- administration -----------------------------------------------------------
+  "claim.title": ["Become an administrator", "Devenir administrateur"],
+  "claim.lead": [
+    "This link was made on the server’s machine. Opening it makes **your account** an administrator of this server.",
+    "Ce lien a été créé sur la machine du serveur. L’ouvrir fait de **votre compte** un administrateur de ce serveur.",
+  ],
+  "claim.button": ["Become an administrator", "Devenir administrateur"],
+  "claim.done": [
+    "Your account now administers this server.",
+    "Votre compte administre maintenant ce serveur.",
+  ],
+  "claim.no-link": [
+    "This page is opened from the address a command prints on the server’s machine.",
+    "Cette page s’ouvre depuis l’adresse qu’une commande affiche sur la machine du serveur.",
+  ],
+  "claim.go": ["Open the administration", "Ouvrir l’administration"],
+
+  "admin.not-admin": [
+    "This part is for the administrators of this server.",
+    "Cette partie est réservée aux administrateurs de ce serveur.",
+  ],
+  "admin.tabs.label": ["Administration", "Administration"],
+  "admin.tab.accounts": ["Accounts", "Comptes"],
+  "admin.tab.applications": ["Applications", "Applications"],
+  "admin.tab.signup": ["Sign-up", "Inscription"],
+  "admin.tab.log": ["Log", "Journal"],
+  "admin.confirm.hint": [
+    "A change asks for your passkey again when you have not used it for a few minutes.",
+    "Une modification redemande votre clé d’accès si vous ne l’avez pas utilisée depuis quelques minutes.",
+  ],
+  "admin.confirm.cancelled": [
+    "Nothing was changed: the passkey was not used.",
+    "Rien n’a été modifié : la clé d’accès n’a pas été utilisée.",
+  ],
+  "admin.failed": [
+    "The change was not made.",
+    "La modification n’a pas été faite.",
+  ],
+
+  "admin.accounts.title": ["Accounts", "Comptes"],
+  "admin.accounts.lead": [
+    "The accounts of this server. You see that they exist, never what they hold: no identity, no name, no application.",
+    "Les comptes de ce serveur. Vous voyez qu’ils existent, jamais ce qu’ils contiennent : aucune identité, aucun nom, aucune application.",
+  ],
+  "admin.accounts.no-reset": [
+    "You cannot give access back to an account: someone who lost every passkey and their recovery code has lost it.",
+    "Vous ne pouvez pas redonner l’accès à un compte : qui a perdu toutes ses clés d’accès et son code de récupération l’a perdu.",
+  ],
+  "admin.account.created": ["Created on {date}", "Créé le {date}"],
+  "admin.account.last": [
+    "Last sign-in on {date}",
+    "Dernière connexion le {date}",
+  ],
+  "admin.account.never": [
+    "No sign-in recorded",
+    "Aucune connexion enregistrée",
+  ],
+  "admin.account.passkeys": ["Passkeys: {count}", "Clés d’accès : {count}"],
+  "admin.account.recovery.yes": [
+    "Has a recovery code",
+    "A un code de récupération",
+  ],
+  "admin.account.recovery.no": [
+    "No recovery code",
+    "Pas de code de récupération",
+  ],
+  "admin.account.you": ["You", "Vous"],
+  "admin.account.admin": ["Administrator", "Administrateur"],
+  "admin.account.suspended": ["Suspended", "Suspendu"],
+  "admin.account.suspend": ["Suspend", "Suspendre"],
+  "admin.account.unsuspend": ["Lift the suspension", "Lever la suspension"],
+  "admin.account.grant": ["Make administrator", "Nommer administrateur"],
+  "admin.account.withdraw": ["Withdraw the role", "Retirer le rôle"],
+  "admin.account.delete": ["Delete", "Supprimer"],
+  "admin.account.suspend.confirm": [
+    "Suspend **{name}**? Its sessions end now, and it can no longer sign in, here or to any application, until you lift the suspension. Nothing of it is deleted.",
+    "Suspendre **{name}** ? Ses sessions se terminent maintenant, et il ne peut plus se connecter, ni ici ni à une application, tant que vous ne levez pas la suspension. Rien n’est supprimé.",
+  ],
+  "admin.account.suspend.yes": ["Yes, suspend", "Oui, suspendre"],
+  "admin.account.delete.confirm": [
+    "Delete **{name}**? The account, its passkeys, its identities and what was recorded about the applications they signed in to are removed for good. Nobody can restore it, and applications keep what they received.",
+    "Supprimer **{name}** ? Le compte, ses clés d’accès, ses identités et ce qui a été enregistré sur les applications auxquelles elles se sont connectées sont retirés définitivement. Personne ne peut le restaurer, et les applications conservent ce qu’elles ont reçu.",
+  ],
+  "admin.account.delete.yes": ["Yes, delete", "Oui, supprimer"],
+  "admin.account.suspended.done": [
+    "{name} is suspended.",
+    "{name} est suspendu.",
+  ],
+  "admin.account.unsuspended.done": [
+    "{name} can sign in again.",
+    "{name} peut de nouveau se connecter.",
+  ],
+  "admin.account.granted": [
+    "{name} is now an administrator.",
+    "{name} est maintenant administrateur.",
+  ],
+  "admin.account.withdrawn": [
+    "{name} is no longer an administrator.",
+    "{name} n’est plus administrateur.",
+  ],
+  "admin.account.deleted": [
+    "The account was deleted.",
+    "Le compte a été supprimé.",
+  ],
+
+  "admin.apps.title": ["Applications", "Applications"],
+  "admin.apps.lead": [
+    "The applications that may ask this server to sign people in.",
+    "Les applications qui peuvent demander à ce serveur de connecter des personnes.",
+  ],
+  "admin.apps.none": [
+    "No application is registered.",
+    "Aucune application n’est enregistrée.",
+  ],
+  "admin.apps.new": ["Register an application", "Enregistrer une application"],
+  "admin.app.name": ["Name", "Nom"],
+  "admin.app.name.hint": [
+    "Shown to people when they sign in to it.",
+    "Montré aux personnes quand elles s’y connectent.",
+  ],
+  "admin.app.uris": ["Return addresses", "Adresses de retour"],
+  "admin.app.uris.hint": [
+    "Where the application may send people back, one per line, compared exactly. Only https, except http on localhost for development.",
+    "Où l’application peut renvoyer les personnes, une par ligne, comparées exactement. Seulement https, sauf http sur localhost pour le développement.",
+  ],
+  "admin.app.confidential": [
+    "It can keep a secret (it has a server)",
+    "Elle peut garder un secret (elle a un serveur)",
+  ],
+  "admin.app.confidential.hint": [
+    "Untick for an application that runs entirely in a browser or on a phone.",
+    "Décochez pour une application qui tourne entièrement dans un navigateur ou sur un téléphone.",
+  ],
+  "admin.app.attributes": [
+    "What it may ask people to share",
+    "Ce qu’elle peut demander de partager",
+  ],
+  "admin.app.attributes.hint": [
+    "Each person still decides, value by value. “Required” stops the sign-in of someone who refuses.",
+    "Chaque personne décide quand même, valeur par valeur. « Requis » arrête la connexion de qui refuse.",
+  ],
+  "admin.app.need.ask": ["May ask", "Peut demander"],
+  "admin.app.need.optional": ["Optional", "Facultatif"],
+  "admin.app.need.required": ["Required", "Requis"],
+  "admin.app.register": ["Register", "Enregistrer"],
+  "admin.app.registered": [
+    "“{name}” is registered. Copy what follows into its configuration.",
+    "« {name} » est enregistrée. Copiez ce qui suit dans sa configuration.",
+  ],
+  "admin.app.client-id": ["Identifier (client_id)", "Identifiant (client_id)"],
+  "admin.app.secret": ["Secret (client_secret)", "Secret (client_secret)"],
+  "admin.app.secret.once": [
+    "Shown only now: the server keeps a hash of it.",
+    "Affiché seulement maintenant : le serveur n’en garde qu’une empreinte.",
+  ],
+  "admin.app.public": [
+    "No secret: it runs in a browser or on a phone.",
+    "Sans secret : elle tourne dans un navigateur ou sur un téléphone.",
+  ],
+  "admin.app.has-secret": ["It has a secret.", "Elle a un secret."],
+  "admin.app.asks.nothing": [
+    "It receives an identifier, and may ask for nothing else.",
+    "Elle reçoit un identifiant, et ne peut rien demander d’autre.",
+  ],
+  "admin.app.asks": ["It may ask for:", "Elle peut demander :"],
+  "admin.app.edit": [
+    "Change what it may ask",
+    "Modifier ce qu’elle peut demander",
+  ],
+  "admin.app.saved": [
+    "Saved. What was taken away is no longer sent.",
+    "Enregistré. Ce qui a été retiré n’est plus envoyé.",
+  ],
+  "admin.app.remove": ["Remove", "Retirer"],
+  "admin.app.remove.confirm": [
+    "Remove **{name}**? Nobody will sign in to it through this server any more, and what was recorded about it is deleted.",
+    "Retirer **{name}** ? Plus personne ne s’y connectera par ce serveur, et ce qui a été enregistré à son sujet est supprimé.",
+  ],
+  "admin.app.remove.yes": ["Yes, remove", "Oui, retirer"],
+  "admin.app.removed": ["“{name}” was removed.", "« {name} » a été retirée."],
+
+  "admin.signup.title": [
+    "Who may create an account",
+    "Qui peut créer un compte",
+  ],
+  "admin.signup.open": ["Anyone", "Tout le monde"],
+  "admin.signup.open.about": [
+    "Whoever reaches this server can create an account.",
+    "Quiconque atteint ce serveur peut créer un compte.",
+  ],
+  "admin.signup.invitation": [
+    "Whoever you invite",
+    "Les personnes que vous invitez",
+  ],
+  "admin.signup.invitation.about": [
+    "An account is created from an invitation link.",
+    "Un compte se crée depuis un lien d’invitation.",
+  ],
+  "admin.signup.closed": ["Nobody", "Personne"],
+  "admin.signup.closed.about": [
+    "No new account. The accounts that exist are not affected.",
+    "Aucun nouveau compte. Les comptes existants ne sont pas touchés.",
+  ],
+  "admin.invite.title": ["Invitations", "Invitations"],
+  "admin.invite.lead": [
+    "A link that creates accounts: as many as you say, until it expires. The server does not know who you give it to.",
+    "Un lien qui crée des comptes : autant que vous le dites, jusqu’à son expiration. Le serveur ne sait pas à qui vous le donnez.",
+  ],
+  "admin.invite.closed-note": [
+    "Sign-up is closed: an invitation opens nothing until you change that.",
+    "L’inscription est fermée : une invitation n’ouvre rien tant que vous ne changez pas cela.",
+  ],
+  "admin.invite.uses": ["Accounts it can create", "Comptes qu’elle peut créer"],
+  "admin.invite.days": ["Days it lasts", "Durée en jours"],
+  "admin.invite.create": ["Create an invitation", "Créer une invitation"],
+  "admin.invite.created": [
+    "Give this address to the people you invite. It is shown only now.",
+    "Donnez cette adresse aux personnes que vous invitez. Elle n’est affichée que maintenant.",
+  ],
+  "admin.invite.address": ["Invitation address", "Adresse d’invitation"],
+  "admin.invite.left": [
+    "Accounts left: {count}, until {date}",
+    "Comptes restants : {count}, jusqu’au {date}",
+  ],
+  "admin.invite.revoke": ["Revoke", "Révoquer"],
+  "admin.invite.revoked": [
+    "The invitation was revoked.",
+    "L’invitation a été révoquée.",
+  ],
+  "admin.invite.none": [
+    "No invitation is waiting.",
+    "Aucune invitation en attente.",
+  ],
+
+  "admin.log.title": ["Log", "Journal"],
+  "admin.log.lead": [
+    "What administrators did, and what was done on the machine. Accounts are kept as identifiers: a deleted account is named nowhere. Entries are deleted after the period set by the server’s operator, a year unless changed.",
+    "Ce que les administrateurs ont fait, et ce qui a été fait sur la machine. Les comptes y sont gardés comme des identifiants : un compte supprimé n’est nommé nulle part. Les entrées sont effacées après la durée fixée par l’opérateur du serveur, un an sauf réglage contraire.",
+  ],
+  "admin.log.none": ["Nothing yet.", "Rien pour l’instant."],
+  "admin.log.by.machine": ["on the machine", "sur la machine"],
+  "admin.log.by.deleted": [
+    "by an administrator whose account was deleted",
+    "par un administrateur dont le compte a été supprimé",
+  ],
+  "admin.log.by": ["by {name}", "par {name}"],
+  "admin.log.account": ["Account: {name}", "Compte : {name}"],
+  "admin.log.account.deleted": [
+    "An account deleted since",
+    "Un compte supprimé depuis",
+  ],
+  "admin.log.action.setup-redeemed": [
+    "First administrator created with the setup link",
+    "Premier administrateur créé avec le lien de mise en place",
+  ],
+  "admin.log.action.administrator-link": [
+    "Administrator link made",
+    "Lien d’administrateur créé",
+  ],
+  "admin.log.action.administrator-claimed": [
+    "Role taken with a link",
+    "Rôle pris avec un lien",
+  ],
+  "admin.log.action.administrator-grant": ["Role granted", "Rôle accordé"],
+  "admin.log.action.administrator-withdraw": ["Role withdrawn", "Rôle retiré"],
+  "admin.log.action.account-suspend": ["Account suspended", "Compte suspendu"],
+  "admin.log.action.account-unsuspend": [
+    "Suspension lifted",
+    "Suspension levée",
+  ],
+  "admin.log.action.account-delete": ["Account deleted", "Compte supprimé"],
+  "admin.log.action.application-register": [
+    "Application registered",
+    "Application enregistrée",
+  ],
+  "admin.log.action.application-attributes": [
+    "What an application may ask was changed",
+    "Ce qu’une application peut demander a été modifié",
+  ],
+  "admin.log.action.application-remove": [
+    "Application removed",
+    "Application retirée",
+  ],
+  "admin.log.action.signup-policy": [
+    "Who may create an account was set",
+    "Qui peut créer un compte a été fixé",
+  ],
+  "admin.log.action.invitation-create": [
+    "Invitation created",
+    "Invitation créée",
+  ],
+  "admin.log.action.invitation-revoke": [
+    "Invitation revoked",
+    "Invitation révoquée",
   ],
 
   // -- identities --------------------------------------------------------------

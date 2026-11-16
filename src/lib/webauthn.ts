@@ -37,17 +37,21 @@ export class WebAuthnError extends Error {
   status: number | null;
   /** The server's own explanation, when it gave one (in English). */
   detail: string | null;
+  /** The server's name for a refusal the interface acts on. */
+  code: string | null;
 
   constructor(
     kind: WebAuthnErrorKind,
     message: string,
     status: number | null = null,
     detail: string | null = null,
+    code: string | null = null,
   ) {
     super(message);
     this.kind = kind;
     this.status = status;
     this.detail = detail;
+    this.code = code;
     this.name = "WebAuthnError";
   }
 }
@@ -88,9 +92,14 @@ async function apiRequest<T>(
 
   if (!response.ok) {
     let detail: string | null = null;
+    let code: string | null = null;
     try {
-      const data = JSON.parse(await response.text()) as { error?: string };
+      const data = JSON.parse(await response.text()) as {
+        error?: string;
+        code?: string;
+      };
       if (data.error) detail = data.error;
+      if (data.code) code = data.code;
     } catch {
       // no explanation given
     }
@@ -99,6 +108,7 @@ async function apiRequest<T>(
       detail ?? `Request failed with status ${response.status}`,
       response.status,
       detail,
+      code,
     );
   }
 
@@ -173,10 +183,10 @@ async function createPasskey(
  * hidden one, ADR-003), and opens its session (an HttpOnly cookie) with the same ceremony. The passkey
  * is named after its provider when the AAGUID is known.
  */
-export async function signUp(): Promise<void> {
+export async function signUp(link?: string): Promise<void> {
   const begin = await apiRequest<BeginRegisterResponse>(
     "/auth/register/begin",
-    {} satisfies BeginRegisterRequest,
+    (link ? { link } : {}) satisfies BeginRegisterRequest,
   );
   const { credential, provider } = await createPasskey(begin.challenge.publicKey);
   await apiRequest<void>("/auth/register/finish", {
@@ -246,6 +256,22 @@ export async function deleteAccount(): Promise<void> {
     undefined,
   );
   await apiRequest<void>("/account/delete/finish", {
+    session_id: begin.session_id,
+    credential: await usePasskey(begin.challenge.publicKey),
+  } satisfies FinishLoginRequest);
+}
+
+/**
+ * Confirms, in the open session, that the person is there: a passkey
+ * ceremony the server asks for before an administrative change. It opens no
+ * session and changes nothing by itself.
+ */
+export async function confirmPresence(): Promise<void> {
+  const begin = await apiRequest<BeginLoginResponse>(
+    "/auth/confirm/begin",
+    undefined,
+  );
+  await apiRequest<void>("/auth/confirm/finish", {
     session_id: begin.session_id,
     credential: await usePasskey(begin.challenge.publicKey),
   } satisfies FinishLoginRequest);
