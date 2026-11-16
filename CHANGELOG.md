@@ -7,6 +7,13 @@ From 0.2.0 on, each entry is written by release-please from the commits merged
 since the last release: there is no "Unreleased" section to keep by hand. What
 a list of commits does not say is in the pull requests it links to.
 
+## [0.4.0](https://github.com/brig-id/app/compare/v0.3.0...v0.4.0) (2026-11-16)
+
+
+### Features
+
+* **app:** ✨ administration: the first administrator, accounts, applications, who may sign up, the log ([192db62](https://github.com/brig-id/app/commit/192db62b5f6ea25541c5a38e1dabe6dd0b1977d4)), closes [#51](https://github.com/brig-id/app/issues/51)
+
 ## [0.3.0](https://github.com/brig-id/app/compare/v0.2.0...v0.3.0) (2026-11-15)
 
 
