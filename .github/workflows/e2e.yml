@@ -35,7 +35,7 @@ jobs:
           repository: brig-id/server-seedling
           # Pinned, so that a run says something about this repository and
           # not about what moved in the server. Bump it deliberately.
-          ref: 0ca27c047755ccb36ca4eb4ad6ec5875a4cb4d79 # feat/administration @ 2026-11-16 (brig-id/server-seedling: administration; to pin at main once merged)
+          ref: c91eeebd947a4931b0f72c475159db07607704ac # main @ 2026-11-16 (administration)
           path: server-seedling
 
       - name: Install Rust stable
