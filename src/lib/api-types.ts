@@ -69,6 +69,8 @@ export interface PublicKeyCredentialJSON {
 export interface BeginRegisterRequest {
   /** `username@server`. Absent: the server generates a hidden username. */
   username?: string;
+  /** A setup link or an invitation, when the server asks for one. */
+  link?: string;
 }
 
 export interface BeginRegisterResponse {
@@ -141,13 +143,21 @@ export interface SessionResponse {
   /** Whether the account has a recovery code. Without one it is still in
    * its onboarding: identities and applications are closed to it. */
   recovery_code: boolean;
+  /** Whether the account is an administrator of this server. */
+  admin: boolean;
+  /** Unix time of the latest passkey ceremony done in this session. */
+  confirmed_at: number;
 }
 
 // -- /auth/server --
 
+export type SignupPolicy = "open" | "invitation" | "closed";
+
 export interface ServerInfo {
-  /** Whether this server accepts new accounts. */
+  /** Whether anyone can create an account here, without a link. */
   sign_up: boolean;
+  /** Who may create an account. */
+  policy: SignupPolicy;
 }
 
 // -- /account/identities --
@@ -240,4 +250,71 @@ export interface AuthorizationRequest {
 /** Where to send the browser next. */
 export interface AuthorizationAnswer {
   redirect_to: string;
+}
+
+// -- administration (`brigid-api/src/routes/admin.rs`) ------------------------
+
+/** An account as an administrator sees it. Nothing of its identities. */
+export interface AdminAccount {
+  id: string;
+  /** The generated username: what the person's passkey manager shows. */
+  username: string;
+  created_at: string;
+  admin: boolean;
+  /** Unix seconds since when it is suspended. */
+  suspended_at: number | null;
+  /** Unix seconds. */
+  last_sign_in_at: number | null;
+  passkeys: number;
+  recovery_code: boolean;
+  /** The account of this session. */
+  own: boolean;
+}
+
+export type Need = "required" | "optional";
+
+export interface AdminApplication {
+  client_id: string;
+  name: string;
+  redirect_uris: string[];
+  confidential: boolean;
+  /** What it may ask people to share: claim name to need. */
+  attributes: Partial<Record<string, Need>>;
+  /** Unix seconds. */
+  created_at: number;
+}
+
+export interface RegisteredApplication extends AdminApplication {
+  /** Shown once: the server keeps only its hash. */
+  client_secret: string | null;
+}
+
+export interface Invitation {
+  id: string;
+  uses_left: number;
+  /** Unix seconds. */
+  created_at: number;
+  /** Unix seconds. */
+  expires_at: number;
+}
+
+export interface NewInvitation extends Invitation {
+  /** What goes in the address given to the people invited. Shown once. */
+  link: string;
+}
+
+export interface SignupSettings {
+  policy: SignupPolicy;
+  invitations: Invitation[];
+}
+
+export interface AdminLogEntry {
+  /** Unix seconds. */
+  at: number;
+  action: string;
+  by: "machine" | "administrator" | "deleted";
+  by_username: string | null;
+  about_account: boolean;
+  account_username: string | null;
+  detail: string | null;
 }

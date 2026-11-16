@@ -3,9 +3,10 @@ import { type DocumentHead, useNavigate } from "@qwik.dev/router";
 import { PasskeyUnsupported } from "~/components/sign-in/passkey-unsupported";
 import { Callout } from "~/components/ui/callout";
 import { Icon } from "~/components/ui/icon";
-import { type Message, Said, T, titled } from "~/i18n";
+import { type Message, type MessageId, Said, T, titled } from "~/i18n";
 import { serverInfo } from "~/lib/api";
 import { failure } from "~/lib/errors";
+import { linkFromAddress, reloadOnLink } from "~/lib/links";
 import { currentServer } from "~/lib/server";
 import {
   passkeySupport,
@@ -27,30 +28,44 @@ export default component$(() => {
     null,
   );
   const server = useSignal("");
-  const closed = useSignal(false);
+  /** Why no account can be created here, when none can. */
+  const closed = useSignal<MessageId | null>(null);
+  /** The invitation the person came with, if any. */
+  const invitation = useSignal<string | null>(null);
 
   useVisibleTask$(async ({ cleanup }) => {
     cleanup(titled("title.signup"));
     server.value = currentServer();
+    invitation.value = linkFromAddress("invitation");
+    cleanup(reloadOnLink("invitation", () => invitation.value));
     const support = passkeySupport();
     if (support !== "supported") {
       unsupported.value = support;
       return;
     }
-    closed.value = !(await serverInfo()).sign_up;
+    const info = await serverInfo();
+    if (info.policy === "closed") closed.value = "signup.closed";
+    else if (info.policy === "invitation" && !invitation.value) {
+      closed.value = "signup.invitation";
+    }
   });
 
   const create = $(async () => {
     error.value = null;
     busy.value = true;
     try {
-      await signUp();
+      await signUp(invitation.value ?? undefined);
       await nav("/welcome/");
     } catch (err) {
       if (err instanceof WebAuthnError && err.kind === "browser") {
         error.value = { id: "signup.none-created" };
-      } else if (err instanceof WebAuthnError && err.status === 403) {
-        closed.value = true;
+      } else if (err instanceof WebAuthnError && err.code === "signup_closed") {
+        closed.value = "signup.closed";
+      } else if (
+        err instanceof WebAuthnError &&
+        err.code === "invitation_required"
+      ) {
+        closed.value = "signup.invitation";
       } else {
         error.value = failure(err, "error.unexpected");
       }
@@ -82,11 +97,18 @@ export default component$(() => {
 
       {closed.value ? (
         <Callout kind="info" alert>
-          <T id="signup.closed" />
+          <T id={closed.value} />
         </Callout>
       ) : (
         <>
           <div class="stack stack--tight">
+            {invitation.value && (
+              <p>
+                <strong>
+                  <T id="signup.invited" />
+                </strong>
+              </p>
+            )}
             <p>
               <T id="signup.lead" />
             </p>

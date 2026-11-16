@@ -22,6 +22,7 @@ const UI = [
   "copy",
   "download-simple",
   "fingerprint",
+  "gear",
   "identification-card",
   "info",
   "key",

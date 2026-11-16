@@ -19,19 +19,28 @@ made of, and why, is specified in
     ├── components/
     │   ├── ui/           # icon, callout, identity logo, language switch
     │   ├── sign-in/      # used by the sign-in part only
-    │   └── account/      # used by the account part only
+    │   ├── account/      # used by the account part, and its frame by the administration
+    │   └── admin/        # used by the administration only
     ├── i18n/             # every text, in English and French
     ├── lib/              # calls to the server, passkey ceremonies, validation
     ├── routes/
-    │   ├── (sign-in)/    # /, /signup/, /recover/, /continue/, /about/
-    │   └── (account)/    # /welcome/, /identities/, /passkeys/
+    │   ├── (sign-in)/    # /, /signup/, /recover/, /continue/, /about/, /setup/
+    │   ├── (account)/    # /welcome/, /identities/, /passkeys/, /account/, /admin/claim/
+    │   └── (admin)/      # /admin/, /admin/applications/, /admin/sign-up/, /admin/log/
     └── styles/           # tokens, fonts, base, components, the two layouts
 ```
 
-The interface has **parts**, called what they are: _sign-in_ (someone arriving) and
-_account_ (someone at home); _administration_ comes later. Sign-in imports nothing from
-the others, so that its pages can be reviewed in one sitting; `src/architecture.spec.ts`
-checks it.
+The interface has **parts**, called what they are: _sign-in_ (someone arriving),
+_account_ (someone at home) and _administration_ (the server's administrators). Sign-in
+imports nothing from the others, so that its pages can be reviewed in one sitting;
+`src/architecture.spec.ts` checks it.
+
+The administration is offered to administrators only, and its pages ask the server for
+nothing on behalf of anyone else; the server refuses those requests anyway. A change asks
+for the passkey again when it was last used more than a few minutes ago
+(`confirmed()` in `src/lib/admin.ts`). A link that carries a secret (the setup link of a
+new server, the link that names an administrator, an invitation) carries it in the
+fragment of its address, which a browser never sends (`src/lib/links.ts`).
 
 ## Design system
 

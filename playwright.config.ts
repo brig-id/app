@@ -25,7 +25,11 @@ const HAS_CERT =
 const WEB_PROTOCOL = HAS_CERT ? "https" : "http";
 const PORT = 8080;
 
-export const E2E_ORIGIN = `${WEB_PROTOCOL}://brigid.localhost:${PORT}`;
+/** The address of a server of this suite listening on `port`. */
+export const originOf = (port: number) =>
+  `${WEB_PROTOCOL}://brigid.localhost:${port}`;
+
+export const E2E_ORIGIN = originOf(PORT);
 
 // Fixed, valid-looking 64-hex-char (32 byte) master key — deterministic,
 // dev/test only.
@@ -41,6 +45,34 @@ process.env.BRIGID_E2E_DATABASE ??= path.join(
   `brigid-e2e-${Date.now()}.db`,
 );
 export const E2E_DATABASE = process.env.BRIGID_E2E_DATABASE;
+
+/** What a server of this suite is started with, and what its commands on
+ * the machine (`seedling client`, `seedling admin link`) read. */
+export function serverEnv(
+  port: number = PORT,
+  database: string = E2E_DATABASE,
+): Record<string, string> {
+  return {
+    BRIGID_MASTER_KEY: E2E_MASTER_KEY,
+    BRIGID_SERVER__DOMAIN: "brigid.localhost",
+    BRIGID_SERVER__HOST: "127.0.0.1",
+    BRIGID_SERVER__PORT: String(port),
+    BRIGID_SERVER__PUBLIC_URL: originOf(port),
+    BRIGID_SERVER__UI_DIST_DIR: path.join(__dirname, "dist"),
+    BRIGID_DATABASE__PATH: database,
+    ...(HAS_CERT
+      ? {
+          BRIGID_SERVER__TLS_CERT: path.join(CERT_DIR, "brigid.localhost.pem"),
+          BRIGID_SERVER__TLS_KEY: path.join(
+            CERT_DIR,
+            "brigid.localhost-key.pem",
+          ),
+        }
+      : {}),
+  };
+}
+
+const SEEDLING = `cargo run --manifest-path ${path.join(SERVER_DIR, "Cargo.toml")}`;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -83,34 +115,18 @@ export default defineConfig({
       // Build the static interface with its CSP manifest (the server allows
       // the inline scripts by hash: a stale manifest blocks them, and the
       // pages never start), then start the server that serves it.
-      command: `pnpm build.server && node scripts/csp-hashes.mjs && cargo run --manifest-path ${path.join(SERVER_DIR, "Cargo.toml")}`,
+      //
+      // A new server takes accounts by invitation. The suites create theirs
+      // freely, so sign-up is opened first, the way an operator does it:
+      // from the machine. The administration suite covers the rest.
+      command: `pnpm build.server && node scripts/csp-hashes.mjs && ${SEEDLING} -- signup open && ${SEEDLING}`,
       // A TCP check, not a URL: with a certificate the server speaks HTTPS
       // only, and this readiness check cannot be told to accept a
       // self-signed certificate.
       port: PORT,
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
-      env: {
-        BRIGID_MASTER_KEY: E2E_MASTER_KEY,
-        BRIGID_SERVER__DOMAIN: "brigid.localhost",
-        BRIGID_SERVER__HOST: "127.0.0.1",
-        BRIGID_SERVER__PORT: String(PORT),
-        BRIGID_SERVER__PUBLIC_URL: E2E_ORIGIN,
-        BRIGID_SERVER__UI_DIST_DIR: path.join(__dirname, "dist"),
-        BRIGID_DATABASE__PATH: E2E_DATABASE,
-        ...(HAS_CERT
-          ? {
-              BRIGID_SERVER__TLS_CERT: path.join(
-                CERT_DIR,
-                "brigid.localhost.pem",
-              ),
-              BRIGID_SERVER__TLS_KEY: path.join(
-                CERT_DIR,
-                "brigid.localhost-key.pem",
-              ),
-            }
-          : {}),
-      },
+      env: serverEnv(),
     },
   ],
 });
