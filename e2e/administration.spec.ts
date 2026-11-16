@@ -209,12 +209,13 @@ test("an administrator named from the machine registers an application, invites,
   await expect(own).toHaveCount(1);
   const administrator = (await own.getAttribute("data-account")) ?? "";
   await expect(own.getByText("Administrator", { exact: true })).toBeVisible();
-  // What runs is said here, to those who administer: this interface's
-  // version, and the server's when it tells it.
-  await expect(page.locator('[data-value="version"]')).toContainText(
-    INTERFACE_VERSION,
-    { timeout: 20_000 },
-  );
+  // What runs is said here, to those who administer: the server's edition
+  // and version, and this interface's.
+  const runs = page.locator('[data-value="version"]');
+  await expect(runs).toContainText(/This server runs seedling \d+\.\d+\.\d+,/, {
+    timeout: 20_000,
+  });
+  await expect(runs).toContainText(`with the interface ${INTERFACE_VERSION}.`);
   // Accounts, and nothing of what they hold: no identity is named here.
   await expect(page.getByText(/Work|Personal|Public/)).toHaveCount(0);
 
