@@ -336,6 +336,11 @@ export const MESSAGES = {
     "You are still signed in: the server could not be told. Try again.",
     "Vous êtes toujours connecté : le serveur n’a pas pu être prévenu. Réessayez.",
   ],
+  "version.running": [
+    "{edition} {version} · interface {interface}",
+    "{edition} {version} · interface {interface}",
+  ],
+  "version.interface": ["interface {interface}", "interface {interface}"],
   "nav.about": ["About", "À propos"],
 
   // -- onboarding --------------------------------------------------------------
@@ -495,14 +500,6 @@ export const MESSAGES = {
   "admin.tab.applications": ["Applications", "Applications"],
   "admin.tab.signup": ["Sign-up", "Inscription"],
   "admin.tab.log": ["Log", "Journal"],
-  "admin.version": [
-    "This server runs {edition} {version}, with the interface {interface}.",
-    "Ce serveur fait tourner {edition} {version}, avec l’interface {interface}.",
-  ],
-  "admin.version.interface": [
-    "Interface {interface}. This server does not say which version it runs.",
-    "Interface {interface}. Ce serveur ne dit pas quelle version il fait tourner.",
-  ],
   "admin.confirm.hint": [
     "A change asks for your passkey again when you have not used it for a few minutes.",
     "Une modification redemande votre clé d’accès si vous ne l’avez pas utilisée depuis quelques minutes.",

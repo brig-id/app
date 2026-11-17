@@ -13,26 +13,24 @@ describe("what runs", () => {
     expect(INTERFACE_VERSION).toMatch(/^\d+\.\d+\.\d+/);
   });
 
-  it("the server's is what it tells its administrators", async () => {
-    vi.spyOn(api, "call").mockResolvedValue({
+  it("the server's is what it says of itself, to anyone", async () => {
+    vi.spyOn(api, "serverInfo").mockResolvedValue({
+      sign_up: false,
+      policy: "invitation",
       edition: "seedling",
-      version: "0.6.1",
+      version: "0.7.1",
     });
     await expect(serverVersion()).resolves.toEqual({
       edition: "seedling",
-      version: "0.6.1",
+      version: "0.7.1",
     });
   });
 
   it("a server that does not say is not an error", async () => {
-    vi.spyOn(api, "call").mockRejectedValue(new api.ApiError(404, "not found"));
+    vi.spyOn(api, "serverInfo").mockResolvedValue({
+      sign_up: true,
+      policy: "open",
+    });
     await expect(serverVersion()).resolves.toBeNull();
-    vi.spyOn(api, "call").mockResolvedValue({ edition: null, version: null });
-    await expect(serverVersion()).resolves.toBeNull();
-  });
-
-  it("a session that ended is still one", async () => {
-    vi.spyOn(api, "call").mockRejectedValue(new api.SessionEndedError());
-    await expect(serverVersion()).rejects.toBeInstanceOf(api.SessionEndedError);
   });
 });

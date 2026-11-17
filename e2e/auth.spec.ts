@@ -8,6 +8,9 @@ import {
   waitForIdentities,
 } from "./account";
 import { addVirtualAuthenticator, skipIfNoVirtualAuthenticator } from "./webauthn";
+import pkg from "../package.json" with { type: "json" };
+
+const INTERFACE_VERSION = pkg.version;
 
 // The passkey ceremonies are rate-limited by the server (one every 3 s, in
 // bursts of 5, per address), and every test hits the same server from the
@@ -336,6 +339,24 @@ test.describe("browsers that can't use passkeys", () => {
     await expect(page.locator(".passkey-unsupported")).toBeVisible();
     await expect(page.getByText(/Passkeys only work on secure pages/)).toBeVisible();
     await expect(page.getByRole("button", { name: "Use my passkey" })).toHaveCount(0);
+  });
+});
+
+test.describe("what runs", () => {
+  test("the foot of the sign-in page says which versions run, to anyone", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const runs = page.locator('[data-value="version"]');
+    await expect(runs).toContainText(`interface ${INTERFACE_VERSION}`);
+    // A server that says what it is (seedling 0.7.1 and later) is named.
+    const info = await page.evaluate(async () => {
+      const response = await fetch("/auth/server");
+      return (await response.json()) as { edition?: string; version?: string };
+    });
+    if (info.edition && info.version) {
+      await expect(runs).toContainText(`${info.edition} ${info.version} · interface`);
+    }
   });
 });
 

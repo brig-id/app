@@ -4,11 +4,6 @@ import { AdminTabs } from "~/components/admin/tabs";
 import { Callout } from "~/components/ui/callout";
 import { T } from "~/i18n";
 import type { SessionResponse } from "~/lib/api-types";
-import {
-  INTERFACE_VERSION,
-  type ServerVersion,
-  serverVersion,
-} from "~/lib/version";
 
 /**
  * The administration: for the accounts that administer this server. The
@@ -18,17 +13,10 @@ import {
 export default component$(() => {
   /** `null` until the server said who this is. */
   const admin = useSignal<boolean | null>(null);
-  /** What the server says it runs; `undefined` until it was asked. */
-  const server = useSignal<ServerVersion | null | undefined>(undefined);
   return (
     <Shell
-      onSession$={$(async (session: SessionResponse) => {
+      onSession$={$((session: SessionResponse) => {
         admin.value = session.admin;
-        // Asked once, and of a server that will answer: it tells its
-        // version to its administrators only.
-        if (session.admin && server.value === undefined) {
-          server.value = await serverVersion().catch(() => null);
-        }
       })}
     >
       {admin.value === null && (
@@ -55,25 +43,6 @@ export default component$(() => {
       <div class="page stack stack--loose" hidden={admin.value !== true}>
         <AdminTabs />
         <Slot />
-        {server.value !== undefined && (
-          <p class="quiet small" data-value="version">
-            {server.value ? (
-              <T
-                id="admin.version"
-                p={{
-                  edition: server.value.edition ?? "",
-                  version: server.value.version ?? "",
-                  interface: INTERFACE_VERSION,
-                }}
-              />
-            ) : (
-              <T
-                id="admin.version.interface"
-                p={{ interface: INTERFACE_VERSION }}
-              />
-            )}
-          </p>
-        )}
       </div>
     </Shell>
   );
