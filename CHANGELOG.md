@@ -7,6 +7,14 @@ From 0.2.0 on, each entry is written by release-please from the commits merged
 since the last release: there is no "Unreleased" section to keep by hand. What
 a list of commits does not say is in the pull requests it links to.
 
+## [0.7.0](https://github.com/brig-id/app/compare/v0.6.1...v0.7.0) (2026-11-17)
+
+
+### Features
+
+* **app:** ✨ the version at the foot of every page, for anyone ([de63326](https://github.com/brig-id/app/commit/de633264b791d7383721b8006980edbb019f713a))
+* **app:** ✨ the version on the About page, not at the foot of every page ([c0a0095](https://github.com/brig-id/app/commit/c0a0095d51d2b5780cfa192c9368e1e2203ae066))
+
 ## [0.6.1](https://github.com/brig-id/app/compare/v0.6.0...v0.6.1) (2026-11-17)
 
 
