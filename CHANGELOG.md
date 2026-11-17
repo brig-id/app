@@ -7,6 +7,13 @@ From 0.2.0 on, each entry is written by release-please from the commits merged
 since the last release: there is no "Unreleased" section to keep by hand. What
 a list of commits does not say is in the pull requests it links to.
 
+## [0.6.1](https://github.com/brig-id/app/compare/v0.6.0...v0.6.1) (2026-11-17)
+
+
+### Bug Fixes
+
+* **deps:** 🔒️ the picomatch advisory cannot reach a static build: an explained exception ([24db592](https://github.com/brig-id/app/commit/24db592a7bbbb9d3651f800e5e77c0707b82ffa7))
+
 ## [0.6.0](https://github.com/brig-id/app/compare/v0.5.0...v0.6.0) (2026-11-16)
 
 
