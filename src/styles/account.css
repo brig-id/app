@@ -523,10 +523,3 @@
 .place-name {
   font-weight: 560;
 }
-
-/* -- what runs, under the navigation ---------------------------------------- */
-
-.account-version {
-  margin: var(--p-space-4) 0 0;
-  padding-inline: var(--p-space-3);
-}

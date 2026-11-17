@@ -1,7 +1,7 @@
 /**
- * What runs: the server and this interface. Both are public: they are shown
- * at the foot of every page. The server says its edition and version in
- * `GET /auth/server`; the interface's own is written into the build.
+ * What runs: the server and this interface. Both are public, on the About
+ * page. The server says its edition and version in `GET /auth/server`; the
+ * interface's own is written into the build.
  */
 import { serverInfo } from "./api";
 

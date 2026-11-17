@@ -343,10 +343,13 @@ test.describe("browsers that can't use passkeys", () => {
 });
 
 test.describe("what runs", () => {
-  test("the foot of the sign-in page says which versions run, to anyone", async ({
+  test("the About page says which versions run, to anyone", async ({
     page,
   }) => {
+    // Not on every page: on the About page, which any page links to.
     await page.goto("/");
+    await expect(page.locator('[data-value="version"]')).toHaveCount(0);
+    await page.goto("/about/");
     const runs = page.locator('[data-value="version"]');
     await expect(runs).toContainText(`interface ${INTERFACE_VERSION}`);
     // A server that says what it is (seedling 0.7.1 and later) is named.

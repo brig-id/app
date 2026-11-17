@@ -1,6 +1,7 @@
 import { component$, useVisibleTask$ } from "@qwik.dev/core";
 import type { DocumentHead } from "@qwik.dev/router";
 import { Icon } from "~/components/ui/icon";
+import { RunningVersion } from "~/components/ui/running-version";
 import { T, titled } from "~/i18n";
 
 const NewTab = () => (
@@ -48,6 +49,9 @@ export default component$(() => {
         </p>
         <p class="quiet">
           <T id="about.nothing-external" />
+        </p>
+        <p>
+          <T id="about.version" /> <RunningVersion />
         </p>
       </div>
       <div class="stack stack--tight">
