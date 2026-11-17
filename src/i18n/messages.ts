@@ -304,6 +304,7 @@ export const MESSAGES = {
     "brig·id est publié sous la licence publique générale GNU Affero, version 3 ou ultérieure. Vous pouvez le lire, l’exécuter, le modifier et le partager.",
   ],
   "about.source": ["Source code", "Code source"],
+  "about.version": ["What runs here:", "Ce qui tourne ici :"],
   "about.credits": ["Credits", "Crédits"],
   "about.credit.background": [
     "Background images: “Prism tribeam 1”, by Kelvinsong, and “Dingle cliff”, by Ian Schneider, both placed in the public domain (CC0 1.0), from Wikimedia Commons.",

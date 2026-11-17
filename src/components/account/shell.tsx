@@ -10,7 +10,6 @@ import { Link, useLocation, useNavigate } from "@qwik.dev/router";
 import { Callout } from "~/components/ui/callout";
 import { Icon, type IconName } from "~/components/ui/icon";
 import { LanguageSwitch } from "~/components/ui/language-switch";
-import { RunningVersion } from "~/components/ui/running-version";
 import { ThemeSwitch } from "~/components/ui/theme-switch";
 import { type MessageId, T } from "~/i18n";
 import {
@@ -146,9 +145,6 @@ export const Shell = component$<{
             </a>
           </li>
         </ul>
-        <p class="account-version quiet small">
-          <RunningVersion />
-        </p>
       </nav>
       <main id="content" class="account-main" tabIndex={-1}>
         {stillSignedIn.value && (

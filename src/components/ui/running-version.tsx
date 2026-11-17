@@ -7,8 +7,8 @@ import {
 } from "~/lib/version";
 
 /**
- * What runs here, at the foot of every page: the server's edition and
- * version, and this interface's. Read once, after the page is shown.
+ * What runs here: the server's edition and version, and this interface's.
+ * Shown on the About page. Read once, after the page is shown.
  */
 export const RunningVersion = component$(() => {
   /** `undefined` until the server answered. */
