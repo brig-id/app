@@ -158,6 +158,10 @@ export interface ServerInfo {
   sign_up: boolean;
   /** Who may create an account. */
   policy: SignupPolicy;
+  /** The program the server is (`seedling`), and its version. Absent from
+   * a server older than the question. */
+  edition?: string | null;
+  version?: string | null;
 }
 
 // -- /account/identities --
