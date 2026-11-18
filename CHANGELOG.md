@@ -7,6 +7,13 @@ From 0.2.0 on, each entry is written by release-please from the commits merged
 since the last release: there is no "Unreleased" section to keep by hand. What
 a list of commits does not say is in the pull requests it links to.
 
+## [0.7.1](https://github.com/brig-id/app/compare/v0.7.0...v0.7.1) (2026-11-18)
+
+
+### Bug Fixes
+
+* **app:** 💬 an expired setup link points to seedling admin link, not to a restart ([5888be5](https://github.com/brig-id/app/commit/5888be54ee920299b9cb90da6b9d2ba923609ffd))
+
 ## [0.7.0](https://github.com/brig-id/app/compare/v0.6.1...v0.7.0) (2026-11-17)
 
 
