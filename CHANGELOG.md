@@ -7,6 +7,13 @@ From 0.2.0 on, each entry is written by release-please from the commits merged
 since the last release: there is no "Unreleased" section to keep by hand. What
 a list of commits does not say is in the pull requests it links to.
 
+## [0.8.0](https://github.com/brig-id/app/compare/v0.7.1...v0.8.0) (2026-11-18)
+
+
+### Features
+
+* **app:** ✨ the favicon is the new mark of brig·id ([dcf59c6](https://github.com/brig-id/app/commit/dcf59c6867ffa1a705bdd694a97a555aeded7b78))
+
 ## [0.7.1](https://github.com/brig-id/app/compare/v0.7.0...v0.7.1) (2026-11-18)
 
 
