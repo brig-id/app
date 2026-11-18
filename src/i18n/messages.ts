@@ -146,8 +146,8 @@ export const MESSAGES = {
     "Cette page s’ouvre depuis le lien qu’un nouveau serveur affiche à son démarrage.",
   ],
   "setup.invalid": [
-    "This setup link is not valid any more. It works once, for an hour: restart the server to get a new one. If the server already has an administrator, sign in.",
-    "Ce lien de mise en place n’est plus valable. Il sert une fois, pendant une heure : redémarrez le serveur pour en obtenir un nouveau. Si le serveur a déjà un administrateur, connectez-vous.",
+    "This setup link is not valid any more: it works once, for an hour, and a newer one replaces it. On the server’s machine, **seedling admin link** prints a new one. If the server already has an administrator, sign in.",
+    "Ce lien de mise en place n’est plus valable : il sert une fois, pendant une heure, et un lien plus récent le remplace. Sur la machine du serveur, **seedling admin link** en affiche un nouveau. Si le serveur a déjà un administrateur, connectez-vous.",
   ],
 
   // -- recovery ----------------------------------------------------------------
