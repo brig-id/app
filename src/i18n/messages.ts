@@ -194,6 +194,10 @@ export const MESSAGES = {
   // -- the linking page ----------------------------------------------------------
   "continue.title": ["Continue to **{app}**", "Continuer vers **{app}**"],
   "continue.request": ["Sign-in request", "Demande de connexion"],
+  "continue.declared": [
+    "It calls itself “{name}”: only the address above is checked.",
+    "Il se présente comme « {name} » : seule l’adresse ci-dessus est vérifiée.",
+  ],
   "continue.expired": [
     "This sign-in request has expired. Go back to the application and start again.",
     "Cette demande de connexion a expiré. Retournez à l’application et recommencez.",

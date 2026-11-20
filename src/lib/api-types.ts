@@ -226,7 +226,15 @@ export interface IdentityApplication {
  * `brigid-api/src/routes/authorize.rs`. */
 export interface AuthorizationRequest {
   /** The site, by the name it was registered with. */
-  client: { name: string };
+  client: {
+    /** The name it was registered with, or the one its document declares. */
+    name: string;
+    /** A site that describes itself: the host of its `client_id`. Shown
+     * first and always, since anyone can declare any name. */
+    host?: string;
+    /** Its logo, only for a site the server's operator accepted. */
+    logo?: string;
+  };
   signed_in: boolean;
   /** A passkey ceremony is needed before answering. */
   must_sign_in: boolean;
