@@ -210,7 +210,11 @@ export default component$(() => {
     );
   }
 
-  const app = r.client.name;
+  // A site that describes itself is named by its address: its declared
+  // name is only shown beside it, since anyone can declare any name.
+  const app = r.client.host ?? r.client.name;
+  const declared =
+    r.client.host && r.client.name !== r.client.host ? r.client.name : null;
   const rows = r.must_sign_in ? [] : askedRows(r, selected.value);
   const blocked = blocking(rows, accepted.value).length > 0;
   return (
@@ -218,6 +222,11 @@ export default component$(() => {
       <h1 class="signin-title">
         <T id="continue.title" p={{ app }} />
       </h1>
+      {declared && (
+        <p class="quiet">
+          <T id="continue.declared" p={{ name: declared }} />
+        </p>
+      )}
 
       {error.value && (
         <Callout kind="danger" alert>
