@@ -1,6 +1,5 @@
 import { $, component$, Slot, useSignal } from "@qwik.dev/core";
 import { Shell } from "~/components/account/shell";
-import { AdminTabs } from "~/components/admin/tabs";
 import { Callout } from "~/components/ui/callout";
 import { T } from "~/i18n";
 import type { SessionResponse } from "~/lib/api-types";
@@ -15,6 +14,7 @@ export default component$(() => {
   const admin = useSignal<boolean | null>(null);
   return (
     <Shell
+      mode="admin"
       onSession$={$((session: SessionResponse) => {
         admin.value = session.admin;
       })}
@@ -41,7 +41,6 @@ export default component$(() => {
           the server for its list) waits until it is shown, so someone else
           sends no request the server would refuse. */}
       <div class="page stack stack--loose" hidden={admin.value !== true}>
-        <AdminTabs />
         <Slot />
       </div>
     </Shell>

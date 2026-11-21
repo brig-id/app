@@ -308,7 +308,17 @@ export default component$(() => {
             >
               <div class="split">
                 <div class="stack stack--tight grow">
-                  <span class="identity-name">{application.name}</span>
+                  <span class="identity-name">
+                    {application.host ?? application.name}
+                  </span>
+                  {application.described && (
+                    <span class="quiet small">
+                      <T
+                        id="admin.app.described"
+                        p={{ name: application.name }}
+                      />
+                    </span>
+                  )}
                   <span class="quiet small mono">{application.client_id}</span>
                   {application.redirect_uris.map((uri) => (
                     <span key={uri} class="quiet small mono">
@@ -318,9 +328,13 @@ export default component$(() => {
                   <span class="quiet small">
                     <T
                       id={
-                        application.confidential
-                          ? "admin.app.has-secret"
-                          : "admin.app.public"
+                        application.described
+                          ? application.confidential
+                            ? "admin.app.signs"
+                            : "admin.app.public"
+                          : application.confidential
+                            ? "admin.app.has-secret"
+                            : "admin.app.public"
                       }
                     />
                   </span>

@@ -1,0 +1,238 @@
+/* Colour: the light of the mark, split into the six colours of identities.
+   Little of it, on purpose: a title leans on one word, an identity carries
+   its colour. The rest of the interface stays quiet. */
+
+:root {
+  --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
+
+  --hue-amber: var(--p-amber);
+  --hue-coral: var(--p-coral);
+  --hue-rose: var(--p-rose);
+  --hue-violet: var(--p-violet);
+  --hue-cyan: var(--p-cyan);
+  --hue-green: var(--p-green);
+
+  --spectrum: linear-gradient(
+    100deg,
+    var(--hue-amber) 0%,
+    var(--hue-coral) 28%,
+    var(--hue-rose) 52%,
+    var(--hue-violet) 76%,
+    var(--hue-cyan) 100%
+  );
+}
+
+/* On paper, the same colours deeper: readable as text (WCAG AA on
+   --p-paper-1). */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --hue-amber: oklch(0.56 0.12 65);
+    --hue-coral: oklch(0.55 0.17 32);
+    --hue-rose: oklch(0.53 0.18 350);
+    --hue-violet: oklch(0.5 0.18 293);
+    --hue-cyan: oklch(0.52 0.1 220);
+    --hue-green: oklch(0.52 0.12 160);
+  }
+}
+
+:root[data-theme="light"] {
+  --hue-amber: oklch(0.56 0.12 65);
+  --hue-coral: oklch(0.55 0.17 32);
+  --hue-rose: oklch(0.53 0.18 350);
+  --hue-violet: oklch(0.5 0.18 293);
+  --hue-cyan: oklch(0.52 0.1 220);
+  --hue-green: oklch(0.52 0.12 160);
+}
+
+.hue-amber {
+  --hue: var(--hue-amber);
+}
+.hue-coral {
+  --hue: var(--hue-coral);
+}
+.hue-rose {
+  --hue: var(--hue-rose);
+}
+.hue-violet {
+  --hue: var(--hue-violet);
+}
+.hue-cyan {
+  --hue: var(--hue-cyan);
+}
+.hue-green {
+  --hue: var(--hue-green);
+}
+
+/* -- titles ------------------------------------------------------------------ */
+
+/* A short line above a title: where one is. */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--p-space-2);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.eyebrow::before {
+  content: "";
+  width: 1.25rem;
+  height: 1px;
+  background: var(--spectrum);
+}
+
+/* Italic serif for the one word a title leans on. */
+.accent {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  font-size: 1.12em;
+}
+
+.spectrum {
+  /* Room for the slant of the italics, and one gradient per line. */
+  margin-inline: -0.1em;
+  padding: 0.06em 0.1em 0.12em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background: var(--spectrum);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* An identity's own word, in its own colour. */
+.accent.in-hue {
+  color: var(--hue);
+}
+
+/* -- identities ---------------------------------------------------------------- */
+
+.identity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  gap: var(--p-space-4);
+}
+
+.identity-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-3);
+  border-top: 3px solid var(--hue, var(--border));
+  transition:
+    transform var(--p-fast) var(--ease),
+    box-shadow var(--p-slow) var(--ease);
+}
+
+.identity-card:hover,
+.identity-card:focus-within {
+  box-shadow: 0 0.75rem 2.5rem -1rem var(--hue, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .identity-card:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.identity-card .identity-logo {
+  color: var(--hue);
+}
+
+.identity-card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--p-space-2);
+  margin-top: auto;
+}
+
+/* The whole card opens the identity. */
+.identity-card-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.identity-hero {
+  display: flex;
+  align-items: center;
+  gap: var(--p-space-4);
+  padding-bottom: var(--p-space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.identity-hero .identity-logo {
+  color: var(--hue);
+}
+
+/* -- comparison ---------------------------------------------------------------- */
+
+.compare-wrap {
+  overflow-x: auto;
+}
+
+.compare {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--p-text-s);
+}
+
+.compare th,
+.compare td {
+  padding: var(--p-space-3);
+  border-bottom: 1px solid var(--border);
+  text-align: start;
+  vertical-align: top;
+}
+
+.compare thead th {
+  border-bottom: 3px solid var(--hue, var(--border));
+  font-size: var(--p-text-m);
+}
+
+.compare tbody th {
+  font-weight: 500;
+  color: var(--text-quiet);
+  white-space: nowrap;
+}
+
+.compare .same {
+  color: var(--warning);
+  font-weight: 600;
+}
+
+.compare .absent {
+  color: var(--text-faint);
+}
+
+/* -- administration -------------------------------------------------------------- */
+
+.mode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--p-space-1);
+  padding: 0.15rem 0.6rem;
+  border: 1px solid var(--warning-border);
+  border-radius: var(--p-radius-full);
+  background: var(--warning-surface);
+  color: var(--warning);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.account[data-mode="admin"] .account-header {
+  border-bottom-color: var(--warning-border);
+}
+
+.mode-switch {
+  margin-top: var(--p-space-3);
+  padding-top: var(--p-space-3);
+  border-top: 1px solid var(--border);
+}

@@ -16,13 +16,17 @@ const set = JSON.parse(
 /** Icons of the interface itself. */
 const UI = [
   "arrow-left",
+  "arrow-right",
   "arrow-square-out",
+  "arrows-left-right",
   "check",
   "check-circle",
+  "columns",
   "copy",
   "download-simple",
   "fingerprint",
   "gear",
+  "globe",
   "identification-card",
   "info",
   "key",

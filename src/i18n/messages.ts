@@ -60,6 +60,7 @@ export const MESSAGES = {
   "title.welcome": ["Welcome", "Bienvenue"],
   "title.identities": ["Identities", "Identités"],
   "title.identity": ["Identity", "Identité"],
+  "title.compare": ["Compare identities", "Comparer les identités"],
   "title.account": ["Account", "Compte"],
   "title.setup": ["Set up this server", "Mettre en place ce serveur"],
   "title.claim": ["Become an administrator", "Devenir administrateur"],
@@ -336,6 +337,7 @@ export const MESSAGES = {
   "nav.passkeys": ["Passkeys", "Clés d’accès"],
   "nav.account": ["Account", "Compte"],
   "nav.admin": ["Administration", "Administration"],
+  "nav.to-account": ["My account", "Mon compte"],
   "nav.signout": ["Sign out", "Se déconnecter"],
   "nav.signout.failed": [
     "You are still signed in: the server could not be told. Try again.",
@@ -504,6 +506,70 @@ export const MESSAGES = {
   "admin.tab.accounts": ["Accounts", "Comptes"],
   "admin.tab.applications": ["Applications", "Applications"],
   "admin.tab.signup": ["Sign-up", "Inscription"],
+  "admin.tab.websites": ["Websites", "Sites web"],
+  "admin.websites.title": [
+    "Websites with no registration",
+    "Sites sans inscription",
+  ],
+  "admin.websites.lead": [
+    "A website can describe itself in a document on its own domain: it then signs in the people of any server that accepts it, without being registered. People always see its address before its name.",
+    "Un site peut se décrire dans un document sur son propre domaine : il connecte alors les personnes de tout serveur qui l’accepte, sans y être inscrit. Les personnes voient toujours son adresse avant son nom.",
+  ],
+  "admin.websites.which": [
+    "Which of them this server accepts",
+    "Lesquels ce serveur accepte",
+  ],
+  "admin.websites.open": ["Any", "Tous"],
+  "admin.websites.open.about": [
+    "Every website that describes itself, except the ones you refuse. Each person decides where they sign in.",
+    "Tout site qui se décrit, sauf ceux que vous refusez. Chaque personne décide où elle se connecte.",
+  ],
+  "admin.websites.listed": [
+    "Only the accepted ones",
+    "Seulement ceux acceptés",
+  ],
+  "admin.websites.listed.about": [
+    "Only the websites you accept below: for a server whose people use a known set of applications.",
+    "Seulement les sites acceptés ci-dessous : pour un serveur dont les personnes utilisent des applications connues.",
+  ],
+  "admin.websites.registered": ["None", "Aucun"],
+  "admin.websites.registered.about": [
+    "Only the applications registered on this server.",
+    "Seulement les applications inscrites sur ce serveur.",
+  ],
+  "admin.websites.cap": [
+    "What they may ask for, at most",
+    "Ce qu’ils peuvent demander, au plus",
+  ],
+  "admin.websites.cap.lead": [
+    "Whatever its document says, such a website may ask only for these. People still decide, one by one.",
+    "Quoi que dise son document, un tel site ne peut demander que ceux-ci. Les personnes décident toujours, un par un.",
+  ],
+  "admin.websites.lists": ["Accepted and refused", "Acceptés et refusés"],
+  "admin.websites.lists.lead": [
+    "A website is named by the address of its document. An accepted website is also the only kind whose logo may be shown.",
+    "Un site se désigne par l’adresse de son document. Seul un site accepté peut aussi avoir son logo affiché.",
+  ],
+  "admin.websites.address": [
+    "Address of its document",
+    "Adresse de son document",
+  ],
+  "admin.websites.address.hint": [
+    "Its https address, which most websites end with /oauth-client-metadata.json.",
+    "Son adresse https, qui se termine le plus souvent par /oauth-client-metadata.json.",
+  ],
+  "admin.websites.accept": ["Accept", "Accepter"],
+  "admin.websites.refuse": ["Refuse", "Refuser"],
+  "admin.websites.accepted": ["Accepted", "Acceptés"],
+  "admin.websites.refused": ["Refused", "Refusés"],
+  "admin.websites.empty": ["None.", "Aucun."],
+  "admin.websites.unlist": ["Take off the list", "Retirer de la liste"],
+  "admin.websites.accepted.done": ["Website accepted.", "Site accepté."],
+  "admin.websites.refused.done": ["Website refused.", "Site refusé."],
+  "admin.websites.unlisted": [
+    "Website taken off the list.",
+    "Site retiré de la liste.",
+  ],
   "admin.tab.log": ["Log", "Journal"],
   "admin.confirm.hint": [
     "A change asks for your passkey again when you have not used it for a few minutes.",
@@ -633,6 +699,14 @@ export const MESSAGES = {
   "admin.app.secret.once": [
     "Shown only now: the server keeps a hash of it.",
     "Affiché seulement maintenant : le serveur n’en garde qu’une empreinte.",
+  ],
+  "admin.app.described": [
+    "Describes itself as “{name}”: nobody registered it.",
+    "Se présente comme « {name} » : personne ne l’a inscrite.",
+  ],
+  "admin.app.signs": [
+    "Proves who it is with a key it publishes.",
+    "Prouve qui elle est avec une clé qu’elle publie.",
   ],
   "admin.app.public": [
     "No secret: it runs in a browser or on a phone.",
@@ -777,6 +851,49 @@ export const MESSAGES = {
 
   // -- identities --------------------------------------------------------------
   "identities.title": ["Identities", "Identités"],
+  "identities.eyebrow": ["Your identities", "Vos identités"],
+  "identities.title.lead": ["One self,", "Un seul soi,"],
+  "identities.title.accent": ["many faces.", "plusieurs visages."],
+  "identities.compare": ["Compare", "Comparer"],
+  "identities.card.nothing": [
+    "Shares nothing: an identifier only.",
+    "Ne partage rien : un identifiant seulement.",
+  ],
+  "identities.card.shares": ["Can share: {list}.", "Peut partager : {list}."],
+  "identity.eyebrow": ["Identity", "Identité"],
+
+  // -- the identities side by side -------------------------------------------------
+  "compare.eyebrow": ["Side by side", "Côte à côte"],
+  "compare.title.lead": ["Your identities,", "Vos identités,"],
+  "compare.title.accent": ["kept apart.", "bien séparées."],
+  "compare.lead": [
+    "What each one can share and where it is used. Only you see this page: to an application, two identities are two strangers.",
+    "Ce que chacune peut partager et où elle sert. Vous seul voyez cette page : pour une application, deux identités sont deux inconnus.",
+  ],
+  "compare.caption": [
+    "Your identities, their attributes and the applications that use them",
+    "Vos identités, leurs attributs et les applications qui s’en servent",
+  ],
+  "compare.apart": [
+    "No value is carried by two identities: nothing they share could join them.",
+    "Aucune valeur n’est portée par deux identités : rien de ce qu’elles partagent ne peut les relier.",
+  ],
+  "compare.same.lead": [
+    "Some values are the same in two identities. An application that receives one from both can tell they are you:",
+    "Certaines valeurs sont les mêmes dans deux identités. Une application qui la reçoit des deux peut savoir qu’il s’agit de vous :",
+  ],
+  "compare.same": ["{attribute}: {identities}", "{attribute} : {identities}"],
+  "compare.same.short": [
+    "(the same in another identity)",
+    "(la même dans une autre identité)",
+  ],
+  "compare.attribute": ["Attribute", "Attribut"],
+  "compare.used-by": ["Used by", "Utilisée par"],
+  "compare.used-by.none": ["No application", "Aucune application"],
+  "compare.two-strangers": [
+    "{sites} know several of your identities: to each of them, these are different people.",
+    "{sites} connaissent plusieurs de vos identités : pour chacune, ce sont des personnes différentes.",
+  ],
   "identities.lead": [
     "What each application sees of you. Applications never see your account, and two identities can’t be connected to each other.",
     "Ce que chaque application voit de vous. Les applications ne voient jamais votre compte, et deux identités ne peuvent pas être reliées entre elles.",
