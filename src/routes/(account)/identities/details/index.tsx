@@ -1,11 +1,16 @@
 import { $, component$, useSignal, useVisibleTask$ } from "@qwik.dev/core";
 import { type DocumentHead, Link, useNavigate } from "@qwik.dev/router";
 import { AttributesForm } from "~/components/account/attributes-form";
+import {
+  type FormValues,
+  IdentityForm,
+} from "~/components/account/identity-form";
 import { Callout } from "~/components/ui/callout";
 import { Icon } from "~/components/ui/icon";
 import { IdentityLogo } from "~/components/ui/identity-logo";
 import { dateParam, type Message, Said, T, titled } from "~/i18n";
 import {
+  deleteIdentity,
   listApplications,
   listIdentities,
   SessionEndedError,
@@ -21,6 +26,7 @@ import {
   isAttribute,
 } from "~/lib/attributes";
 import { failure } from "~/lib/errors";
+import { hueOf } from "~/lib/hues";
 
 type Notice = { kind: "success" | "danger"; message: Message } | null;
 
@@ -44,6 +50,9 @@ export default component$(() => {
   const applications = useSignal<IdentityApplication[]>([]);
   const loaded = useSignal(false);
   const editing = useSignal(false);
+  /** Its label (name, icon, description) is being edited. */
+  const relabeling = useSignal(false);
+  const deleting = useSignal(false);
   /** The application whose withdrawal is being confirmed. */
   const withdrawing = useSignal<string | null>(null);
   const notice = useSignal<Notice>(null);
@@ -98,6 +107,26 @@ export default component$(() => {
           message: failure(err, "identity.attributes.invalid"),
         };
       }
+    }
+  });
+
+  const relabel = $(async (values: FormValues) => {
+    try {
+      await updateIdentity(identityId.value, values);
+      relabeling.value = false;
+      notice.value = { kind: "success", message: { id: "identity.saved" } };
+      await refresh();
+    } catch (err) {
+      await fail(err);
+    }
+  });
+
+  const remove = $(async (name: string) => {
+    try {
+      await deleteIdentity(identityId.value);
+      await nav(`/identities/?deleted=${encodeURIComponent(name)}`);
+    } catch (err) {
+      await fail(err);
     }
   });
 
@@ -172,17 +201,95 @@ export default component$(() => {
     (name) => identity.attributes[name] !== undefined,
   );
   return (
-    <div class="page stack stack--loose">
+    <div
+      class={`page stack stack--loose hue-${hueOf(
+        identities.value.map((i) => i.id),
+        identity.id,
+      )}`}
+    >
       {back}
-      <div class="cluster">
-        <IdentityLogo logo={identity.logo} size="l" />
-        <div class="stack stack--tight grow">
-          <h1 class="identity-title">{identity.name}</h1>
-          {identity.description && (
-            <span class="quiet">{identity.description}</span>
-          )}
+      {relabeling.value ? (
+        <section class="card">
+          <IdentityForm
+            editing={identity.name}
+            initial={{
+              name: identity.name,
+              logo: identity.logo,
+              description: identity.description ?? "",
+            }}
+            onSubmit$={relabel}
+            onCancel$={$(() => {
+              relabeling.value = false;
+            })}
+          />
+        </section>
+      ) : (
+        <div class="identity-hero">
+          <IdentityLogo logo={identity.logo} size="l" />
+          <div class="stack stack--tight grow">
+            <p class="eyebrow">
+              <T id="identity.eyebrow" />
+            </p>
+            <h1 class="identity-title">
+              <span class="accent in-hue">{identity.name}</span>
+            </h1>
+            {identity.description && (
+              <span class="quiet">{identity.description}</span>
+            )}
+          </div>
+          <div class="cluster">
+            <button
+              type="button"
+              class="button button--small"
+              onClick$={() => {
+                relabeling.value = true;
+                deleting.value = false;
+              }}
+            >
+              <Icon name="pencil-simple" />
+              <T id="identity.edit" />
+              <span class="sr-only"> {identity.name}</span>
+            </button>
+            <button
+              type="button"
+              class="button button--small button--danger"
+              aria-expanded={deleting.value}
+              onClick$={() => {
+                deleting.value = !deleting.value;
+              }}
+            >
+              <Icon name="trash" />
+              <T id="identity.delete" />
+              <span class="sr-only"> {identity.name}</span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
+      {deleting.value && (
+        <div class="confirm stack">
+          <p>
+            <T id="identity.delete.confirm" p={{ name: identity.name }} />
+          </p>
+          <div class="cluster">
+            <button
+              type="button"
+              class="button button--small button--danger"
+              onClick$={() => remove(identity.name)}
+            >
+              <T id="identity.delete.yes" />
+            </button>
+            <button
+              type="button"
+              class="button button--small"
+              onClick$={() => {
+                deleting.value = false;
+              }}
+            >
+              <T id="common.cancel" />
+            </button>
+          </div>
+        </div>
+      )}
       <p class="quiet small">
         <T id="identity.label.note" />
       </p>

@@ -29,6 +29,23 @@ const LINKS: readonly { href: string; label: MessageId; icon: IconName }[] = [
   { href: "/account/", label: "nav.account", icon: "user-circle" },
 ];
 
+/** The pages of the administration, when the frame is in that mode. */
+const ADMIN_LINKS: readonly {
+  href: string;
+  label: MessageId;
+  icon: IconName;
+}[] = [
+  { href: "/admin/", label: "admin.tab.accounts", icon: "user-circle" },
+  {
+    href: "/admin/applications/",
+    label: "admin.tab.applications",
+    icon: "key",
+  },
+  { href: "/admin/websites/", label: "admin.tab.websites", icon: "globe" },
+  { href: "/admin/sign-up/", label: "admin.tab.signup", icon: "plus" },
+  { href: "/admin/log/", label: "admin.tab.log", icon: "info" },
+];
+
 /** Where an account finishes being set up. */
 const ONBOARDING = "/welcome/";
 
@@ -47,7 +64,10 @@ const CHECK_EVERY_MS = 5 * 60 * 1000;
  */
 export const Shell = component$<{
   onSession$?: QRL<(session: SessionResponse) => void>;
-}>(({ onSession$ }) => {
+  /** `admin`: the administration, a place of its own with its own
+   * navigation, and a way back to one's account. */
+  mode?: "account" | "admin";
+}>(({ onSession$, mode = "account" }) => {
   const loc = useLocation();
   const nav = useNavigate();
   /** Whether the account administers this server: one more entry then. */
@@ -90,14 +110,22 @@ export const Shell = component$<{
   });
 
   return (
-    <div class="account">
+    <div class="account" data-mode={mode}>
       <a class="skip-link" href="#content">
         <T id="common.skip" />
       </a>
       <header class="account-header">
-        <Link href="/identities/" class="brand">
-          brig·id
-        </Link>
+        <div class="cluster">
+          <Link href="/identities/" class="brand">
+            brig·id
+          </Link>
+          {mode === "admin" && (
+            <span class="mode-badge">
+              <Icon name="gear" />
+              <T id="nav.admin" />
+            </span>
+          )}
+        </div>
         <div class="cluster">
           <LanguageSwitch />
           <ThemeSwitch />
@@ -111,40 +139,59 @@ export const Shell = component$<{
         <h2 id="account-nav-title" class="sr-only">
           <T id="nav.label" />
         </h2>
-        <ul>
-          {LINKS.map((link) => (
-            <li key={link.href}>
-              <Link
-                href={link.href}
-                aria-current={
-                  loc.url.pathname.startsWith(link.href) ? "page" : undefined
-                }
-              >
-                <Icon name={link.icon} />
-                <T id={link.label} />
+        {mode === "admin" ? (
+          <ul>
+            {ADMIN_LINKS.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  aria-current={
+                    loc.url.pathname === link.href ? "page" : undefined
+                  }
+                >
+                  <Icon name={link.icon} />
+                  <T id={link.label} />
+                </Link>
+              </li>
+            ))}
+            <li class="mode-switch">
+              <Link href="/identities/">
+                <Icon name="arrows-left-right" />
+                <T id="nav.to-account" />
               </Link>
             </li>
-          ))}
-          {admin.value && (
+          </ul>
+        ) : (
+          <ul>
+            {LINKS.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  aria-current={
+                    loc.url.pathname.startsWith(link.href) ? "page" : undefined
+                  }
+                >
+                  <Icon name={link.icon} />
+                  <T id={link.label} />
+                </Link>
+              </li>
+            ))}
             <li>
-              <Link
-                href="/admin/"
-                aria-current={
-                  loc.url.pathname.startsWith("/admin/") ? "page" : undefined
-                }
-              >
-                <Icon name="gear" />
-                <T id="nav.admin" />
-              </Link>
+              <a href="/about/">
+                <Icon name="info" />
+                <T id="nav.about" />
+              </a>
             </li>
-          )}
-          <li>
-            <a href="/about/">
-              <Icon name="info" />
-              <T id="nav.about" />
-            </a>
-          </li>
-        </ul>
+            {admin.value && (
+              <li class="mode-switch">
+                <Link href="/admin/">
+                  <Icon name="arrows-left-right" />
+                  <T id="nav.admin" />
+                </Link>
+              </li>
+            )}
+          </ul>
+        )}
       </nav>
       <main id="content" class="account-main" tabIndex={-1}>
         {stillSignedIn.value && (

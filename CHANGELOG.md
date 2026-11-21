@@ -9,99 +9,87 @@ a list of commits does not say is in the pull requests it links to.
 
 ## [0.9.0](https://github.com/brig-id/app/compare/v0.8.0...v0.9.0) (2026-11-20)
 
-
 ### Features
 
-* **app:** ✨ a site that describes itself is named by its address ([d6ec6c5](https://github.com/brig-id/app/commit/d6ec6c51a34b22f0ccfdbd025ee8eebe768a712e))
+- **app:** ✨ a site that describes itself is named by its address ([d6ec6c5](https://github.com/brig-id/app/commit/d6ec6c51a34b22f0ccfdbd025ee8eebe768a712e))
 
 ## [0.8.0](https://github.com/brig-id/app/compare/v0.7.1...v0.8.0) (2026-11-18)
 
-
 ### Features
 
-* **app:** ✨ the favicon is the new mark of brig·id ([dcf59c6](https://github.com/brig-id/app/commit/dcf59c6867ffa1a705bdd694a97a555aeded7b78))
+- **app:** ✨ the favicon is the new mark of brig·id ([dcf59c6](https://github.com/brig-id/app/commit/dcf59c6867ffa1a705bdd694a97a555aeded7b78))
 
 ## [0.7.1](https://github.com/brig-id/app/compare/v0.7.0...v0.7.1) (2026-11-18)
 
-
 ### Bug Fixes
 
-* **app:** 💬 an expired setup link points to seedling admin link, not to a restart ([5888be5](https://github.com/brig-id/app/commit/5888be54ee920299b9cb90da6b9d2ba923609ffd))
+- **app:** 💬 an expired setup link points to seedling admin link, not to a restart ([5888be5](https://github.com/brig-id/app/commit/5888be54ee920299b9cb90da6b9d2ba923609ffd))
 
 ## [0.7.0](https://github.com/brig-id/app/compare/v0.6.1...v0.7.0) (2026-11-17)
 
-
 ### Features
 
-* **app:** ✨ the version at the foot of every page, for anyone ([de63326](https://github.com/brig-id/app/commit/de633264b791d7383721b8006980edbb019f713a))
-* **app:** ✨ the version on the About page, not at the foot of every page ([c0a0095](https://github.com/brig-id/app/commit/c0a0095d51d2b5780cfa192c9368e1e2203ae066))
+- **app:** ✨ the version at the foot of every page, for anyone ([de63326](https://github.com/brig-id/app/commit/de633264b791d7383721b8006980edbb019f713a))
+- **app:** ✨ the version on the About page, not at the foot of every page ([c0a0095](https://github.com/brig-id/app/commit/c0a0095d51d2b5780cfa192c9368e1e2203ae066))
 
 ## [0.6.1](https://github.com/brig-id/app/compare/v0.6.0...v0.6.1) (2026-11-17)
 
-
 ### Bug Fixes
 
-* **deps:** 🔒️ the picomatch advisory cannot reach a static build: an explained exception ([24db592](https://github.com/brig-id/app/commit/24db592a7bbbb9d3651f800e5e77c0707b82ffa7))
+- **deps:** 🔒️ the picomatch advisory cannot reach a static build: an explained exception ([24db592](https://github.com/brig-id/app/commit/24db592a7bbbb9d3651f800e5e77c0707b82ffa7))
 
 ## [0.6.0](https://github.com/brig-id/app/compare/v0.5.0...v0.6.0) (2026-11-16)
 
-
 ### Features
 
-* **app:** ✨ a second passkey: the person says where it will be kept, and a place that has one says so ([db77277](https://github.com/brig-id/app/commit/db77277d7b2a816620f5f8e903bfc09f11852505))
+- **app:** ✨ a second passkey: the person says where it will be kept, and a place that has one says so ([db77277](https://github.com/brig-id/app/commit/db77277d7b2a816620f5f8e903bfc09f11852505))
 
 ## [0.5.0](https://github.com/brig-id/app/compare/v0.4.0...v0.5.0) (2026-11-16)
 
-
 ### Features
 
-* **app:** ✨ the administration says which versions run: the server's and this interface's ([119b6bc](https://github.com/brig-id/app/commit/119b6bc2d849f8d7808c2d09bb3c4000eb588a86))
+- **app:** ✨ the administration says which versions run: the server's and this interface's ([119b6bc](https://github.com/brig-id/app/commit/119b6bc2d849f8d7808c2d09bb3c4000eb588a86))
 
 ## [0.4.0](https://github.com/brig-id/app/compare/v0.3.0...v0.4.0) (2026-11-16)
 
-
 ### Features
 
-* **app:** ✨ administration: the first administrator, accounts, applications, who may sign up, the log ([192db62](https://github.com/brig-id/app/commit/192db62b5f6ea25541c5a38e1dabe6dd0b1977d4)), closes [#51](https://github.com/brig-id/app/issues/51)
+- **app:** ✨ administration: the first administrator, accounts, applications, who may sign up, the log ([192db62](https://github.com/brig-id/app/commit/192db62b5f6ea25541c5a38e1dabe6dd0b1977d4)), closes [#51](https://github.com/brig-id/app/issues/51)
 
 ## [0.3.0](https://github.com/brig-id/app/compare/v0.2.0...v0.3.0) (2026-11-15)
 
-
 ### Features
 
-* **app:** ✨ attributes: what an identity can share, asked for and accepted one by one ([b7378ab](https://github.com/brig-id/app/commit/b7378ab1efbb3901d3525198e02be49f0c06abc7)), closes [#55](https://github.com/brig-id/app/issues/55)
-* **app:** ✨ onboarding proposes the first identities; export one's data; delete one's account ([8ef1243](https://github.com/brig-id/app/commit/8ef1243597af95c9e60654c25f2bec9a5170f745)), closes [#61](https://github.com/brig-id/app/issues/61)
-
+- **app:** ✨ attributes: what an identity can share, asked for and accepted one by one ([b7378ab](https://github.com/brig-id/app/commit/b7378ab1efbb3901d3525198e02be49f0c06abc7)), closes [#55](https://github.com/brig-id/app/issues/55)
+- **app:** ✨ onboarding proposes the first identities; export one's data; delete one's account ([8ef1243](https://github.com/brig-id/app/commit/8ef1243597af95c9e60654c25f2bec9a5170f745)), closes [#61](https://github.com/brig-id/app/issues/61)
 
 ### Bug Fixes
 
-* **app:** 🐛 a refused "Cancel" on the linking page is not an expired request ([b71d79e](https://github.com/brig-id/app/commit/b71d79edb56431b872d643c7bcade0eb0826ee33))
+- **app:** 🐛 a refused "Cancel" on the linking page is not an expired request ([b71d79e](https://github.com/brig-id/app/commit/b71d79edb56431b872d643c7bcade0eb0826ee33))
 
 ## [0.2.0](https://github.com/brig-id/app/compare/v0.1.0...v0.2.0) (2026-11-15)
 
-
 ### Features
 
-* ✨ "Add a passkey" now adds a credential to the current identity ([fed712d](https://github.com/brig-id/app/commit/fed712d3a84bba78632e271f28eb2f7bdc31cb8d))
-* ✨ visual redesign of login/register — daily photo + gradient accent ([78cbf57](https://github.com/brig-id/app/commit/78cbf571bb8f3d32c1cc18814f849a94c1b0a0ac))
-* **app:** ✨ linking page: continue to a site as the identity you choose ([056f957](https://github.com/brig-id/app/commit/056f9570d60831d5734f6697cbd5e0c3c2a74360)), closes [#43](https://github.com/brig-id/app/issues/43)
-* **app:** ✨ passkey-only signup with onboarding, sign-in without username, account recovery ([580f8ab](https://github.com/brig-id/app/commit/580f8abb256a6178f4be6c0d3f057a4070a0cfa3))
-* **app:** ✨ rewrite the interface on qwik 2, self-contained, in two languages ([392048f](https://github.com/brig-id/app/commit/392048f8247c31b283421e3c8248a3a045b2e934))
-* **app:** ✨ say why passkeys can't work here and what to do ([15b6ece](https://github.com/brig-id/app/commit/15b6ece9af006dc32eef32d88091c013b0ad432c))
-* **app:** ✨ signed-in shell, identities page, icon library, passkey names, passkey autofill ([ce8170f](https://github.com/brig-id/app/commit/ce8170fae712cb814007903ba692df9037683617))
-* **app:** ✨ the light theme, following the system, with a remembered switch ([5d46858](https://github.com/brig-id/app/commit/5d46858e521ffd507f8f9aa8054626edcca8db2b))
-* **app:** ✨ the session is an HttpOnly cookie: no token or account id in the browser ([c788e00](https://github.com/brig-id/app/commit/c788e0075d0efae251328130d50b705b578e51c5))
-* **app:** ✨ write the CSP hash manifest of inline scripts and styles at build ([3d56e05](https://github.com/brig-id/app/commit/3d56e05062b625d0aa57e45052482edd2b0b02a1))
-
+- ✨ "Add a passkey" now adds a credential to the current identity ([fed712d](https://github.com/brig-id/app/commit/fed712d3a84bba78632e271f28eb2f7bdc31cb8d))
+- ✨ visual redesign of login/register — daily photo + gradient accent ([78cbf57](https://github.com/brig-id/app/commit/78cbf571bb8f3d32c1cc18814f849a94c1b0a0ac))
+- **app:** ✨ linking page: continue to a site as the identity you choose ([056f957](https://github.com/brig-id/app/commit/056f9570d60831d5734f6697cbd5e0c3c2a74360)), closes [#43](https://github.com/brig-id/app/issues/43)
+- **app:** ✨ passkey-only signup with onboarding, sign-in without username, account recovery ([580f8ab](https://github.com/brig-id/app/commit/580f8abb256a6178f4be6c0d3f057a4070a0cfa3))
+- **app:** ✨ rewrite the interface on qwik 2, self-contained, in two languages ([392048f](https://github.com/brig-id/app/commit/392048f8247c31b283421e3c8248a3a045b2e934))
+- **app:** ✨ say why passkeys can't work here and what to do ([15b6ece](https://github.com/brig-id/app/commit/15b6ece9af006dc32eef32d88091c013b0ad432c))
+- **app:** ✨ signed-in shell, identities page, icon library, passkey names, passkey autofill ([ce8170f](https://github.com/brig-id/app/commit/ce8170fae712cb814007903ba692df9037683617))
+- **app:** ✨ the light theme, following the system, with a remembered switch ([5d46858](https://github.com/brig-id/app/commit/5d46858e521ffd507f8f9aa8054626edcca8db2b))
+- **app:** ✨ the session is an HttpOnly cookie: no token or account id in the browser ([c788e00](https://github.com/brig-id/app/commit/c788e0075d0efae251328130d50b705b578e51c5))
+- **app:** ✨ write the CSP hash manifest of inline scripts and styles at build ([3d56e05](https://github.com/brig-id/app/commit/3d56e05062b625d0aa57e45052482edd2b0b02a1))
 
 ### Bug Fixes
 
-* 🐛 disable "Remove" for a user's only passkey ([376100e](https://github.com/brig-id/app/commit/376100ef93005a136e70dd36ecc0991ef89f81d5))
-* 🐛 drop custom brand gradient, apply the org's WA Kit overrides ([c910036](https://github.com/brig-id/app/commit/c910036d22decbec72461b47ba6cf782acacfbc0))
-* **app:** 🐛 a read that hits the rate limit is asked again, not shown stale ([50799b7](https://github.com/brig-id/app/commit/50799b70ca51b1f695ae64c2993ff8e20424fc5f))
-* **app:** 🐛 distinguish each passkey's Remove button by accessible name ([19da6ef](https://github.com/brig-id/app/commit/19da6ef1b0e26c9de1b0ecddf4471703f1c4873e))
-* **ci:** 🐛 match dev/* branches in workflow triggers ([6cceb38](https://github.com/brig-id/app/commit/6cceb387a97d52679fe8a390f6f1470a6a8945c4))
-* **deps:** 🔒️ refresh dependencies to clear pnpm audit advisories ([44f1f6e](https://github.com/brig-id/app/commit/44f1f6e646762afbf41dd511497ac7c4e819f0b5))
+- 🐛 disable "Remove" for a user's only passkey ([376100e](https://github.com/brig-id/app/commit/376100ef93005a136e70dd36ecc0991ef89f81d5))
+- 🐛 drop custom brand gradient, apply the org's WA Kit overrides ([c910036](https://github.com/brig-id/app/commit/c910036d22decbec72461b47ba6cf782acacfbc0))
+- **app:** 🐛 a read that hits the rate limit is asked again, not shown stale ([50799b7](https://github.com/brig-id/app/commit/50799b70ca51b1f695ae64c2993ff8e20424fc5f))
+- **app:** 🐛 distinguish each passkey's Remove button by accessible name ([19da6ef](https://github.com/brig-id/app/commit/19da6ef1b0e26c9de1b0ecddf4471703f1c4873e))
+- **ci:** 🐛 match dev/\* branches in workflow triggers ([6cceb38](https://github.com/brig-id/app/commit/6cceb387a97d52679fe8a390f6f1470a6a8945c4))
+- **deps:** 🔒️ refresh dependencies to clear pnpm audit advisories ([44f1f6e](https://github.com/brig-id/app/commit/44f1f6e646762afbf41dd511497ac7c4e819f0b5))
 
 ## [0.2.0] in words
 

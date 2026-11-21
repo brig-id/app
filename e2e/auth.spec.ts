@@ -295,18 +295,35 @@ test.describe("identities page", () => {
     );
     await expect(names.last()).toHaveText("Les Dupont");
 
+    // Its own page: renamed there, and deleted there.
+    await page
+      .getByRole("link", { name: "What it shares, and with whom (Les Dupont)" })
+      .click();
+    const title = page.getByRole("heading", { level: 1 });
+    await expect(title).toHaveText("Les Dupont");
     await page.getByRole("button", { name: "Edit Les Dupont" }).click();
     await page.getByLabel("Name").fill("Famille");
     await clickUntil(page, page.getByRole("button", { name: "Save", exact: true }), () =>
-      expect(names.last()).toHaveText("Famille", { timeout: 3000 }),
+      expect(title).toHaveText("Famille", { timeout: 3000 }),
     );
 
-    // Deleting asks first, in the page.
+    // Deleting asks first, in the page, then goes back to the list.
     await page.getByRole("button", { name: "Delete Famille" }).click();
     await expect(page.getByText(/This cannot be undone/)).toBeVisible();
     await clickUntil(page, page.getByRole("button", { name: "Yes, delete" }), () =>
-      expect(cards).toHaveCount(3, { timeout: 3000 }),
+      expect(page).toHaveURL(/\/identities\/(\?.*)?$/, { timeout: 3000 }),
     );
+    await expect(cards).toHaveCount(3);
+    await expect(page.getByRole("alert")).toContainText("“Famille” deleted.");
+
+    // Side by side.
+    await page.getByRole("link", { name: "Compare" }).click();
+    await expect(page.getByRole("table")).toBeVisible();
+    await expect(page.locator(".compare thead .identity-name")).toHaveText([
+      "Public",
+      "Personal",
+      "Work",
+    ]);
   });
 });
 

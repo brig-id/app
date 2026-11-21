@@ -294,6 +294,23 @@ export interface AdminApplication {
   attributes: Partial<Record<string, Need>>;
   /** Unix seconds. */
   created_at: number;
+  /** It describes itself in a document it publishes: nobody registered it. */
+  described?: boolean;
+  /** For such an application: the host of its `client_id`. */
+  host?: string;
+}
+
+/** Which websites that describe themselves the server accepts. Mirrors
+ * `DescribedView` in `brigid-api/src/routes/admin.rs`. */
+export type DescribedPolicy = "open" | "listed" | "registered";
+export interface DescribedSettings {
+  policy: DescribedPolicy;
+  /** `client_id`s (document URLs) accepted under `listed`. */
+  accepted: string[];
+  /** `client_id`s never accepted. */
+  refused: string[];
+  /** The attributes such a website may ask for, at most. */
+  attributes: string[];
 }
 
 export interface RegisteredApplication extends AdminApplication {

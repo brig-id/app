@@ -10,6 +10,8 @@ import type {
   AdminAccount,
   AdminApplication,
   AdminLogEntry,
+  DescribedPolicy,
+  DescribedSettings,
   Need,
   NewInvitation,
   RegisteredApplication,
@@ -108,6 +110,29 @@ export async function setApplicationAttributes(
 export async function removeApplication(clientId: string): Promise<void> {
   await confirmed(() =>
     call<void>("DELETE", `/admin/applications/${id(clientId)}`),
+  );
+}
+
+// -- websites that describe themselves ----------------------------------------------
+
+export async function describedSettings(): Promise<DescribedSettings> {
+  return call<DescribedSettings>("GET", "/admin/described");
+}
+
+export async function setDescribed(change: {
+  policy?: DescribedPolicy;
+  attributes?: string[];
+}): Promise<void> {
+  await confirmed(() => call<void>("PUT", "/admin/described", change));
+}
+
+/** Puts a website (its document's URL) on a list, or on none. */
+export async function listWebsite(
+  clientId: string,
+  list: "accepted" | "refused" | null,
+): Promise<void> {
+  await confirmed(() =>
+    call<void>("PUT", "/admin/described/list", { client_id: clientId, list }),
   );
 }
 
