@@ -314,7 +314,7 @@ test.describe("identities page", () => {
       expect(page).toHaveURL(/\/identities\/(\?.*)?$/, { timeout: 3000 }),
     );
     await expect(cards).toHaveCount(3);
-    await expect(page.getByRole("alert")).toContainText("“Famille” deleted.");
+    await expect(page.getByRole("status")).toContainText("“Famille” deleted.");
 
     // Side by side.
     await page.getByRole("link", { name: "Compare" }).click();
