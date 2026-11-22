@@ -26,6 +26,7 @@ import {
   isAttribute,
 } from "~/lib/attributes";
 import { failure } from "~/lib/errors";
+import { leaveDeleted } from "~/lib/deleted";
 import { hueOf } from "~/lib/hues";
 
 type Notice = { kind: "success" | "danger"; message: Message } | null;
@@ -124,7 +125,8 @@ export default component$(() => {
   const remove = $(async (name: string) => {
     try {
       await deleteIdentity(identityId.value);
-      await nav(`/identities/?deleted=${encodeURIComponent(name)}`);
+      leaveDeleted(name);
+      await nav("/identities/");
     } catch (err) {
       await fail(err);
     }
