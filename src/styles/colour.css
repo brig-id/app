@@ -3,8 +3,6 @@
    its colour. The rest of the interface stays quiet. */
 
 :root {
-  --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
-
   --hue-amber: var(--p-amber);
   --hue-coral: var(--p-coral);
   --hue-rose: var(--p-rose);
@@ -84,19 +82,14 @@
   background: var(--spectrum);
 }
 
-/* Italic serif for the one word a title leans on. */
+/* The one word a title leans on: the same type, in the colours of the
+   mark. */
 .accent {
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-weight: 400;
-  letter-spacing: -0.01em;
-  font-size: 1.12em;
+  font-weight: inherit;
 }
 
 .spectrum {
-  /* Room for the slant of the italics, and one gradient per line. */
-  margin-inline: -0.1em;
-  padding: 0.06em 0.1em 0.12em;
+  /* One gradient per line when the words wrap. */
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
   background: var(--spectrum);
