@@ -110,9 +110,21 @@ for (const { locale, colorScheme } of CASES) {
       await page.locator(".template").nth(4).click();
       await expectNoViolation(page, "/identities/ creating an identity");
       await page.locator("form .button:not(.button--primary)").click();
-      await page.locator(".identity-list .button--danger").first().click();
+
+      // Side by side.
+      await page.goto(`${E2E_ORIGIN}/identities/compare/`, { waitUntil: "networkidle" });
+      await expect(page.locator(".compare")).toBeVisible({ timeout: 10_000 });
+      await expectNoViolation(page, "/identities/compare/");
+
+      // One identity's page, its label being edited, then its deletion
+      // being confirmed.
+      await page.goto(`${E2E_ORIGIN}/identities/`, { waitUntil: "networkidle" });
+      await page.locator(".identity-card-link").first().click();
+      await expect(page.locator(".identity-hero")).toBeVisible({ timeout: 10_000 });
+      await expectNoViolation(page, "/identities/details/");
+      await page.locator(".identity-hero .button--danger").click();
       await expect(page.locator(".confirm")).toBeVisible();
-      await expectNoViolation(page, "/identities/ confirming a deletion");
+      await expectNoViolation(page, "/identities/details/ confirming a deletion");
 
       await page.goto(`${E2E_ORIGIN}/passkeys/`, { waitUntil: "networkidle" });
       await expect(page.locator(".passkey-item")).toHaveCount(1, { timeout: 10_000 });
