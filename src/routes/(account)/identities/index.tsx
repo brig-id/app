@@ -1,5 +1,5 @@
 import { $, component$, useSignal, useVisibleTask$ } from "@qwik.dev/core";
-import { type DocumentHead, useLocation, useNavigate } from "@qwik.dev/router";
+import { type DocumentHead, useNavigate } from "@qwik.dev/router";
 import {
   type FormValues,
   IdentityForm,
@@ -18,13 +18,13 @@ import type { Identity, IdentityTemplate } from "~/lib/api-types";
 import { ATTRIBUTES, attributeLabel } from "~/lib/attributes";
 import { failure } from "~/lib/errors";
 import { hueAt } from "~/lib/hues";
+import { takeDeleted } from "~/lib/deleted";
 import { DEFAULT_LOGO } from "~/lib/icons";
 
 type Notice = { kind: "success" | "danger"; message: Message } | null;
 
 export default component$(() => {
   const nav = useNavigate();
-  const loc = useLocation();
   const identities = useSignal<Identity[]>([]);
   const templates = useSignal<IdentityTemplate[]>([]);
   const loaded = useSignal(false);
@@ -54,16 +54,13 @@ export default component$(() => {
 
   useVisibleTask$(async ({ cleanup }) => {
     cleanup(titled("title.identities"));
-    // Back from an identity's page that deleted it. The router's address:
-    // after a navigation inside the interface, `window.location` may not
-    // be the new one yet.
-    const deleted = loc.url.searchParams.get("deleted");
+    // Back from an identity's page that deleted it: it left the name here.
+    const deleted = takeDeleted();
     if (deleted) {
       notice.value = {
         kind: "success",
         message: { id: "identity.deleted", p: { name: deleted } },
       };
-      history.replaceState(null, "", window.location.pathname);
     }
     await refresh();
     try {
