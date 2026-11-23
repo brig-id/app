@@ -105,11 +105,13 @@ for (const { locale, colorScheme } of CASES) {
       await continueToIdentities(page);
       await expectNoViolation(page, "/identities/");
 
-      // The form, with a template applied, then a deletion being confirmed.
-      await page.locator(".split .button--primary").click();
-      await page.locator(".template").nth(4).click();
-      await expectNoViolation(page, "/identities/ creating an identity");
-      await page.locator("form .button:not(.button--primary)").click();
+      // A new identity: the archetypes, then the form by hand.
+      await page.goto(`${E2E_ORIGIN}/identities/new/`, { waitUntil: "networkidle" });
+      await expect(page.locator(".archetype").first()).toBeVisible({ timeout: 10_000 });
+      await expectNoViolation(page, "/identities/new/");
+      await page.locator(".mode-pills button").nth(1).click();
+      await expect(page.locator("form")).toBeVisible();
+      await expectNoViolation(page, "/identities/new/ by hand");
 
       // Side by side.
       await page.goto(`${E2E_ORIGIN}/identities/compare/`, { waitUntil: "networkidle" });
@@ -192,16 +194,19 @@ for (const { locale, colorScheme } of CASES) {
 
       // The identity's page: what it gave, the form, a withdrawal confirmed.
       await page.goto(`${E2E_ORIGIN}/identities/`, { waitUntil: "networkidle" });
-      await page.locator(".identity-list > li a").last().click();
+      await page.locator(".identity-card-link").last().click();
+      await expect(page.locator(".identity-hero")).toBeVisible({ timeout: 10_000 });
+      await page.locator("#tab-usage").click();
       await expect(page.locator(".shared-row")).toHaveCount(1, { timeout: 10_000 });
-      await expectNoViolation(page, "/identities/details/");
+      await expectNoViolation(page, "/identities/details/?tab=usage");
       await page.locator("[data-application] .button--danger").click();
       await expect(page.locator(".confirm")).toBeVisible();
       await expectNoViolation(page, "/identities/details/ confirming a withdrawal");
+      await page.locator("#tab-info").click();
       await page.locator("section.card .split .button").click();
       // The same address as another identity would be a warning: none here.
       await expect(page.locator("form .input")).toHaveCount(6);
-      await expectNoViolation(page, "/identities/details/ editing what it can share");
+      await expectNoViolation(page, "/identities/details/ editing my information");
     });
 
     test("the administration", async ({ page, context, browser, browserName }) => {

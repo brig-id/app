@@ -282,26 +282,30 @@ test.describe("identities page", () => {
     const names = page.locator(".identity-name");
     await expect(names).toHaveText(["Public", "Personal", "Work"]);
 
-    await page.getByRole("button", { name: "New identity" }).click();
-    await page
-      .getByRole("group", { name: "Start from" })
-      .getByRole("button", { name: "Family" })
-      .click();
-    await expect(page.getByLabel("Name")).toHaveValue("Family");
-    await page.getByLabel("Name").fill("Les Dupont");
-    // Rate-limited like the list: the form is still there to send again.
-    await clickUntil(page, page.getByRole("button", { name: "Create", exact: true }), () =>
-      expect(cards).toHaveCount(4, { timeout: 3000 }),
+    // A new identity has a page of its own: an archetype creates it at once
+    // and opens it. (Rate-limited like the list: clicked until it went.)
+    const main = page.locator("main");
+    await main.getByRole("link", { name: "New identity" }).click();
+    await expect(page).toHaveURL(/\/identities\/new\/?$/);
+    const title = page.getByRole("heading", { level: 1 });
+    await clickUntil(page, main.getByRole("button", { name: /^Family/ }), () =>
+      expect(title).toHaveText("Family", { timeout: 3000 }),
     );
-    await expect(names.last()).toHaveText("Les Dupont");
+    // The menu lists it, and the archetype is not proposed again.
+    await expect(page.locator(".account-nav").getByRole("link", { name: "Family" })).toBeVisible();
+    await main.getByRole("link", { name: "All identities" }).click();
+    await expect(cards).toHaveCount(4);
+    await expect(names.last()).toHaveText("Family");
+    await page.goto("/identities/new/");
+    await expect(main.locator(".archetype").first()).toBeVisible();
+    await expect(main.getByRole("button", { name: /^Family/ })).toHaveCount(0);
 
     // Its own page: renamed there, and deleted there.
-    await page
-      .getByRole("link", { name: "What it shares, and with whom (Les Dupont)" })
-      .click();
-    const title = page.getByRole("heading", { level: 1 });
-    await expect(title).toHaveText("Les Dupont");
-    await page.getByRole("button", { name: "Edit Les Dupont" }).click();
+    await page.goto("/identities/");
+    await waitForIdentities(page, 4);
+    await main.getByRole("link", { name: "Open (Family)" }).click();
+    await expect(title).toHaveText("Family");
+    await page.getByRole("button", { name: "Edit Family" }).click();
     await page.getByLabel("Name").fill("Famille");
     await clickUntil(page, page.getByRole("button", { name: "Save", exact: true }), () =>
       expect(title).toHaveText("Famille", { timeout: 3000 }),
@@ -319,7 +323,7 @@ test.describe("identities page", () => {
     // Side by side. The page asks the server once per identity: refused for
     // going too fast after all the above, it says so, and a person would
     // open it again a moment later.
-    await page.getByRole("link", { name: "Compare" }).click();
+    await main.getByRole("link", { name: "Compare" }).click();
     await expect(async () => {
       if (!(await page.getByRole("table").isVisible())) await page.reload();
       await expect(page.getByRole("table")).toBeVisible({ timeout: 4000 });

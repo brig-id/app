@@ -2,11 +2,13 @@ import {
   $,
   component$,
   Slot,
+  useContextProvider,
   useSignal,
   useVisibleTask$,
   type QRL,
 } from "@qwik.dev/core";
 import { Link, useLocation, useNavigate } from "@qwik.dev/router";
+import { IDENTITIES_MENU } from "~/components/account/identities-context";
 import { Callout } from "~/components/ui/callout";
 import { Icon, type IconName } from "~/components/ui/icon";
 import { LanguageSwitch } from "~/components/ui/language-switch";
@@ -14,36 +16,51 @@ import { ThemeSwitch } from "~/components/ui/theme-switch";
 import { type MessageId, T } from "~/i18n";
 import {
   checkSession,
+  listIdentities,
   SessionEndedError,
   signOut as endSession,
 } from "~/lib/api";
-import type { SessionResponse } from "~/lib/api-types";
+import type { Identity, SessionResponse } from "~/lib/api-types";
 
-const LINKS: readonly { href: string; label: MessageId; icon: IconName }[] = [
+interface NavLink {
+  href: string;
+  label: MessageId;
+  icon: IconName;
+  /** Its own pages, shown under it while one of them is open. */
+  sub?: readonly { href: string; label: MessageId }[];
+}
+
+const LINKS: readonly NavLink[] = [
   {
     href: "/identities/",
     label: "nav.identities",
     icon: "identification-card",
   },
   { href: "/passkeys/", label: "nav.passkeys", icon: "key" },
-  { href: "/account/", label: "nav.account", icon: "user-circle" },
+  {
+    href: "/account/",
+    label: "nav.account",
+    icon: "user-circle",
+    sub: [
+      { href: "/account/#export-title", label: "nav.account.export" },
+      { href: "/account/#delete-title", label: "nav.account.delete" },
+    ],
+  },
+  { href: "/info/", label: "nav.about", icon: "info" },
 ];
 
 /** The pages of the administration, when the frame is in that mode. */
-const ADMIN_LINKS: readonly {
-  href: string;
-  label: MessageId;
-  icon: IconName;
-}[] = [
+const ADMIN_LINKS: readonly NavLink[] = [
   { href: "/admin/", label: "admin.tab.accounts", icon: "user-circle" },
   {
     href: "/admin/applications/",
     label: "admin.tab.applications",
     icon: "key",
+    sub: [{ href: "/admin/websites/", label: "admin.tab.websites" }],
   },
-  { href: "/admin/websites/", label: "admin.tab.websites", icon: "globe" },
   { href: "/admin/sign-up/", label: "admin.tab.signup", icon: "plus" },
-  { href: "/admin/log/", label: "admin.tab.log", icon: "info" },
+  { href: "/admin/log/", label: "admin.tab.log", icon: "list-bullets" },
+  { href: "/admin/about/", label: "nav.about", icon: "info" },
 ];
 
 /** Where an account finishes being set up. */
@@ -72,6 +89,28 @@ export const Shell = component$<{
   const nav = useNavigate();
   /** Whether the account administers this server: one more entry then. */
   const admin = useSignal(false);
+  /** The identities, for the menu under "Identities". */
+  const identities = useSignal<Identity[]>([]);
+  const changed = useSignal(0);
+  useContextProvider(IDENTITIES_MENU, { list: identities, changed });
+  /** The identity whose page is open. Read from the browser: on a page
+   * built ahead of time, the router's address has no query string. */
+  const openId = useSignal("");
+  useVisibleTask$(({ track }) => {
+    track(() => loc.url.href);
+    openId.value = new URLSearchParams(window.location.search).get("id") ?? "";
+  });
+
+  useVisibleTask$(async ({ track }) => {
+    const path = track(() => loc.url.pathname);
+    track(() => changed.value);
+    if (mode !== "account" || !path.startsWith("/identities/")) return;
+    try {
+      identities.value = await listIdentities();
+    } catch {
+      // The page itself says what went wrong; the menu just stays short.
+    }
+  });
 
   useVisibleTask$(async ({ track, cleanup }) => {
     track(() => loc.url.pathname);
@@ -117,13 +156,24 @@ export const Shell = component$<{
       <header class="account-header">
         <div class="cluster">
           <Link href="/identities/" class="brand">
+            <img src="/favicon.svg" alt="" width={28} height={28} />
             brig·id
           </Link>
-          {mode === "admin" && (
-            <span class="mode-badge">
-              <Icon name="gear" />
-              <T id="nav.admin" />
-            </span>
+          {admin.value && (
+            <div class="mode-pills">
+              <Link
+                href="/identities/"
+                aria-current={mode === "account" ? "page" : undefined}
+              >
+                <T id="nav.to-account" />
+              </Link>
+              <Link
+                href="/admin/"
+                aria-current={mode === "admin" ? "page" : undefined}
+              >
+                <T id="nav.admin" />
+              </Link>
+            </div>
           )}
         </div>
         <div class="cluster">
@@ -139,59 +189,92 @@ export const Shell = component$<{
         <h2 id="account-nav-title" class="sr-only">
           <T id="nav.label" />
         </h2>
-        {mode === "admin" ? (
-          <ul>
-            {ADMIN_LINKS.map((link) => (
+        <ul>
+          {(mode === "admin" ? ADMIN_LINKS : LINKS).map((link) => {
+            const path = loc.url.pathname;
+            const here =
+              link.href === "/admin/"
+                ? path === "/admin/"
+                : path.startsWith(link.href) ||
+                  (link.sub ?? []).some((s) =>
+                    path.startsWith(s.href.split("#")[0]!),
+                  );
+            const open =
+              here &&
+              (link.href === "/identities/" || (link.sub ?? []).length > 0);
+            return (
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  aria-current={
-                    loc.url.pathname === link.href ? "page" : undefined
-                  }
+                  aria-current={path === link.href ? "page" : undefined}
+                  class={here ? "is-here" : undefined}
                 >
                   <Icon name={link.icon} />
                   <T id={link.label} />
                 </Link>
+                {open && (
+                  <ul class="subnav">
+                    {link.href === "/identities/" ? (
+                      <>
+                        <li>
+                          <Link
+                            href="/identities/compare/"
+                            aria-current={
+                              path === "/identities/compare/"
+                                ? "page"
+                                : undefined
+                            }
+                          >
+                            <T id="nav.identities.compare" />
+                          </Link>
+                        </li>
+                        {identities.value.map((identity) => {
+                          const href = `/identities/details/?id=${encodeURIComponent(identity.id)}`;
+                          const current =
+                            path === "/identities/details/" &&
+                            openId.value === identity.id;
+                          return (
+                            <li key={identity.id}>
+                              <Link
+                                href={href}
+                                aria-current={current ? "page" : undefined}
+                              >
+                                {identity.name}
+                              </Link>
+                            </li>
+                          );
+                        })}
+                        <li>
+                          <Link
+                            href="/identities/new/"
+                            aria-current={
+                              path === "/identities/new/" ? "page" : undefined
+                            }
+                          >
+                            <T id="nav.identities.new" />
+                          </Link>
+                        </li>
+                      </>
+                    ) : (
+                      (link.sub ?? []).map((sub) => (
+                        <li key={sub.href}>
+                          <Link
+                            href={sub.href}
+                            aria-current={
+                              path === sub.href ? "page" : undefined
+                            }
+                          >
+                            <T id={sub.label} />
+                          </Link>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                )}
               </li>
-            ))}
-            <li class="mode-switch">
-              <Link href="/identities/">
-                <Icon name="arrows-left-right" />
-                <T id="nav.to-account" />
-              </Link>
-            </li>
-          </ul>
-        ) : (
-          <ul>
-            {LINKS.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  aria-current={
-                    loc.url.pathname.startsWith(link.href) ? "page" : undefined
-                  }
-                >
-                  <Icon name={link.icon} />
-                  <T id={link.label} />
-                </Link>
-              </li>
-            ))}
-            <li>
-              <a href="/about/">
-                <Icon name="info" />
-                <T id="nav.about" />
-              </a>
-            </li>
-            {admin.value && (
-              <li class="mode-switch">
-                <Link href="/admin/">
-                  <Icon name="arrows-left-right" />
-                  <T id="nav.admin" />
-                </Link>
-              </li>
-            )}
-          </ul>
-        )}
+            );
+          })}
+        </ul>
       </nav>
       <main id="content" class="account-main" tabIndex={-1}>
         {stillSignedIn.value && (

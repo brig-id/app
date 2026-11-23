@@ -180,6 +180,9 @@ export interface Identity {
 }
 
 export interface IdentityTemplate {
+  /** The group it is shown in: `everyday`, `work`, `leisure`, `online`
+   * (absent from a server older than core#121). */
+  group?: string;
   key: string;
   name: string;
   logo: string;

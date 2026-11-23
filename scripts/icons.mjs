@@ -30,6 +30,8 @@ const UI = [
   "identification-card",
   "info",
   "key",
+  "lightbulb",
+  "list-bullets",
   "moon",
   "pencil-simple",
   "plus",
