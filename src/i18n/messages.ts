@@ -44,7 +44,6 @@ export const MESSAGES = {
     "Ce lien n’est plus valable : il a été utilisé, il a expiré ou il a été révoqué.",
   ],
 
-  "language.switch": ["Français", "English"],
   "theme.light": ["Light theme", "Thème clair"],
   "theme.dark": ["Dark theme", "Thème sombre"],
 
@@ -91,10 +90,6 @@ export const MESSAGES = {
   ],
   "signin.create": ["Create an account", "Créer un compte"],
   "signin.lost": ["Lost your passkeys?", "Clés d’accès perdues ?"],
-  "signin.closed": [
-    "This server does not accept new accounts.",
-    "Ce serveur n’accepte pas de nouveaux comptes.",
-  ],
 
   // -- sign-up -----------------------------------------------------------------
   "signup.title": ["Create an account", "Créer un compte"],
@@ -776,7 +771,6 @@ export const MESSAGES = {
     "Give this address to the people you invite. It is shown only now.",
     "Donnez cette adresse aux personnes que vous invitez. Elle n’est affichée que maintenant.",
   ],
-  "admin.invite.address": ["Invitation address", "Adresse d’invitation"],
   "admin.invite.left": [
     "Accounts left: {count}, until {date}",
     "Comptes restants : {count}, jusqu’au {date}",
@@ -854,7 +848,6 @@ export const MESSAGES = {
   ],
 
   // -- identities --------------------------------------------------------------
-  "identities.title": ["Identities", "Identités"],
   "identities.eyebrow": ["Your identities", "Vos identités"],
   "identities.title.lead": ["One self,", "Un seul soi,"],
   "identities.title.accent": ["many faces.", "plusieurs visages."],
@@ -936,11 +929,6 @@ export const MESSAGES = {
     "Aucune identité pour l’instant. Créez-en une pour vous connecter à des applications.",
   ],
   "identity.form.edit": ["Edit “{name}”", "Modifier « {name} »"],
-  "identity.form.template": ["Archetype", "Archétype"],
-  "identity.form.template.hint": [
-    "A starting point: it fills the fields below, and you can change everything.",
-    "Un point de départ : il remplit les champs ci-dessous, et vous pouvez tout modifier.",
-  ],
   "identity.form.name": ["Name", "Nom"],
   "identity.form.name.hint": [
     "Only you see it. No application receives it.",
@@ -949,7 +937,6 @@ export const MESSAGES = {
   "identity.form.description": ["Description", "Description"],
   "identity.form.logo": ["Icon", "Icône"],
   "identity.create": ["Create", "Créer"],
-  "identity.created": ["“{name}” created.", "« {name} » créée."],
   "identity.saved": ["Identity saved.", "Identité enregistrée."],
   "identity.deleted": ["“{name}” deleted.", "« {name} » supprimée."],
   "identity.edit": ["Edit", "Modifier"],
@@ -985,7 +972,6 @@ export const MESSAGES = {
     "Its name, icon and description are for you only. No application receives them.",
     "Son nom, son icône et sa description ne sont que pour vous. Aucune application ne les reçoit.",
   ],
-  "identity.attributes.title": ["My information", "Mes informations"],
   "identity.attributes.lead": [
     "Information you put on this identity so that applications can ask for it. An application receives a piece of it only once you have accepted, with the value you saw.",
     "Des informations que vous placez sur cette identité pour que des applications puissent les demander. Une application n’en reçoit une que lorsque vous l’avez accepté, avec la valeur que vous avez vue.",
@@ -993,10 +979,6 @@ export const MESSAGES = {
   "identity.attributes.none": [
     "Nothing yet: applications receive an identifier, and nothing else.",
     "Rien pour l’instant : les applications reçoivent un identifiant, et rien d’autre.",
-  ],
-  "identity.attributes.edit": [
-    "Edit my information",
-    "Modifier mes informations",
   ],
   "identity.attributes.linking": [
     "The same last name, username or address on two identities lets applications understand that they belong to one person. Nothing can undo that once it is shared.",
@@ -1086,108 +1068,108 @@ export const MESSAGES = {
   "attribute.locale": ["Language", "Langue"],
   "attribute.zoneinfo": ["Time zone", "Fuseau horaire"],
 
-  "template.public": ["Public", "Publique"],
-  "template.public.about": [
+  "archetype.public": ["Public", "Publique"],
+  "archetype.public.about": [
     "For everyone you come across online.",
     "Pour tous ceux que vous croisez en ligne.",
   ],
-  "template.personal": ["Personal", "Personnelle"],
-  "template.personal.about": [
+  "archetype.personal": ["Personal", "Personnelle"],
+  "archetype.personal.about": [
     "Yours alone: not even aunt Monique gets in.",
     "Rien qu’à vous : même tata Monique n’y a pas droit.",
   ],
-  "template.family": ["Family", "Famille"],
-  "template.family.about": [
+  "archetype.family": ["Family", "Famille"],
+  "archetype.family.about": [
     "Family life: the school, the doctor, the group photos.",
     "La vie de famille : l’école, le médecin, les photos de groupe.",
   ],
-  "template.friends": ["Friends", "Amis"],
-  "template.friends.about": [
+  "archetype.friends": ["Friends", "Amis"],
+  "archetype.friends.about": [
     "Plans, games and group chats with friends.",
     "Les sorties, les jeux et les groupes entre amis.",
   ],
-  "template.shopping": ["Shopping", "Achats"],
-  "template.shopping.about": [
+  "archetype.shopping": ["Shopping", "Achats"],
+  "archetype.shopping.about": [
     "Online shops and deliveries, nothing more.",
     "Les boutiques en ligne et les livraisons, rien de plus.",
   ],
-  "template.work": ["Work", "Travail"],
-  "template.work.about": [
+  "archetype.work": ["Work", "Travail"],
+  "archetype.work.about": [
     "All the work stuff: serious, no fun.",
     "Tout le work stuff : sérieux, et sans fun.",
   ],
-  "template.freelance": ["Freelance", "Indépendant"],
-  "template.freelance.about": [
+  "archetype.freelance": ["Freelance", "Indépendant"],
+  "archetype.freelance.about": [
     "Clients, quotes and invoices.",
     "Les clients, les devis et les factures.",
   ],
-  "template.job-search": ["Job search", "Recherche d’emploi"],
-  "template.job-search.about": [
+  "archetype.job-search": ["Job search", "Recherche d’emploi"],
+  "archetype.job-search.about": [
     "Job boards and applications, ready for the interview.",
     "Les sites d’emploi et les candidatures, prête pour l’entretien.",
   ],
-  "template.student": ["Student", "Études"],
-  "template.student.about": [
+  "archetype.student": ["Student", "Études"],
+  "archetype.student.about": [
     "Courses, campus and exam season.",
     "Les cours, le campus et les partiels.",
   ],
-  "template.volunteering": ["Volunteering", "Bénévolat"],
-  "template.volunteering.about": [
+  "archetype.volunteering": ["Volunteering", "Bénévolat"],
+  "archetype.volunteering.about": [
     "The associations and causes you give time to.",
     "Les associations et les causes auxquelles vous donnez du temps.",
   ],
-  "template.gaming": ["Gaming", "Jeu vidéo"],
-  "template.gaming.about": [
+  "archetype.gaming": ["Gaming", "Jeu vidéo"],
+  "archetype.gaming.about": [
     "Lobbies, clans and late nights.",
     "Les lobbies, les clans et les nuits blanches.",
   ],
-  "template.music": ["Music", "Musique"],
-  "template.music.about": [
+  "archetype.music": ["Music", "Musique"],
+  "archetype.music.about": [
     "Playlists, concerts and the band.",
     "Les playlists, les concerts et le groupe.",
   ],
-  "template.sport": ["Sport", "Sport"],
-  "template.sport.about": [
+  "archetype.sport": ["Sport", "Sport"],
+  "archetype.sport.about": [
     "Training, the club and race results.",
     "Les entraînements, le club et les résultats de course.",
   ],
-  "template.travel": ["Travel", "Voyage"],
-  "template.travel.about": [
+  "archetype.travel": ["Travel", "Voyage"],
+  "archetype.travel.about": [
     "Tickets, bookings and the next trip.",
     "Les billets, les réservations et le prochain voyage.",
   ],
-  "template.reading": ["Reading", "Lecture"],
-  "template.reading.about": [
+  "archetype.reading": ["Reading", "Lecture"],
+  "archetype.reading.about": [
     "Books, libraries and reading lists.",
     "Les livres, les bibliothèques et les listes de lecture.",
   ],
-  "template.creative": ["Creative", "Création"],
-  "template.creative.about": [
+  "archetype.creative": ["Creative", "Création"],
+  "archetype.creative.about": [
     "Sketches, projects and creative circles.",
     "Les esquisses, les projets et les cercles créatifs.",
   ],
-  "template.developer": ["Developer", "Développement"],
-  "template.developer.about": [
+  "archetype.developer": ["Developer", "Développement"],
+  "archetype.developer.about": [
     "Code, forges and package registries.",
     "Le code, les forges et les registres de paquets.",
   ],
-  "template.social": ["Social", "Réseaux sociaux"],
-  "template.social.about": [
+  "archetype.social": ["Social", "Réseaux sociaux"],
+  "archetype.social.about": [
     "Social networks, with the face you choose.",
     "Les réseaux sociaux, avec le visage que vous choisissez.",
   ],
-  "template.forums": ["Forums", "Forums"],
-  "template.forums.about": [
+  "archetype.forums": ["Forums", "Forums"],
+  "archetype.forums.about": [
     "Forums and comment threads, under a pen name.",
     "Les forums et les commentaires, sous un pseudonyme.",
   ],
-  "template.isolated": ["Isolated", "Isolée"],
-  "template.isolated.about": [
+  "archetype.isolated": ["Isolated", "Isolée"],
+  "archetype.isolated.about": [
     "Detective mode: tied to nothing else.",
     "Mode détective : reliée à rien d’autre.",
   ],
-  "template.testing": ["Testing", "Essais"],
-  "template.testing.about": [
+  "archetype.testing": ["Testing", "Essais"],
+  "archetype.testing.about": [
     "Sign-ups to try something out, then forget.",
     "Les inscriptions pour essayer, puis oublier.",
   ],
@@ -1195,7 +1177,6 @@ export const MESSAGES = {
   "archetypes.group.work": ["Work and studies", "Travail et études"],
   "archetypes.group.leisure": ["Leisure", "Loisirs"],
   "archetypes.group.online": ["Online", "En ligne"],
-  "archetypes.group.other": ["Others", "Autres"],
 
   "icons.group.people": ["People", "Personnes"],
   "icons.group.work": ["Work and study", "Travail et études"],

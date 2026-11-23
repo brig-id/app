@@ -120,38 +120,6 @@
   overflow-wrap: anywhere;
 }
 
-.templates {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--p-space-2);
-}
-
-.template {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--p-space-2);
-  min-height: 2.25rem;
-  padding: 0 var(--p-space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--p-radius-full);
-  background: transparent;
-  color: var(--text-quiet);
-  font: inherit;
-  font-size: var(--p-text-s);
-  cursor: pointer;
-}
-
-.template:hover {
-  background: var(--surface-hover);
-  color: var(--text);
-}
-
-.template[aria-pressed="true"] {
-  border-color: var(--selected);
-  background: var(--selected-surface);
-  color: var(--text);
-}
-
 .icon-picker {
   display: flex;
   flex-direction: column;
