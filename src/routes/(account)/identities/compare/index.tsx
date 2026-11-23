@@ -28,13 +28,13 @@ export default component$(() => {
   const load = $(async () => {
     try {
       const all = await listIdentities();
-      const lists = await Promise.all(
-        all.map((identity) => listApplications(identity.id)),
-      );
+      // One identity after the other, not all at once: the server limits
+      // how fast an account's pages may ask.
       const applications: Record<string, IdentityApplication[]> = {};
-      all.forEach((identity, i) => {
-        applications[identity.id] = lists[i] ?? [];
-      });
+      for (const identity of all) {
+        // oxlint-disable-next-line no-await-in-loop -- sequential on purpose
+        applications[identity.id] = await listApplications(identity.id);
+      }
       identities.value = all;
       used.value = applications;
     } catch (err) {
