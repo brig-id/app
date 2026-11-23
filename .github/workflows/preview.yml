@@ -5,6 +5,7 @@ name: Preview
 # one origin, as in production, and a Cloudflare quick tunnel gives it a public
 # HTTPS address (https://<random>.trycloudflare.com). No account, no token, no
 # secret: the server, its key and its database live and die with the job.
+# Anyone with the address may sign up on it.
 #
 # The address is temporary: it lasts PREVIEW_MINUTES, and a new push, closing
 # the pull request or cancelling the run ends it. To get one again, re-run the
@@ -88,20 +89,29 @@ jobs:
         run: |
           key=$(openssl rand -hex 32)
           echo "::add-mask::$key"
-          # Reachable from this machine only, through the tunnel. The tunnel
-          # sets x-forwarded-for: trusting it gives each visitor their own
-          # rate limit instead of one for all.
+          env_file="$RUNNER_TEMP/seedling.env"
+          install -m 600 /dev/null "$env_file"
+          # The tunnel sets x-forwarded-for: trusting it gives each visitor
+          # their own rate limit instead of one for all.
+          cat > "$env_file" <<ENV
+          BRIGID_MASTER_KEY=$key
+          BRIGID_SERVER__DOMAIN=${URL#https://}
+          BRIGID_SERVER__PUBLIC_URL=$URL
+          BRIGID_SERVER__HOST=0.0.0.0
+          BRIGID_SERVER__PORT=8080
+          BRIGID_SERVER__UI_DIST_DIR=/ui/dist
+          BRIGID_DATABASE__PATH=/data/brigid.db
+          BRIGID_SECURITY__TRUST_FORWARDED_FOR=true
+          ENV
+          # The image runs as nonroot: a directory anyone can write to.
+          mkdir -m 777 "$RUNNER_TEMP/data"
+          data="$RUNNER_TEMP/data:/data"
+          # A new server only lets invited people sign up, and its first
+          # administrator is out of reach here: anyone may sign up instead.
+          docker run --rm --env-file "$env_file" -v "$data" "$SEEDLING_IMAGE" signup open
+          # Reachable from this machine only, through the tunnel.
           docker run -d --name seedling -p 127.0.0.1:8080:8080 \
-            --tmpfs /data:mode=1777 \
-            -v "$PWD/dist:/ui/dist:ro" \
-            -e BRIGID_MASTER_KEY="$key" \
-            -e BRIGID_SERVER__DOMAIN="${URL#https://}" \
-            -e BRIGID_SERVER__PUBLIC_URL="$URL" \
-            -e BRIGID_SERVER__HOST=0.0.0.0 \
-            -e BRIGID_SERVER__PORT=8080 \
-            -e BRIGID_SERVER__UI_DIST_DIR=/ui/dist \
-            -e BRIGID_DATABASE__PATH=/data/brigid.db \
-            -e BRIGID_SECURITY__TRUST_FORWARDED_FOR=true \
+            --env-file "$env_file" -v "$data" -v "$PWD/dist:/ui/dist:ro" \
             "$SEEDLING_IMAGE" > /dev/null
           for _ in $(seq 1 30); do
             curl -fsS http://127.0.0.1:8080/health > /dev/null 2>&1 && break
@@ -140,7 +150,7 @@ jobs:
           version=$(docker run --rm "$SEEDLING_IMAGE" --version | awk '{ print $2 }' || true)
           until=$(date -u -d "+$PREVIEW_MINUTES minutes" '+%H:%M UTC')
           gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --edit-last --create-if-none --body \
-            "Preview: $URL — commit ${SHA:0:7}, served by seedling ${version:-latest}, until $until. An empty server: sign up first. Re-run the Preview workflow to get a new one."
+            "Preview: $URL — commit ${SHA:0:7}, served by seedling ${version:-latest}, until $until. An empty server, open to anyone: sign up first. Re-run the Preview workflow to get a new one."
 
       - name: Keep it running
         run: sleep $((PREVIEW_MINUTES * 60))
