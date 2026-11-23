@@ -84,8 +84,8 @@ describe("segments", () => {
 
 describe("isMessage", () => {
   it("tells an id built from data", () => {
-    expect(isMessage("template.work")).toBe(true);
-    expect(isMessage("template.from-a-newer-server")).toBe(false);
+    expect(isMessage("archetype.work")).toBe(true);
+    expect(isMessage("archetype.not-one")).toBe(false);
     expect(isMessage("toString")).toBe(false);
   });
 });

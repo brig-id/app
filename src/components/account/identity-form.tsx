@@ -1,9 +1,6 @@
-import { $, component$, useSignal, type QRL } from "@qwik.dev/core";
+import { component$, useSignal, type QRL } from "@qwik.dev/core";
 import { IconPicker } from "~/components/account/icon-picker";
-import { LogoIcon } from "~/components/ui/icon";
-import { isMessage, T, tr } from "~/i18n";
-import type { IdentityTemplate } from "~/lib/api-types";
-import { logoName } from "~/lib/icons";
+import { T } from "~/i18n";
 
 export interface FormValues {
   name: string;
@@ -17,28 +14,13 @@ export const IdentityForm = component$<{
   /** The name of the identity being edited; none when creating. */
   editing?: string;
   initial: FormValues;
-  templates?: IdentityTemplate[];
-  onSubmit$: QRL<
-    (values: FormValues, template: string | null) => Promise<void>
-  >;
+  onSubmit$: QRL<(values: FormValues) => Promise<void>>;
   onCancel$: QRL<() => void>;
-}>(({ editing, initial, templates, onSubmit$, onCancel$ }) => {
+}>(({ editing, initial, onSubmit$, onCancel$ }) => {
   const name = useSignal(initial.name);
   const logo = useSignal(initial.logo);
   const description = useSignal(initial.description);
-  const template = useSignal("");
   const busy = useSignal(false);
-
-  /** A template fills the fields, in the page's language when the interface
-   * knows it, with the server's words otherwise. */
-  const applyTemplate = $((t: IdentityTemplate) => {
-    template.value = t.key;
-    const title = `template.${t.key}`;
-    const about = `template.${t.key}.about`;
-    name.value = isMessage(title) ? tr(title) : t.name;
-    description.value = isMessage(about) ? tr(about) : t.description;
-    logo.value = t.logo;
-  });
 
   return (
     <form
@@ -47,14 +29,11 @@ export const IdentityForm = component$<{
       onSubmit$={async () => {
         busy.value = true;
         try {
-          await onSubmit$(
-            {
-              name: name.value,
-              logo: logo.value,
-              description: description.value,
-            },
-            template.value || null,
-          );
+          await onSubmit$({
+            name: name.value,
+            logo: logo.value,
+            description: description.value,
+          });
         } finally {
           busy.value = false;
         }
@@ -67,34 +46,6 @@ export const IdentityForm = component$<{
           <T id="identity.form.edit" p={{ name: editing }} />
         )}
       </h2>
-
-      {templates && templates.length > 0 && (
-        <fieldset class="field" aria-describedby="template-hint">
-          <legend class="field-label">
-            <T id="identity.form.template" />
-          </legend>
-          <div class="templates">
-            {templates.map((t) => {
-              const title = `template.${t.key}`;
-              return (
-                <button
-                  key={t.key}
-                  type="button"
-                  class="template"
-                  aria-pressed={template.value === t.key}
-                  onClick$={() => applyTemplate(t)}
-                >
-                  <LogoIcon name={logoName(t.logo)} />
-                  {isMessage(title) ? <T id={title} /> : t.name}
-                </button>
-              );
-            })}
-          </div>
-          <span id="template-hint" class="field-hint">
-            <T id="identity.form.template.hint" />
-          </span>
-        </fieldset>
-      )}
 
       <div class="field">
         <label class="field-control">

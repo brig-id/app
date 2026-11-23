@@ -67,8 +67,6 @@ export interface PublicKeyCredentialJSON {
 // -- /auth/register --
 
 export interface BeginRegisterRequest {
-  /** `username@server`. Absent: the server generates a hidden username. */
-  username?: string;
   /** A setup link or an invitation, when the server asks for one. */
   link?: string;
 }
@@ -179,22 +177,9 @@ export interface Identity {
   updated_at: string;
 }
 
-export interface IdentityTemplate {
-  /** The group it is shown in: `everyday`, `work`, `leisure`, `online`
-   * (absent from a server older than core#121). */
-  group?: string;
-  key: string;
+export interface CreateIdentityRequest {
   name: string;
   logo: string;
-  description: string;
-  /** One of the identities the onboarding proposes to a new account. */
-  starter: boolean;
-}
-
-export interface CreateIdentityRequest {
-  template?: string;
-  name?: string;
-  logo?: string;
   description?: string;
   attributes?: Record<string, string>;
 }

@@ -10,16 +10,16 @@ import { type DocumentHead, useNavigate } from "@qwik.dev/router";
 import { RecoveryCodePanel } from "~/components/account/recovery-code";
 import { Callout } from "~/components/ui/callout";
 import { IdentityLogo } from "~/components/ui/identity-logo";
-import { isMessage, type Message, Said, T, titled, tr } from "~/i18n";
+import { type Message, Said, T, titled } from "~/i18n";
 import {
   createIdentity,
   listIdentities,
   listPasskeys,
-  listTemplates,
   renamePasskey,
   SessionEndedError,
 } from "~/lib/api";
 import type { PasskeySummary } from "~/lib/api-types";
+import { ARCHETYPES, archetypeWords } from "~/lib/archetypes";
 import { failure } from "~/lib/errors";
 import { takeRecoveredFlag } from "~/lib/webauthn";
 
@@ -29,6 +29,8 @@ interface Starter {
   key: string;
   logo: string;
   name: string;
+  /** Its description, the archetype's, in the page's language. */
+  about: string;
   keep: boolean;
   /** Created already: a second press on "Continue" does not create it twice. */
   created: boolean;
@@ -89,19 +91,17 @@ export default component$(() => {
     startersAsked.value = true;
     try {
       if ((await listIdentities()).length > 0) return;
-      const templates = await listTemplates();
-      starters.list = templates
-        .filter((t) => t.starter)
-        .map((t) => {
-          const title = `template.${t.key}`;
-          return {
-            key: t.key,
-            logo: t.logo,
-            name: isMessage(title) ? tr(title) : t.name,
-            keep: true,
-            created: false,
-          };
-        });
+      starters.list = ARCHETYPES.filter((a) => a.starter).map((a) => {
+        const words = archetypeWords(a);
+        return {
+          key: a.key,
+          logo: a.logo,
+          name: words.name,
+          about: words.about,
+          keep: true,
+          created: false,
+        };
+      });
     } catch (err) {
       if (err instanceof SessionEndedError) await nav("/");
       // Otherwise nothing is proposed: identities are created from their page.
@@ -119,7 +119,11 @@ export default component$(() => {
         if (!starter.keep || starter.created || !starter.name.trim()) continue;
         // One at a time: the list of identities keeps this order.
         // oxlint-disable-next-line no-await-in-loop
-        await createIdentity({ template: starter.key, name: starter.name });
+        await createIdentity({
+          name: starter.name,
+          logo: starter.logo,
+          description: starter.about,
+        });
         starter.created = true;
       }
       await nav("/identities/");

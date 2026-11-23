@@ -10,7 +10,6 @@ import type {
   CreateIdentityRequest,
   Identity,
   IdentityApplication,
-  IdentityTemplate,
   PasskeySummary,
   RecoveryCodeResponse,
   RecoveryStatus,
@@ -178,10 +177,6 @@ export async function createRecoveryCode(): Promise<string> {
 
 export async function listIdentities(): Promise<Identity[]> {
   return call<Identity[]>("GET", "/account/identities");
-}
-
-export async function listTemplates(): Promise<IdentityTemplate[]> {
-  return call<IdentityTemplate[]>("GET", "/account/identity-templates");
 }
 
 export async function createIdentity(input: CreateIdentityRequest): Promise<Identity> {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { LOGO_ICONS } from "~/components/ui/icons.gen";
 import { MESSAGES } from "~/i18n/messages";
+import { ARCHETYPES } from "./archetypes";
 import { DEFAULT_LOGO, ICON_GROUPS, LOGO_NAMES, logoName, logoRef } from "./icons";
 
 describe("logo library", () => {
@@ -24,18 +25,9 @@ describe("logo library", () => {
     }
   });
 
-  it("covers the logo of every template of the server", () => {
-    // `brigid-identity/src/templates.rs` in `core`.
-    for (const name of [
-      "user",
-      "briefcase",
-      "code",
-      "palette",
-      "house-line",
-      "globe-hemisphere-west",
-      "detective",
-    ]) {
-      expect(LOGO_NAMES).toContain(name);
+  it("covers the logo of every archetype, and the default", () => {
+    for (const archetype of ARCHETYPES) {
+      expect(LOGO_NAMES).toContain(logoName(archetype.logo));
     }
     expect(logoName(DEFAULT_LOGO)).toBe("user");
   });
