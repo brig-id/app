@@ -7,6 +7,22 @@ From 0.2.0 on, each entry is written by release-please from the commits merged
 since the last release: there is no "Unreleased" section to keep by hand. What
 a list of commits does not say is in the pull requests it links to.
 
+## [0.10.0](https://github.com/brig-id/app/compare/v0.9.0...v0.10.0) (2026-11-23)
+
+
+### Features
+
+* **app:** ✨ identities as coloured cards, one page each, side by side; the administration on its own ([65de1e0](https://github.com/brig-id/app/commit/65de1e0020bf60052d2a67c65858356f48520b3d))
+
+
+### Bug Fixes
+
+* **app:** 🐛 Compare asks the server one identity at a time; its test opens it again when refused ([a01b02e](https://github.com/brig-id/app/commit/a01b02e69a719a64f3330ab92dd98713df8ba4e3))
+* **app:** 🐛 the deletion is said on the list; the accessibility suite opens an identity's page ([398f600](https://github.com/brig-id/app/commit/398f6001db36034e0ec3c5862a411fcbaef56d15))
+* **app:** 🐛 the list says which identity was deleted, through the tab's storage ([8abdbf3](https://github.com/brig-id/app/commit/8abdbf34436d68439100a46f6676c4a593df32e8))
+* **docs:** 🐛 leave the release-please changelog as it writes it ([30740d5](https://github.com/brig-id/app/commit/30740d5c19c6b01a4d9ee5c69b52fa041a7f4254))
+* **e2e:** 🐛 a success is said in a status, not an alert ([9724667](https://github.com/brig-id/app/commit/9724667c5a99429af563d9762d4b4488bf62ddec))
+
 ## [0.9.0](https://github.com/brig-id/app/compare/v0.8.0...v0.9.0) (2026-11-20)
 
 
