@@ -338,6 +338,10 @@ export const MESSAGES = {
   "nav.account": ["Account", "Compte"],
   "nav.admin": ["Administration", "Administration"],
   "nav.to-account": ["My account", "Mon compte"],
+  "nav.identities.compare": ["Compare", "Comparer"],
+  "nav.identities.new": ["New identity", "Nouvelle identité"],
+  "nav.account.export": ["Your data", "Vos données"],
+  "nav.account.delete": ["Delete the account", "Supprimer le compte"],
   "nav.signout": ["Sign out", "Se déconnecter"],
   "nav.signout.failed": [
     "You are still signed in: the server could not be told. Try again.",
@@ -442,8 +446,8 @@ export const MESSAGES = {
   ],
   "account.export.title": ["Export your data", "Exporter vos données"],
   "account.export.lead": [
-    "A file with your identities, their names and what they can share, and the applications each one signed in to. It is made here, in your browser, and anyone can read it: keep it somewhere private.",
-    "Un fichier avec vos identités, leurs noms et ce qu’elles peuvent partager, ainsi que les applications auxquelles chacune s’est connectée. Il est produit ici, dans votre navigateur, et n’importe qui peut le lire : rangez-le dans un endroit privé.",
+    "A file with your identities, their names and their information, and the applications each one signed in to. It is made here, in your browser, and anyone can read it: keep it somewhere private.",
+    "Un fichier avec vos identités, leurs noms et leurs informations, ainsi que les applications auxquelles chacune s’est connectée. Il est produit ici, dans votre navigateur, et n’importe qui peut le lire : rangez-le dans un endroit privé.",
   ],
   "account.export.button": ["Download my data", "Télécharger mes données"],
   "account.export.done": ["Downloaded: {file}", "Téléchargé : {file}"],
@@ -453,8 +457,8 @@ export const MESSAGES = {
   ],
   "account.delete.title": ["Delete your account", "Supprimer votre compte"],
   "account.delete.removes": [
-    "This removes from this server, for good: your account, your passkeys and your recovery code, every identity with what it can share, and what was recorded about the applications they signed in to.",
-    "Cela retire de ce serveur, définitivement : votre compte, vos clés d’accès et votre code de récupération, chaque identité avec ce qu’elle peut partager, et ce qui a été enregistré sur les applications auxquelles elles se sont connectées.",
+    "This removes from this server, for good: your account, your passkeys and your recovery code, every identity with its information, and what was recorded about the applications they signed in to.",
+    "Cela retire de ce serveur, définitivement : votre compte, vos clés d’accès et votre code de récupération, chaque identité avec ses informations, et ce qui a été enregistré sur les applications auxquelles elles se sont connectées.",
   ],
   "account.delete.keeps": [
     "It cannot reach the applications: each one keeps what it received, and the account you have there. Nobody can restore a deleted account, not even the administrator of this server.",
@@ -856,27 +860,55 @@ export const MESSAGES = {
   "identities.title.accent": ["many faces.", "plusieurs visages."],
   "identities.compare": ["Compare", "Comparer"],
   "identities.card.nothing": [
-    "Shares nothing: an identifier only.",
-    "Ne partage rien : un identifiant seulement.",
+    "No information yet: applications get an identifier only.",
+    "Aucune information pour l’instant : les applications ne reçoivent qu’un identifiant.",
   ],
-  "identities.card.shares": ["Can share: {list}.", "Peut partager : {list}."],
+  "identities.card.has": ["Holds: {list}.", "Contient : {list}."],
+  "identities.card.suggestion": ["{count} suggestion", "{count} suggestion"],
+  "identities.card.suggestions": ["{count} suggestions", "{count} suggestions"],
   "identity.eyebrow": ["Identity", "Identité"],
+  "identity.tab.summary": ["Summary", "Résumé"],
+  "identity.tab.info": ["My information", "Mes informations"],
+  "identity.tab.usage": ["Usage", "Utilisation"],
+  "identity.info.title": ["My information", "Mes informations"],
+  "identity.tips.title": ["Suggestions", "Suggestions"],
+  "identity.tip.set": ["Set {attribute}:", "Définir {attribute} :"],
+  "identity.tip.change": ["Change {attribute} to", "Changer {attribute} en"],
+  "identity.tip.from-device": [
+    "As this device says.",
+    "Comme l’indique cet appareil.",
+  ],
+  "identity.tip.from-identity": [
+    "As in {identity}. The same value in two identities makes them easier to match.",
+    "Comme dans {identity}. Une même valeur dans deux identités les rend plus faciles à recouper.",
+  ],
+  "identity.tip.apply": ["Set", "Définir"],
+  "identity.tip.ignore": ["Ignore", "Ignorer"],
+  "identity.glance.title": ["At a glance", "En bref"],
+  "identity.glance.no-info": ["Nothing yet.", "Rien pour l’instant."],
+  "identity.glance.info": ["{list}.", "{list}."],
+  "identity.glance.no-apps": [
+    "No application yet.",
+    "Aucune application pour l’instant.",
+  ],
+  "identity.glance.apps": ["{list}.", "{list}."],
+  "identity.glance.see": ["See", "Voir"],
 
   // -- the identities side by side -------------------------------------------------
   "compare.eyebrow": ["Side by side", "Côte à côte"],
   "compare.title.lead": ["Your identities,", "Vos identités,"],
   "compare.title.accent": ["kept apart.", "bien séparées."],
   "compare.lead": [
-    "What each one can share and where it is used. Only you see this page: to an application, two identities are two strangers.",
-    "Ce que chacune peut partager et où elle sert. Vous seul voyez cette page : pour une application, deux identités sont deux inconnus.",
+    "What each one holds and where it is used. Only you see this page: to an application, two identities are two strangers.",
+    "Ce que chacune contient et où elle sert. Vous seul voyez cette page : pour une application, deux identités sont deux inconnus.",
   ],
   "compare.caption": [
     "Your identities, their attributes and the applications that use them",
     "Vos identités, leurs attributs et les applications qui s’en servent",
   ],
   "compare.apart": [
-    "No value is carried by two identities: nothing they share could join them.",
-    "Aucune valeur n’est portée par deux identités : rien de ce qu’elles partagent ne peut les relier.",
+    "brig·id keeps your identities apart. But the same value entered in two of them makes it easier for data brokers to match them: keep them different where you can.",
+    "brig·id isole vos identités. Mais une même valeur renseignée dans deux d’entre elles facilite le recoupement par les courtiers en données : gardez-les différentes autant que possible.",
   ],
   "compare.same.lead": [
     "Some values are the same in two identities. An application that receives one from both can tell they are you:",
@@ -904,7 +936,7 @@ export const MESSAGES = {
     "Aucune identité pour l’instant. Créez-en une pour vous connecter à des applications.",
   ],
   "identity.form.edit": ["Edit “{name}”", "Modifier « {name} »"],
-  "identity.form.template": ["Start from", "Partir de"],
+  "identity.form.template": ["Archetype", "Archétype"],
   "identity.form.template.hint": [
     "A starting point: it fills the fields below, and you can change everything.",
     "Un point de départ : il remplit les champs ci-dessous, et vous pouvez tout modifier.",
@@ -927,9 +959,20 @@ export const MESSAGES = {
     "Supprimer « {name} » ? Cette action est définitive.",
   ],
   "identity.delete.yes": ["Yes, delete", "Oui, supprimer"],
-  "identity.open": [
-    "What it shares, and with whom",
-    "Ce qu’elle partage, et avec qui",
+  "identity.open": ["Open", "Ouvrir"],
+  "title.new-identity": ["New identity", "Nouvelle identité"],
+  "new.eyebrow": ["New identity", "Nouvelle identité"],
+  "new.title.lead": ["Who will you", "Qui serez-vous"],
+  "new.title.accent": ["be this time?", "cette fois-ci ?"],
+  "new.lead": [
+    "Pick an archetype and the identity is ready; you can change everything afterwards. Or start from a blank page.",
+    "Choisissez un archétype et l’identité est prête ; vous pourrez tout changer ensuite. Ou partez d’une page blanche.",
+  ],
+  "new.archetypes": ["Archetypes", "Archétypes"],
+  "new.manual": ["By hand", "À la main"],
+  "new.all-used": [
+    "You already have an identity for every archetype. Make one by hand.",
+    "Vous avez déjà une identité pour chaque archétype. Créez-en une à la main.",
   ],
 
   // -- one identity: attributes, and what uses it ---------------------------------
@@ -942,10 +985,7 @@ export const MESSAGES = {
     "Its name, icon and description are for you only. No application receives them.",
     "Son nom, son icône et sa description ne sont que pour vous. Aucune application ne les reçoit.",
   ],
-  "identity.attributes.title": [
-    "What it can share",
-    "Ce qu’elle peut partager",
-  ],
+  "identity.attributes.title": ["My information", "Mes informations"],
   "identity.attributes.lead": [
     "Information you put on this identity so that applications can ask for it. An application receives a piece of it only once you have accepted, with the value you saw.",
     "Des informations que vous placez sur cette identité pour que des applications puissent les demander. Une application n’en reçoit une que lorsque vous l’avez accepté, avec la valeur que vous avez vue.",
@@ -955,8 +995,8 @@ export const MESSAGES = {
     "Rien pour l’instant : les applications reçoivent un identifiant, et rien d’autre.",
   ],
   "identity.attributes.edit": [
-    "Edit what it can share",
-    "Modifier ce qu’elle peut partager",
+    "Edit my information",
+    "Modifier mes informations",
   ],
   "identity.attributes.linking": [
     "The same last name, username or address on two identities lets applications understand that they belong to one person. Nothing can undo that once it is shared.",
@@ -1046,38 +1086,116 @@ export const MESSAGES = {
   "attribute.locale": ["Language", "Langue"],
   "attribute.zoneinfo": ["Time zone", "Fuseau horaire"],
 
+  "template.public": ["Public", "Publique"],
+  "template.public.about": [
+    "For everyone you come across online.",
+    "Pour tous ceux que vous croisez en ligne.",
+  ],
   "template.personal": ["Personal", "Personnelle"],
   "template.personal.about": [
-    "Kept strictly for yourself.",
-    "Strictement pour vous.",
-  ],
-  "template.work": ["Work", "Travail"],
-  "template.work.about": [
-    "Work accounts and tools.",
-    "Comptes et outils de travail.",
-  ],
-  "template.developer": ["Developer", "Développement"],
-  "template.developer.about": [
-    "Developer tooling.",
-    "Outils de développement.",
-  ],
-  "template.creative": ["Creative", "Création"],
-  "template.creative.about": [
-    "Creative tools and communities.",
-    "Outils et communautés de création.",
+    "Yours alone: not even aunt Monique gets in.",
+    "Rien qu’à vous : même tata Monique n’y a pas droit.",
   ],
   "template.family": ["Family", "Famille"],
   "template.family.about": [
-    "Shared within a restricted circle.",
-    "Partagée dans un cercle restreint.",
+    "Family life: the school, the doctor, the group photos.",
+    "La vie de famille : l’école, le médecin, les photos de groupe.",
   ],
-  "template.public": ["Public", "Publique"],
-  "template.public.about": ["Visible to everyone.", "Visible de tous."],
+  "template.friends": ["Friends", "Amis"],
+  "template.friends.about": [
+    "Plans, games and group chats with friends.",
+    "Les sorties, les jeux et les groupes entre amis.",
+  ],
+  "template.shopping": ["Shopping", "Achats"],
+  "template.shopping.about": [
+    "Online shops and deliveries, nothing more.",
+    "Les boutiques en ligne et les livraisons, rien de plus.",
+  ],
+  "template.work": ["Work", "Travail"],
+  "template.work.about": [
+    "All the work stuff: serious, no fun.",
+    "Tout le work stuff : sérieux, et sans fun.",
+  ],
+  "template.freelance": ["Freelance", "Indépendant"],
+  "template.freelance.about": [
+    "Clients, quotes and invoices.",
+    "Les clients, les devis et les factures.",
+  ],
+  "template.job-search": ["Job search", "Recherche d’emploi"],
+  "template.job-search.about": [
+    "Job boards and applications, ready for the interview.",
+    "Les sites d’emploi et les candidatures, prête pour l’entretien.",
+  ],
+  "template.student": ["Student", "Études"],
+  "template.student.about": [
+    "Courses, campus and exam season.",
+    "Les cours, le campus et les partiels.",
+  ],
+  "template.volunteering": ["Volunteering", "Bénévolat"],
+  "template.volunteering.about": [
+    "The associations and causes you give time to.",
+    "Les associations et les causes auxquelles vous donnez du temps.",
+  ],
+  "template.gaming": ["Gaming", "Jeu vidéo"],
+  "template.gaming.about": [
+    "Lobbies, clans and late nights.",
+    "Les lobbies, les clans et les nuits blanches.",
+  ],
+  "template.music": ["Music", "Musique"],
+  "template.music.about": [
+    "Playlists, concerts and the band.",
+    "Les playlists, les concerts et le groupe.",
+  ],
+  "template.sport": ["Sport", "Sport"],
+  "template.sport.about": [
+    "Training, the club and race results.",
+    "Les entraînements, le club et les résultats de course.",
+  ],
+  "template.travel": ["Travel", "Voyage"],
+  "template.travel.about": [
+    "Tickets, bookings and the next trip.",
+    "Les billets, les réservations et le prochain voyage.",
+  ],
+  "template.reading": ["Reading", "Lecture"],
+  "template.reading.about": [
+    "Books, libraries and reading lists.",
+    "Les livres, les bibliothèques et les listes de lecture.",
+  ],
+  "template.creative": ["Creative", "Création"],
+  "template.creative.about": [
+    "Sketches, projects and creative circles.",
+    "Les esquisses, les projets et les cercles créatifs.",
+  ],
+  "template.developer": ["Developer", "Développement"],
+  "template.developer.about": [
+    "Code, forges and package registries.",
+    "Le code, les forges et les registres de paquets.",
+  ],
+  "template.social": ["Social", "Réseaux sociaux"],
+  "template.social.about": [
+    "Social networks, with the face you choose.",
+    "Les réseaux sociaux, avec le visage que vous choisissez.",
+  ],
+  "template.forums": ["Forums", "Forums"],
+  "template.forums.about": [
+    "Forums and comment threads, under a pen name.",
+    "Les forums et les commentaires, sous un pseudonyme.",
+  ],
   "template.isolated": ["Isolated", "Isolée"],
   "template.isolated.about": [
-    "Unlinked from everything else.",
-    "Sans lien avec tout le reste.",
+    "Detective mode: tied to nothing else.",
+    "Mode détective : reliée à rien d’autre.",
   ],
+  "template.testing": ["Testing", "Essais"],
+  "template.testing.about": [
+    "Sign-ups to try something out, then forget.",
+    "Les inscriptions pour essayer, puis oublier.",
+  ],
+  "archetypes.group.everyday": ["Everyday", "Au quotidien"],
+  "archetypes.group.work": ["Work and studies", "Travail et études"],
+  "archetypes.group.leisure": ["Leisure", "Loisirs"],
+  "archetypes.group.online": ["Online", "En ligne"],
+  "archetypes.group.other": ["Others", "Autres"],
 
   "icons.group.people": ["People", "Personnes"],
   "icons.group.work": ["Work and study", "Travail et études"],

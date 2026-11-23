@@ -1,52 +1,52 @@
 import { $, component$, useSignal, useVisibleTask$ } from "@qwik.dev/core";
-import { type DocumentHead, useNavigate } from "@qwik.dev/router";
-import {
-  type FormValues,
-  IdentityForm,
-} from "~/components/account/identity-form";
+import { type DocumentHead, Link, useNavigate } from "@qwik.dev/router";
 import { Callout } from "~/components/ui/callout";
 import { Icon } from "~/components/ui/icon";
 import { IdentityLogo } from "~/components/ui/identity-logo";
 import { both, type Message, Said, T, titled } from "~/i18n";
-import {
-  createIdentity,
-  listIdentities,
-  listTemplates,
-  SessionEndedError,
-} from "~/lib/api";
-import type { Identity, IdentityTemplate } from "~/lib/api-types";
-import { ATTRIBUTES, attributeLabel } from "~/lib/attributes";
+import { listIdentities, SessionEndedError } from "~/lib/api";
+import type { Identity } from "~/lib/api-types";
+import { ATTRIBUTES, attributeLabel, deviceValue } from "~/lib/attributes";
+import { takeDeleted } from "~/lib/deleted";
 import { failure } from "~/lib/errors";
 import { hueAt } from "~/lib/hues";
-import { takeDeleted } from "~/lib/deleted";
-import { DEFAULT_LOGO } from "~/lib/icons";
+import { ignoredSuggestions, suggestions } from "~/lib/suggestions";
 
 type Notice = { kind: "success" | "danger"; message: Message } | null;
 
+/**
+ * The identities, a card each in its own colour. A card opens the
+ * identity's page; a new one has a page of its own (`/identities/new/`).
+ */
 export default component$(() => {
   const nav = useNavigate();
   const identities = useSignal<Identity[]>([]);
-  const templates = useSignal<IdentityTemplate[]>([]);
+  /** How many suggestions each identity's summary has, by id. */
+  const pending = useSignal<Record<string, number>>({});
   const loaded = useSignal(false);
-  const creating = useSignal(false);
   const notice = useSignal<Notice>(null);
-
-  const fail = $(async (err: unknown) => {
-    if (err instanceof SessionEndedError) {
-      await nav("/");
-      return;
-    }
-    notice.value = {
-      kind: "danger",
-      message: failure(err, "error.unexpected"),
-    };
-  });
 
   const refresh = $(async () => {
     try {
-      identities.value = await listIdentities();
+      const all = await listIdentities();
+      identities.value = all;
+      const device = {
+        locale: deviceValue("locale"),
+        zoneinfo: deviceValue("zoneinfo"),
+      };
+      const ignored = ignoredSuggestions();
+      pending.value = Object.fromEntries(
+        all.map((i) => [i.id, suggestions(i, all, device, ignored).length]),
+      );
     } catch (err) {
-      await fail(err);
+      if (err instanceof SessionEndedError) {
+        await nav("/");
+        return;
+      }
+      notice.value = {
+        kind: "danger",
+        message: failure(err, "error.unexpected"),
+      };
     } finally {
       loaded.value = true;
     }
@@ -63,68 +63,34 @@ export default component$(() => {
       };
     }
     await refresh();
-    try {
-      templates.value = await listTemplates();
-    } catch {
-      // Creating without a template still works.
-    }
-  });
-
-  const create = $(async (values: FormValues, template: string | null) => {
-    try {
-      await createIdentity({
-        ...(template ? { template } : {}),
-        name: values.name,
-        logo: values.logo,
-        description: values.description,
-      });
-      creating.value = false;
-      notice.value = {
-        kind: "success",
-        message: { id: "identity.created", p: { name: values.name.trim() } },
-      };
-      await refresh();
-    } catch (err) {
-      await fail(err);
-    }
   });
 
   return (
-    <div class="page stack stack--loose">
-      <div class="split">
-        <div class="stack stack--tight grow">
-          <p class="eyebrow">
-            <T id="identities.eyebrow" />
-          </p>
-          <h1>
-            <T id="identities.title.lead" />{" "}
-            <span class="accent spectrum">
-              <T id="identities.title.accent" />
-            </span>
-          </h1>
-          <p class="quiet">
-            <T id="identities.lead" />
-          </p>
-        </div>
-        {!creating.value && (
-          <div class="cluster">
-            {identities.value.length > 1 && (
-              <a class="button" href="/identities/compare/">
-                <Icon name="columns" />
-                <T id="identities.compare" />
-              </a>
-            )}
-            <button
-              type="button"
-              class="button button--primary"
-              onClick$={() => {
-                creating.value = true;
-              }}
-            >
-              <Icon name="plus" />
-              <T id="identities.new" />
-            </button>
-          </div>
+    <div class="page page--wide stack stack--loose">
+      <div class="stack stack--tight">
+        <p class="eyebrow">
+          <T id="identities.eyebrow" />
+        </p>
+        <h1>
+          <T id="identities.title.lead" />{" "}
+          <span class="accent spectrum">
+            <T id="identities.title.accent" />
+          </span>
+        </h1>
+        <p class="quiet">
+          <T id="identities.lead" />
+        </p>
+      </div>
+      <div class="cluster">
+        <Link class="button button--primary" href="/identities/new/">
+          <Icon name="plus" />
+          <T id="identities.new" />
+        </Link>
+        {identities.value.length > 1 && (
+          <Link class="button" href="/identities/compare/">
+            <Icon name="columns" />
+            <T id="identities.compare" />
+          </Link>
         )}
       </div>
 
@@ -134,20 +100,7 @@ export default component$(() => {
         </Callout>
       )}
 
-      {creating.value && (
-        <section class="card">
-          <IdentityForm
-            initial={{ name: "", logo: DEFAULT_LOGO, description: "" }}
-            templates={templates.value}
-            onSubmit$={create}
-            onCancel$={$(() => {
-              creating.value = false;
-            })}
-          />
-        </section>
-      )}
-
-      {loaded.value && identities.value.length === 0 && !creating.value && (
+      {loaded.value && identities.value.length === 0 && (
         <p class="quiet">
           <T id="identities.empty" />
         </p>
@@ -162,6 +115,7 @@ export default component$(() => {
             en: present.map((n) => both(attributeLabel(n)).en).join(", "),
             fr: present.map((n) => both(attributeLabel(n)).fr).join(", "),
           };
+          const tips = pending.value[identity.id] ?? 0;
           return (
             <li
               key={identity.id}
@@ -180,9 +134,22 @@ export default component$(() => {
                 {present.length === 0 ? (
                   <T id="identities.card.nothing" />
                 ) : (
-                  <T id="identities.card.shares" p={{ list }} />
+                  <T id="identities.card.has" p={{ list }} />
                 )}
               </p>
+              {tips > 0 && (
+                <p class="tip-badge small">
+                  <Icon name="lightbulb" />
+                  <T
+                    id={
+                      tips === 1
+                        ? "identities.card.suggestion"
+                        : "identities.card.suggestions"
+                    }
+                    p={{ count: tips }}
+                  />
+                </p>
+              )}
               <a
                 class="identity-card-link small"
                 href={`/identities/details/?id=${encodeURIComponent(identity.id)}`}

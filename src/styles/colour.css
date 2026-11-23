@@ -154,6 +154,7 @@
 
 .identity-hero {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--p-space-4);
   padding-bottom: var(--p-space-4);
@@ -162,6 +163,21 @@
 
 .identity-hero .identity-logo {
   color: var(--hue);
+}
+
+.identity-hero > .grow {
+  min-width: min(100%, 14rem);
+}
+
+/* On a phone the actions go under the name rather than squeezing it. */
+@media (max-width: 40rem) {
+  .identity-hero-actions {
+    flex-basis: 100%;
+  }
+
+  .tab {
+    padding-inline: var(--p-space-3);
+  }
 }
 
 /* -- comparison ---------------------------------------------------------------- */
@@ -204,28 +220,241 @@
   color: var(--text-faint);
 }
 
-/* -- administration -------------------------------------------------------------- */
+/* -- the frame: account and administration ---------------------------------------- */
 
-.mode-badge {
+.account-header .brand {
   display: inline-flex;
   align-items: center;
-  gap: var(--p-space-1);
-  padding: 0.15rem 0.6rem;
-  border: 1px solid var(--warning-border);
+  gap: var(--p-space-2);
+}
+
+.account-header .brand img {
+  display: block;
+  border-radius: 7px;
+}
+
+/* For an administrator: where one is, the account or the administration. */
+.mode-pills {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border);
   border-radius: var(--p-radius-full);
+  background: var(--surface);
+  align-self: flex-start;
+}
+
+.mode-pills a {
+  padding: 0.2rem 0.8rem;
+  border-radius: var(--p-radius-full);
+  color: var(--text-quiet);
+  font-size: var(--p-text-s);
+  font-weight: 540;
+  text-decoration: none;
+}
+
+.mode-pills a:hover {
+  color: var(--text);
+}
+
+.mode-pills a[aria-current="page"] {
+  background: var(--surface-raised);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.account[data-mode="admin"] .mode-pills a[aria-current="page"] {
   background: var(--warning-surface);
   color: var(--warning);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  box-shadow: inset 0 0 0 1px var(--warning-border);
 }
 
 .account[data-mode="admin"] .account-header {
   border-bottom-color: var(--warning-border);
 }
 
-.mode-switch {
-  margin-top: var(--p-space-3);
-  padding-top: var(--p-space-3);
-  border-top: 1px solid var(--border);
+/* A section's own pages, under it. */
+.account-nav .is-here:not([aria-current="page"]) {
+  color: var(--text);
+}
+
+.account-nav .subnav {
+  display: none;
+  flex-direction: column;
+  gap: 1px;
+  margin: var(--p-space-1) 0 var(--p-space-2) calc(var(--p-space-4) + 0.6rem);
+  padding: 0 0 0 var(--p-space-3);
+  border-left: 1px solid var(--border);
+}
+
+.account-nav .subnav a {
+  min-height: 2.1rem;
+  padding: 0 var(--p-space-3);
+  font-size: var(--p-text-s);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account-nav .subnav a[aria-current="page"] {
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+@media (min-width: 56rem) {
+  .account-nav .subnav {
+    display: flex;
+  }
+}
+
+/* Pages that lay out several things side by side. */
+.page--wide {
+  max-width: 64rem;
+}
+
+/* -- identities: tabs, suggestions, archetypes ------------------------------------- */
+
+.mode-pills button {
+  padding: 0.3rem 0.9rem;
+  border: 0;
+  border-radius: var(--p-radius-full);
+  background: none;
+  color: var(--text-quiet);
+  font: inherit;
+  font-size: var(--p-text-s);
+  font-weight: 540;
+  cursor: pointer;
+}
+
+.mode-pills button[aria-pressed="true"] {
+  background: var(--surface-raised);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.tabs[role="tablist"] {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  gap: var(--p-space-1);
+  /* A shadow, not a border: the row scrolls on a phone, and a scrolling
+     box would clip a tab's underline drawn over its border. */
+  box-shadow: inset 0 -1px 0 var(--border);
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--p-space-2);
+  flex: none;
+  padding: var(--p-space-2) var(--p-space-4);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-quiet);
+  font: inherit;
+  font-weight: 540;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab[aria-selected="true"] {
+  border-bottom-color: var(--hue, var(--accent));
+  color: var(--text);
+}
+
+.tab-count {
+  min-width: 1.4em;
+  padding: 0 0.35em;
+  border-radius: var(--p-radius-full);
+  background: var(--hue, var(--accent));
+  color: var(--surface-page);
+  font-size: 0.75rem;
+  font-weight: 650;
+  text-align: center;
+}
+
+.tips {
+  display: grid;
+  gap: var(--p-space-3);
+}
+
+.tip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--p-space-3);
+  align-items: center;
+  padding: var(--p-space-3) var(--p-space-4);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--hue, var(--accent));
+  border-radius: var(--p-radius-m);
+}
+
+.tip-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--p-space-1);
+  align-self: flex-start;
+  padding: 0.1rem 0.6rem;
+  border-radius: var(--p-radius-full);
+  background: color-mix(in oklch, var(--hue, var(--accent)) 16%, transparent);
+  color: var(--text);
+}
+
+.tip-badge .icon {
+  color: var(--hue, var(--accent));
+}
+
+.archetypes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
+  gap: var(--p-space-3);
+}
+
+.archetype {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto 1fr;
+  gap: var(--p-space-1) var(--p-space-3);
+  align-items: center;
+  align-content: start;
+  width: 100%;
+  height: 100%;
+  padding: var(--p-space-4);
+  color: var(--text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    border-color var(--p-fast) var(--ease),
+    transform var(--p-fast) var(--ease);
+}
+
+.archetype .icon {
+  font-size: 1.6rem;
+}
+
+.archetype-name {
+  font-weight: 600;
+}
+
+.archetype-about {
+  grid-column: 1 / -1;
+  align-self: start;
+}
+
+.archetype:hover:not(:disabled) {
+  border-color: var(--border-strong);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .archetype:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+}
+
+.about-page {
+  max-width: 44rem;
 }

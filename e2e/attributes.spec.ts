@@ -126,10 +126,9 @@ test("an application receives what was ticked, nothing else, and it can be withd
   // -- the identity's page: what it shares, and with whom ----------------------
   await page.goto("/identities/");
   await waitForIdentities(page, 3);
-  await page
-    .getByRole("link", { name: "What it shares, and with whom (Work)" })
-    .click();
+  await page.getByRole("link", { name: "Open (Work)" }).click();
   await expect(page.getByRole("heading", { name: "Work", level: 1 })).toBeVisible();
+  await page.getByRole("tab", { name: "Usage" }).click();
   await expect(page.getByRole("heading", { name: "Used by" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Connected to" })).toBeVisible();
   const application = page.locator('[data-application="Field Notes"]');
@@ -138,7 +137,8 @@ test("an application receives what was ticked, nothing else, and it can be withd
 
   // A changed value is said to be no longer sent. (A button shown a moment
   // ago may not answer its first click: each one is pressed until it did.)
-  await page.getByRole("button", { name: "Edit What it can share" }).click();
+  await page.getByRole("tab", { name: "My information" }).click();
+  await page.getByRole("button", { name: "Edit My information" }).click();
   await page.getByLabel("E-mail address").fill("ada@new.example");
   await clickUntil(
     page,
@@ -149,6 +149,7 @@ test("an application receives what was ticked, nothing else, and it can be withd
         { timeout: 3000 },
       ),
   );
+  await page.getByRole("tab", { name: "Usage" }).click();
   await expect(
     application.getByText(/You changed this value since/),
   ).toBeVisible();
@@ -178,9 +179,8 @@ test("an application receives what was ticked, nothing else, and it can be withd
   // Everything withdrawn, after a confirmation that says what it cannot do.
   await page.goto("/identities/");
   await waitForIdentities(page, 3);
-  await page
-    .getByRole("link", { name: "What it shares, and with whom (Work)" })
-    .click();
+  await page.getByRole("link", { name: "Open (Work)" }).click();
+  await page.getByRole("tab", { name: "Usage" }).click();
   await clickUntil(
     page,
     application.getByRole("button", {

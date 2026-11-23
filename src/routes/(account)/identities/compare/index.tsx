@@ -69,7 +69,7 @@ export default component$(() => {
   const sharedSites = [...sites.values()].filter((s) => s.count > 1);
 
   return (
-    <div class="page stack stack--loose">
+    <div class="page page--wide stack stack--loose">
       <a class="back-link small" href="/identities/">
         <Icon name="arrow-left" />
         <T id="identity.back" />
@@ -103,34 +103,35 @@ export default component$(() => {
 
       {loaded.value && all.length > 0 && (
         <>
-          {same.length === 0 ? (
-            <Callout kind="success">
-              <T id="compare.apart" />
-            </Callout>
-          ) : (
-            <Callout kind="warning">
-              <div class="stack stack--tight">
-                <p>
-                  <T id="compare.same.lead" />
-                </p>
-                <ul class="stack stack--tight">
-                  {same.map((s) => (
-                    <li key={`${s.name}-${s.identities[0]!.id}`}>
-                      <T
-                        id="compare.same"
-                        p={{
-                          attribute: both(attributeLabel(s.name)),
-                          identities: s.identities
-                            .map((i) => i.name)
-                            .join(", "),
-                        }}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </Callout>
-          )}
+          <Callout kind="warning">
+            <div class="stack stack--tight">
+              <p>
+                <T id="compare.apart" />
+              </p>
+              {same.length > 0 && (
+                <>
+                  <p>
+                    <T id="compare.same.lead" />
+                  </p>
+                  <ul class="stack stack--tight">
+                    {same.map((s) => (
+                      <li key={`${s.name}-${s.identities[0]!.id}`}>
+                        <T
+                          id="compare.same"
+                          p={{
+                            attribute: both(attributeLabel(s.name)),
+                            identities: s.identities
+                              .map((i) => i.name)
+                              .join(", "),
+                          }}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
+          </Callout>
 
           <div class="compare-wrap card">
             <table class="compare">
