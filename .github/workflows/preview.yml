@@ -1,0 +1,163 @@
+name: Preview
+
+# Runs each pull request for real, for a while, and comments its address:
+# the released seedling image serves this pull request's build and the API from
+# one origin, as in production, and a Cloudflare quick tunnel gives it a public
+# HTTPS address (https://<random>.trycloudflare.com). No account, no token, no
+# secret: the server, its key and its database live and die with the job.
+#
+# The address is temporary: it lasts PREVIEW_MINUTES, and a new push, closing
+# the pull request or cancelling the run ends it. To get one again, re-run the
+# workflow from the pull request's checks. Each run starts from an empty
+# database: sign up again.
+#
+# The server is the latest released image, not one built from a branch: a pull
+# request that needs an API not released yet runs against the API as released.
+#
+# The setup link that makes the first administrator is kept out of the log,
+# which is public: the administration pages cannot be tried here.
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+
+permissions:
+  contents: read
+
+# One preview per pull request: a new push or closing it stops the running one.
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  PREVIEW_MINUTES: 120
+  SEEDLING_IMAGE: ghcr.io/brig-id/seedling:latest
+  CLOUDFLARED_VERSION: 2026.11.0
+  CLOUDFLARED_SHA256: 51f7c68b57ed7269164075d7e789efce5b59355982f06392deeb037d982a51fd
+
+jobs:
+  preview:
+    name: Run the preview
+    # Only branches of this repository: a fork would hold a runner for hours.
+    if: >-
+      github.event.action != 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: helpers4/action/setup-pnpm@6fddd178620e7325d446a246c38a44f979569fc4 # main @ 2026-07-29
+        with:
+          node-version: "24"
+          working-directory: .
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Open the tunnel
+        id: tunnel
+        run: |
+          curl -fsSL -o cloudflared \
+            "https://github.com/cloudflare/cloudflared/releases/download/$CLOUDFLARED_VERSION/cloudflared-linux-amd64"
+          echo "$CLOUDFLARED_SHA256  cloudflared" | sha256sum -c -
+          chmod +x cloudflared
+          # The tunnel comes first: the server must know its public address
+          # (WebAuthn's relying party, the cookie, the origin check).
+          nohup ./cloudflared tunnel --no-autoupdate --url http://127.0.0.1:8080 > cloudflared.log 2>&1 &
+          for _ in $(seq 1 60); do
+            url=$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' cloudflared.log | head -n 1 || true)
+            [ -n "$url" ] && break
+            sleep 1
+          done
+          if [ -z "$url" ]; then
+            echo "::error::The tunnel gave no address."
+            cat cloudflared.log
+            exit 1
+          fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Start the server
+        env:
+          URL: ${{ steps.tunnel.outputs.url }}
+        run: |
+          key=$(openssl rand -hex 32)
+          echo "::add-mask::$key"
+          # Reachable from this machine only, through the tunnel. The tunnel
+          # sets x-forwarded-for: trusting it gives each visitor their own
+          # rate limit instead of one for all.
+          docker run -d --name seedling -p 127.0.0.1:8080:8080 \
+            --tmpfs /data:mode=1777 \
+            -v "$PWD/dist:/ui/dist:ro" \
+            -e BRIGID_MASTER_KEY="$key" \
+            -e BRIGID_SERVER__DOMAIN="${URL#https://}" \
+            -e BRIGID_SERVER__PUBLIC_URL="$URL" \
+            -e BRIGID_SERVER__HOST=0.0.0.0 \
+            -e BRIGID_SERVER__PORT=8080 \
+            -e BRIGID_SERVER__UI_DIST_DIR=/ui/dist \
+            -e BRIGID_DATABASE__PATH=/data/brigid.db \
+            -e BRIGID_SECURITY__TRUST_FORWARDED_FOR=true \
+            "$SEEDLING_IMAGE" > /dev/null
+          for _ in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:8080/health > /dev/null 2>&1 && break
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8080/health > /dev/null
+
+      - name: Check that the server serves this build
+        env:
+          URL: ${{ steps.tunnel.outputs.url }}
+        run: |
+          # The image carries its own interface and falls back on it when the
+          # directory cannot be served: the preview would then show the release,
+          # not this pull request.
+          curl -fsS -o served.html http://127.0.0.1:8080/
+          cmp -s served.html dist/index.html || {
+            echo "::error::The server does not serve this build."
+            exit 1
+          }
+          # The address answers from outside too (a new quick tunnel can take
+          # a few seconds to be reachable).
+          for _ in $(seq 1 30); do
+            curl -fsS -o /dev/null "$URL/health" && exit 0
+            sleep 2
+          done
+          echo "::error::$URL does not answer."
+          exit 1
+
+      - name: Comment the address
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          URL: ${{ steps.tunnel.outputs.url }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          version=$(docker run --rm "$SEEDLING_IMAGE" --version | awk '{ print $2 }' || true)
+          until=$(date -u -d "+$PREVIEW_MINUTES minutes" '+%H:%M UTC')
+          gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --edit-last --create-if-none --body \
+            "Preview: $URL — commit ${SHA:0:7}, served by seedling ${version:-latest}, until $until. An empty server: sign up first. Re-run the Preview workflow to get a new one."
+
+      - name: Keep it running
+        run: sleep $((PREVIEW_MINUTES * 60))
+
+      - name: Server log
+        if: always()
+        run: |
+          # Without the setup link: whoever reads this public log would become
+          # the preview's administrator.
+          docker logs seedling 2>&1 | sed 's/#link=.*/#link=***/' || true
+
+      - name: Say it has ended
+        if: always() && steps.tunnel.outputs.url != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --edit-last --create-if-none --body \
+            "Preview of ${SHA:0:7} ended ($(date -u '+%H:%M UTC')). Re-run the Preview workflow to get a new one." || true
