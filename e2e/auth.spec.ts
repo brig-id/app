@@ -316,9 +316,14 @@ test.describe("identities page", () => {
     await expect(cards).toHaveCount(3);
     await expect(page.getByRole("status")).toContainText("“Famille” deleted.");
 
-    // Side by side.
+    // Side by side. The page asks the server once per identity: refused for
+    // going too fast after all the above, it says so, and a person would
+    // open it again a moment later.
     await page.getByRole("link", { name: "Compare" }).click();
-    await expect(page.getByRole("table")).toBeVisible();
+    await expect(async () => {
+      if (!(await page.getByRole("table").isVisible())) await page.reload();
+      await expect(page.getByRole("table")).toBeVisible({ timeout: 4000 });
+    }).toPass({ timeout: 40_000, intervals: [3500] });
     await expect(page.locator(".compare thead .identity-name")).toHaveText([
       "Public",
       "Personal",
