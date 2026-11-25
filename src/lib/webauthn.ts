@@ -12,6 +12,7 @@ import type {
   PublicKeyCredentialJSON,
   RegisterPublicKeyCredentialJSON,
 } from "./api-types";
+import { type LimitReached, readRefusal } from "./refusal";
 
 /**
  * Why passkeys can or can't work here (app#13):
@@ -39,6 +40,8 @@ export class WebAuthnError extends Error {
   detail: string | null;
   /** The server's name for a refusal the interface acts on. */
   code: string | null;
+  /** The limit of the server the request reached (`limit_reached`). */
+  limit: LimitReached | null;
 
   constructor(
     kind: WebAuthnErrorKind,
@@ -46,12 +49,14 @@ export class WebAuthnError extends Error {
     status: number | null = null,
     detail: string | null = null,
     code: string | null = null,
+    limit: LimitReached | null = null,
   ) {
     super(message);
     this.kind = kind;
     this.status = status;
     this.detail = detail;
     this.code = code;
+    this.limit = limit;
     this.name = "WebAuthnError";
   }
 }
@@ -91,24 +96,14 @@ async function apiRequest<T>(
   }
 
   if (!response.ok) {
-    let detail: string | null = null;
-    let code: string | null = null;
-    try {
-      const data = JSON.parse(await response.text()) as {
-        error?: string;
-        code?: string;
-      };
-      if (data.error) detail = data.error;
-      if (data.code) code = data.code;
-    } catch {
-      // no explanation given
-    }
+    const { detail, code, limit } = readRefusal(await response.text());
     throw new WebAuthnError(
       "api",
       detail ?? `Request failed with status ${response.status}`,
       response.status,
       detail,
       code,
+      limit,
     );
   }
 

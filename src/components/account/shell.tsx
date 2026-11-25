@@ -59,6 +59,11 @@ const ADMIN_LINKS: readonly NavLink[] = [
     sub: [{ href: "/admin/websites/", label: "admin.tab.websites" }],
   },
   { href: "/admin/sign-up/", label: "admin.tab.signup", icon: "plus" },
+  {
+    href: "/admin/limits/",
+    label: "admin.tab.limits",
+    icon: "sliders-horizontal",
+  },
   { href: "/admin/log/", label: "admin.tab.log", icon: "list-bullets" },
   { href: "/admin/about/", label: "nav.about", icon: "info" },
 ];

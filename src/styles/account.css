@@ -435,6 +435,18 @@
   grid-column: 2;
 }
 
+/* The limits of the server: one card each. */
+.limits {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-3);
+}
+
+/* A few digits: the field need not take the width of the card. */
+.limit-value {
+  max-width: 10rem;
+}
+
 @media (max-width: 30rem) {
   .need {
     grid-template-columns: minmax(0, 1fr);

@@ -4,6 +4,7 @@
  */
 import type { Message, MessageId } from "~/i18n";
 import { ApiError } from "./api";
+import { limitReachedMessage } from "./limits";
 import { WebAuthnError } from "./webauthn";
 
 /** What the server's own names for its refusals mean to a person. */
@@ -12,9 +13,14 @@ const REFUSALS: Record<string, MessageId> = {
   invitation_required: "signup.invitation",
   link_invalid: "error.link-invalid",
   signup_closed: "signup.closed",
+  invalid_limit: "admin.limits.invalid",
 };
 
 export function failure(err: unknown, fallback: MessageId): Message {
+  // A limit of the server, reached: said plainly, whatever the status.
+  if ((err instanceof WebAuthnError || err instanceof ApiError) && err.limit) {
+    return limitReachedMessage(err.limit);
+  }
   if (
     (err instanceof WebAuthnError || err instanceof ApiError) &&
     err.code !== null &&

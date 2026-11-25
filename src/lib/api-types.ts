@@ -325,6 +325,23 @@ export interface SignupSettings {
   invitations: Invitation[];
 }
 
+/** A limit of the server: what one account, or one network address, may
+ * do. A newer server may have limits this interface has no words for. */
+export interface ServerLimit {
+  /** `identities_per_account`, `passkeys_per_account`,
+   * `sign_ups_per_ip_per_day`… */
+  name: string;
+  value: number;
+  /** The value of a server nobody changed it on. */
+  default: number;
+  /** The most it can be set to. The least is 1. */
+  max: number;
+}
+
+export interface LimitsSettings {
+  limits: ServerLimit[];
+}
+
 export interface AdminLogEntry {
   /** Unix seconds. */
   at: number;

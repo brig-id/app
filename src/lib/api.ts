@@ -18,6 +18,7 @@ import type {
   SessionResponse,
   UpdateIdentityRequest,
 } from "./api-types";
+import { type LimitReached, readRefusal } from "./refusal";
 
 /** The session is over: sign in again. */
 export class SessionEndedError extends Error {
@@ -35,16 +36,20 @@ export class ApiError extends Error {
   /** The server's name for a refusal the interface acts on
    * (`confirmation_required`, `suspended`, `link_invalid`…). */
   code: string | null;
+  /** The limit of the server the request reached (`limit_reached`). */
+  limit: LimitReached | null;
   constructor(
     status: number,
     message: string,
     detail: string | null = null,
     code: string | null = null,
+    limit: LimitReached | null = null,
   ) {
     super(message);
     this.status = status;
     this.detail = detail;
     this.code = code;
+    this.limit = limit;
     this.name = "ApiError";
   }
 }
@@ -96,20 +101,13 @@ export async function call<T>(
   }
   const text = await response.text();
   if (!response.ok) {
-    let detail: string | null = null;
-    let code: string | null = null;
-    try {
-      const data = JSON.parse(text) as { error?: string; code?: string };
-      if (data.error) detail = data.error;
-      if (data.code) code = data.code;
-    } catch {
-      // no explanation given
-    }
+    const { detail, code, limit } = readRefusal(text);
     throw new ApiError(
       response.status,
       detail ?? `Request failed (${response.status}).`,
       detail,
       code,
+      limit,
     );
   }
   return (text.length ? JSON.parse(text) : undefined) as T;
