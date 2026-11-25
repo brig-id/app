@@ -39,7 +39,7 @@ jobs:
           # repository and not about what moved in the server. Renovate
           # proposes each new release of the server (as ci: nothing to release).
           # renovate: datasource=github-tags depName=brig-id/server-seedling
-          ref: 7c2c5140c7a80347d1f0871989572ef443eacadb # v0.6.1
+          ref: 629563e671a4c4953e6b2de5d1a57b663310ccab # v0.11.0
           path: server-seedling
 
       - name: Install Rust stable
