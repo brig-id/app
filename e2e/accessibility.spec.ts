@@ -298,6 +298,35 @@ for (const { locale, colorScheme } of CASES) {
       }).toPass({ timeout: 40_000 });
       await expectNoViolation(page, "/admin/sign-up/ with an invitation");
 
+      // The limits. A server built on a core older than brig-id/core
+      // `feat/backup-and-limits` has none: the page says so, and is checked
+      // in that state; then with the limits such a server answers.
+      await page.goto(`${E2E_ORIGIN}/admin/limits/`, { waitUntil: "networkidle" });
+      await expect(page.locator(".limits, main .callout").first()).toBeVisible({ timeout: 20_000 });
+      await expectNoViolation(page, "/admin/limits/");
+      if ((await page.locator(".limits").count()) === 0) {
+        await page.route("**/admin/limits", (route) =>
+          route.fulfill({
+            json: {
+              limits: [
+                { name: "identities_per_account", value: 20, default: 20, max: 200 },
+                { name: "passkeys_per_account", value: 10, default: 10, max: 50 },
+                { name: "sign_ups_per_ip_per_day", value: 5, default: 5, max: 1000 },
+                { name: "a_newer_limit", value: 3, default: 3, max: 9 },
+              ],
+            },
+          }),
+        );
+        await page.reload({ waitUntil: "networkidle" });
+        await expect(page.locator(".limits")).toBeVisible({ timeout: 20_000 });
+        await expectNoViolation(page, "/admin/limits/ with limits");
+      }
+      // A value out of range, said under its field.
+      await page.locator(".limits input").first().fill("0");
+      await expect(page.locator(".limits .field-error")).toBeVisible();
+      await expectNoViolation(page, "/admin/limits/ with a value out of range");
+      await page.unrouteAll();
+
       await page.goto(`${E2E_ORIGIN}/admin/log/`, { waitUntil: "networkidle" });
       await expect(page.locator(".log-entry").first()).toBeVisible({ timeout: 20_000 });
       await expectNoViolation(page, "/admin/log/");
