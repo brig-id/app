@@ -12,6 +12,7 @@ import type {
   AdminLogEntry,
   DescribedPolicy,
   DescribedSettings,
+  LimitsSettings,
   Need,
   NewInvitation,
   RegisteredApplication,
@@ -159,6 +160,20 @@ export async function revokeInvitation(invitation: string): Promise<void> {
   await confirmed(() =>
     call<void>("DELETE", `/admin/invitations/${id(invitation)}`),
   );
+}
+
+// -- limits -----------------------------------------------------------------------
+
+export async function limitsSettings(): Promise<LimitsSettings> {
+  return call<LimitsSettings>("GET", "/admin/limits");
+}
+
+/** Sets the limits named in `changes`, and only them. Answers with all the
+ * limits, as the server now holds them. */
+export async function setLimits(
+  changes: Record<string, number>,
+): Promise<LimitsSettings> {
+  return confirmed(() => call<LimitsSettings>("PUT", "/admin/limits", changes));
 }
 
 // -- the log ----------------------------------------------------------------------

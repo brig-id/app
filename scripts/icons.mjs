@@ -36,6 +36,7 @@ const UI = [
   "pencil-simple",
   "plus",
   "sign-out",
+  "sliders-horizontal",
   "sun",
   "translate",
   "trash",

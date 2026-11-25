@@ -505,6 +505,7 @@ export const MESSAGES = {
   "admin.tab.accounts": ["Accounts", "Comptes"],
   "admin.tab.applications": ["Applications", "Applications"],
   "admin.tab.signup": ["Sign-up", "Inscription"],
+  "admin.tab.limits": ["Limits", "Limites"],
   "admin.tab.websites": ["Websites", "Sites web"],
   "admin.websites.title": [
     "Websites with no registration",
@@ -785,6 +786,105 @@ export const MESSAGES = {
     "Aucune invitation en attente.",
   ],
 
+  "admin.limits.title": ["Limits", "Limites"],
+  "admin.limits.lead": [
+    "What one account, or one network address, may do on this server. Limits keep a few people from filling the server or slowing it down for everyone. Each one goes from 1 to a maximum set by the server. For now, the default is also the recommended value.",
+    "Ce qu’un compte, ou une adresse réseau, peut faire sur ce serveur. Les limites empêchent quelques personnes de remplir le serveur ou de le ralentir pour tout le monde. Chacune va de 1 à un maximum fixé par le serveur. Pour l’instant, la valeur par défaut est aussi la valeur recommandée.",
+  ],
+  "admin.limits.range": [
+    "Default: {default} · Maximum: {max}",
+    "Par défaut : {default} · Maximum : {max}",
+  ],
+  "admin.limits.reset": [
+    "Back to the default",
+    "Revenir à la valeur par défaut",
+  ],
+  "admin.limits.unknown": [
+    "A limit of a newer server, which this interface does not describe yet.",
+    "Une limite d’un serveur plus récent, que cette interface ne décrit pas encore.",
+  ],
+  "admin.limits.not-valid": [
+    "A whole number from 1 to {max}.",
+    "Un nombre entier de 1 à {max}.",
+  ],
+  "admin.limits.check": [
+    "Nothing was saved: a value is not one the server takes.",
+    "Rien n’a été enregistré : une valeur n’est pas acceptée par le serveur.",
+  ],
+  "admin.limits.unchanged": [
+    "No value was changed.",
+    "Aucune valeur n’a été modifiée.",
+  ],
+  "admin.limits.invalid": [
+    "The server refused a value: each limit is a whole number from 1 to its maximum.",
+    "Le serveur a refusé une valeur : chaque limite est un nombre entier de 1 à son maximum.",
+  ],
+  "admin.limits.load-failed": [
+    "The limits could not be read.",
+    "Les limites n’ont pas pu être lues.",
+  ],
+  "admin.limits.absent": [
+    "This server has no limits to change here: it is older than this page.",
+    "Ce serveur n’a pas de limites à modifier ici : il est plus ancien que cette page.",
+  ],
+  "admin.limits.none": [
+    "This server sets no limit that can be changed here.",
+    "Ce serveur ne fixe aucune limite modifiable ici.",
+  ],
+
+  "limit.identities_per_account": [
+    "Identities per account",
+    "Identités par compte",
+  ],
+  "limit.identities_per_account.about": [
+    "How many identities one account can hold. It keeps a single account from filling the server’s storage.",
+    "Combien d’identités un compte peut avoir. Cela empêche un seul compte de remplir le stockage du serveur.",
+  ],
+  "limit.identities_per_account.reached": [
+    "This server allows at most {count} identities per account.",
+    "Ce serveur permet au plus {count} identités par compte.",
+  ],
+  "limit.identities_per_account.reached.one": [
+    "This server allows only one identity per account.",
+    "Ce serveur ne permet qu’une identité par compte.",
+  ],
+  "limit.passkeys_per_account": [
+    "Passkeys per account",
+    "Clés d’accès par compte",
+  ],
+  "limit.passkeys_per_account.about": [
+    "How many passkeys one account can have. It keeps a single account from filling the server’s storage.",
+    "Combien de clés d’accès un compte peut avoir. Cela empêche un seul compte de remplir le stockage du serveur.",
+  ],
+  "limit.passkeys_per_account.reached": [
+    "This server allows at most {count} passkeys per account.",
+    "Ce serveur permet au plus {count} clés d’accès par compte.",
+  ],
+  "limit.passkeys_per_account.reached.one": [
+    "This server allows only one passkey per account.",
+    "Ce serveur ne permet qu’une clé d’accès par compte.",
+  ],
+  "limit.sign_ups_per_ip_per_day": [
+    "New accounts per day from one network address",
+    "Nouveaux comptes par jour depuis une même adresse réseau",
+  ],
+  "limit.sign_ups_per_ip_per_day.about": [
+    "How many accounts can be created in a day from the same network address. It slows down anyone creating accounts in bulk. People who share an address, in an office or a school, count together.",
+    "Combien de comptes peuvent être créés en un jour depuis une même adresse réseau. Cela freine quiconque crée des comptes en masse. Les personnes qui partagent une adresse, dans un bureau ou une école, comptent ensemble.",
+  ],
+  "limit.sign_ups_per_ip_per_day.reached": [
+    "This server allows at most {count} new accounts per day from the same network address. Try again tomorrow, or from another network.",
+    "Ce serveur permet au plus {count} nouveaux comptes par jour depuis une même adresse réseau. Réessayez demain, ou depuis un autre réseau.",
+  ],
+  "limit.sign_ups_per_ip_per_day.reached.one": [
+    "This server allows only one new account per day from the same network address. Try again tomorrow, or from another network.",
+    "Ce serveur ne permet qu’un nouveau compte par jour depuis une même adresse réseau. Réessayez demain, ou depuis un autre réseau.",
+  ],
+  "limit.reached": [
+    "This server refused: a limit set by its administrators is reached.",
+    "Ce serveur a refusé : une limite fixée par ses administrateurs est atteinte.",
+  ],
+
   "admin.log.title": ["Log", "Journal"],
   "admin.log.lead": [
     "What administrators did, and what was done on the machine. Accounts are kept as identifiers: a deleted account is named nowhere. Entries are deleted after the period set by the server’s operator, a year unless changed.",
@@ -846,6 +946,7 @@ export const MESSAGES = {
     "Invitation revoked",
     "Invitation révoquée",
   ],
+  "admin.log.action.limits-set": ["Limits changed", "Limites modifiées"],
 
   // -- identities --------------------------------------------------------------
   "identities.eyebrow": ["Your identities", "Vos identités"],
