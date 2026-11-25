@@ -317,13 +317,19 @@ test.describe("identities page", () => {
     await clickUntil(page, page.getByRole("button", { name: "Yes, delete" }), () =>
       expect(page).toHaveURL(/\/identities\/(\?.*)?$/, { timeout: 3000 }),
     );
-    await expect(cards).toHaveCount(3);
+    // Said even when the list is then refused for going too fast (the
+    // deletion is done): checked before the list, which reloads until it
+    // is served.
     await expect(page.getByRole("status")).toContainText("“Famille” deleted.");
+    await waitForIdentities(page, 3);
 
     // Side by side. The page asks the server once per identity: refused for
     // going too fast after all the above, it says so, and a person would
     // open it again a moment later.
-    await main.getByRole("link", { name: "Compare" }).click();
+    // Clicked until it goes: the list may have been reloaded just before.
+    await clickUntil(page, main.getByRole("link", { name: "Compare" }), () =>
+      expect(page).toHaveURL(/\/identities\/compare\/?$/, { timeout: 3000 }),
+    );
     await expect(async () => {
       if (!(await page.getByRole("table").isVisible())) await page.reload();
       await expect(page.getByRole("table")).toBeVisible({ timeout: 4000 });
