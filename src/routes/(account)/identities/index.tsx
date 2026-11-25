@@ -12,8 +12,6 @@ import { failure } from "~/lib/errors";
 import { hueAt } from "~/lib/hues";
 import { ignoredSuggestions, suggestions } from "~/lib/suggestions";
 
-type Notice = { kind: "success" | "danger"; message: Message } | null;
-
 /**
  * The identities, a card each in its own colour. A card opens the
  * identity's page; a new one has a page of its own (`/identities/new/`).
@@ -23,13 +21,20 @@ export default component$(() => {
   const identities = useSignal<Identity[]>([]);
   /** How many suggestions each identity's summary has, by id. */
   const pending = useSignal<Record<string, number>>({});
+  /** Whether the list was read: until then, and if reading it failed, the
+   * page does not say there is no identity. */
   const loaded = useSignal(false);
-  const notice = useSignal<Notice>(null);
+  /** Why the list could not be read (e.g. too many requests). */
+  const failed = useSignal<Message | null>(null);
+  /** The identity just deleted from its own page, said once. Kept apart from
+   * `failed`: the deletion is done even when the list then fails to load. */
+  const deleted = useSignal<Message | null>(null);
 
   const refresh = $(async () => {
     try {
       const all = await listIdentities();
       identities.value = all;
+      failed.value = null;
       const device = {
         locale: deviceValue("locale"),
         zoneinfo: deviceValue("zoneinfo"),
@@ -43,25 +48,17 @@ export default component$(() => {
         await nav("/");
         return;
       }
-      notice.value = {
-        kind: "danger",
-        message: failure(err, "error.unexpected"),
-      };
-    } finally {
-      loaded.value = true;
+      failed.value = failure(err, "error.unexpected");
+      return;
     }
+    loaded.value = true;
   });
 
   useVisibleTask$(async ({ cleanup }) => {
     cleanup(titled("title.identities"));
     // Back from an identity's page that deleted it: it left the name here.
-    const deleted = takeDeleted();
-    if (deleted) {
-      notice.value = {
-        kind: "success",
-        message: { id: "identity.deleted", p: { name: deleted } },
-      };
-    }
+    const name = takeDeleted();
+    if (name) deleted.value = { id: "identity.deleted", p: { name } };
     await refresh();
   });
 
@@ -94,9 +91,14 @@ export default component$(() => {
         )}
       </div>
 
-      {notice.value && (
-        <Callout kind={notice.value.kind} alert>
-          <Said message={notice.value.message} />
+      {deleted.value && (
+        <Callout kind="success" alert>
+          <Said message={deleted.value} />
+        </Callout>
+      )}
+      {failed.value && (
+        <Callout kind="danger" alert>
+          <Said message={failed.value} />
         </Callout>
       )}
 
