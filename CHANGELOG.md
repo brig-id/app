@@ -7,6 +7,18 @@ From 0.2.0 on, each entry is written by release-please from the commits merged
 since the last release: there is no "Unreleased" section to keep by hand. What
 a list of commits does not say is in the pull requests it links to.
 
+## [0.11.1](https://github.com/brig-id/app/compare/v0.11.0...v0.11.1) (2026-11-25)
+
+
+### Bug Fixes
+
+* **app:** 🐛 a list refused for going too fast no longer says there is no identity ([427db76](https://github.com/brig-id/app/commit/427db76c53ee617b2bc3e20e1b79482713267a43))
+
+
+### Continuous Integration
+
+* **ci:** 👷 release through the shared workflow, tested; Renovate; E2E follows the server's releases ([a5ef2de](https://github.com/brig-id/app/commit/a5ef2de17e5cea7788c961a12b2eec64dbc5c129))
+
 ## [0.11.0](https://github.com/brig-id/app/compare/v0.10.0...v0.11.0) (2026-11-23)
 
 
