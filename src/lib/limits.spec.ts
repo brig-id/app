@@ -107,7 +107,7 @@ describe("the limits of the administration", () => {
       .spyOn(webauthn, "confirmPresence")
       .mockResolvedValue(undefined);
 
-    expect((await limitsSettings()).limits).toEqual(LIMITS);
+    expect((await limitsSettings())?.limits).toEqual(LIMITS);
     const after = await setLimits({ identities_per_account: 30 });
     expect(after.limits[0]!.value).toBe(30);
     expect(ceremony).toHaveBeenCalledTimes(1);
@@ -117,6 +117,19 @@ describe("the limits of the administration", () => {
     expect(JSON.parse(String(init?.body))).toEqual({
       identities_per_account: 30,
     });
+  });
+
+  it("are none on a server older than them", async () => {
+    // It answers with a 404, or with the page of the same name.
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn<typeof fetch>()
+        .mockResolvedValueOnce(response(404, { error: "not found" }))
+        .mockResolvedValueOnce(response(200, "<!doctype html><html></html>")),
+    );
+    await expect(limitsSettings()).resolves.toBeNull();
+    await expect(limitsSettings()).resolves.toBeNull();
   });
 
   it("refused for a value out of range, say so plainly", async () => {
