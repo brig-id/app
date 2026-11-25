@@ -4,7 +4,7 @@ import { Callout } from "~/components/ui/callout";
 import { Said, T, titled } from "~/i18n";
 import { limitsSettings, setLimits } from "~/lib/admin";
 import { done, type Notice, notDone } from "~/lib/admin-notice";
-import { ApiError, SessionEndedError } from "~/lib/api";
+import { SessionEndedError } from "~/lib/api";
 import { failure } from "~/lib/errors";
 import type { ServerLimit } from "~/lib/api-types";
 import {
@@ -45,13 +45,16 @@ export default component$(() => {
   useVisibleTask$(async ({ cleanup }) => {
     cleanup(titled("title.admin"));
     try {
-      await show((await limitsSettings()).limits);
-    } catch (err) {
-      if (err instanceof SessionEndedError) await nav("/");
-      else if (err instanceof ApiError && err.status === 404) {
+      const settings = await limitsSettings();
+      if (settings === null) {
         // A server older than this page: it has no limits to change.
         notice.value = { kind: "info", message: { id: "admin.limits.absent" } };
       } else {
+        await show(settings.limits);
+      }
+    } catch (err) {
+      if (err instanceof SessionEndedError) await nav("/");
+      else {
         notice.value = {
           kind: "danger",
           message: failure(err, "admin.limits.load-failed"),

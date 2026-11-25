@@ -164,8 +164,18 @@ export async function revokeInvitation(invitation: string): Promise<void> {
 
 // -- limits -----------------------------------------------------------------------
 
-export async function limitsSettings(): Promise<LimitsSettings> {
-  return call<LimitsSettings>("GET", "/admin/limits");
+/** The limits, or `null` from a server older than them: it has no
+ * `/admin/limits`, and answers with a 404, or with the page of that name. */
+export async function limitsSettings(): Promise<LimitsSettings | null> {
+  let settings: LimitsSettings;
+  try {
+    settings = await call<LimitsSettings>("GET", "/admin/limits");
+  } catch (err) {
+    if (err instanceof SyntaxError) return null;
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
+  return Array.isArray(settings?.limits) ? settings : null;
 }
 
 /** Sets the limits named in `changes`, and only them. Answers with all the

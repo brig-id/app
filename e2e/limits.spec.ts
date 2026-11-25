@@ -49,9 +49,13 @@ test("an administrator lowers a limit, a person reaching it is told so, and it g
   // The limits came with brig-id/core `feat/backup-and-limits`: a server
   // built on an older core has no `/admin/limits`, and this test waits for
   // one that has (the page then says the server is older than it).
-  const probe = await page.request.get("/admin/limits");
+  // Asked from the page: the browser resolves `brigid.localhost`, Node may not.
+  const probe = await page.evaluate(async () => {
+    const response = await fetch("/admin/limits");
+    return { status: response.status, type: response.headers.get("content-type") ?? "" };
+  });
   test.skip(
-    probe.status() === 404 || !(probe.headers()["content-type"] ?? "").includes("json"),
+    probe.status === 404 || !probe.type.includes("json"),
     "the server has no /admin/limits yet (needs brig-id/core feat/backup-and-limits)",
   );
 

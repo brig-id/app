@@ -305,6 +305,8 @@ for (const { locale, colorScheme } of CASES) {
       await expect(page.locator(".limits, main .callout").first()).toBeVisible({ timeout: 20_000 });
       await expectNoViolation(page, "/admin/limits/");
       if ((await page.locator(".limits").count()) === 0) {
+        // Said as a server older than the page, not as an error.
+        await expect(page.locator("main .callout--info")).toBeVisible();
         await page.route("**/admin/limits", (route) =>
           route.fulfill({
             json: {
