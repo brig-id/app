@@ -9,6 +9,8 @@ on:
     branches: [main, "dev/*"]
   pull_request:
     branches: [main, "dev/*"]
+  # Started by the release workflow on the release pull request.
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
@@ -33,9 +35,11 @@ jobs:
         with:
           persist-credentials: false
           repository: brig-id/server-seedling
-          # Pinned, so that a run says something about this repository and
-          # not about what moved in the server. Bump it deliberately.
-          ref: 7c2c5140c7a80347d1f0871989572ef443eacadb # main @ 2026-11-16 (v0.6.1: the server says its version to administrators)
+          # Pinned to a release, so that a run says something about this
+          # repository and not about what moved in the server. Renovate
+          # proposes each new release of the server (as ci: nothing to release).
+          # renovate: datasource=github-tags depName=brig-id/server-seedling
+          ref: 7c2c5140c7a80347d1f0871989572ef443eacadb # v0.6.1
           path: server-seedling
 
       - name: Install Rust stable
