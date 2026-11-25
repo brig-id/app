@@ -91,7 +91,9 @@ chore(deps): 📦 bump @qwik.dev/core to 2.0.0
 Nobody tags by hand. `.github/workflows/release.yml` (release-please) keeps a release
 pull request up to date: the next version (from the commit types since the last
 release) and its `CHANGELOG.md` entry. **Merging that pull request is the release**: the
-tag `vX.Y.Z` and the GitHub Release follow. So:
+tag `vX.Y.Z` and the GitHub Release follow. The shared workflow (brig-id/.github) also
+starts CI and E2E on that pull request, which a pull request opened by a workflow
+would not get otherwise. The servers then receive the release from Renovate. So:
 
 - the commit type decides the version: `feat` is a minor, `fix` a patch, a `!` or a
   `BREAKING CHANGE:` footer a minor too while the version is 0.x;
