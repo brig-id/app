@@ -119,7 +119,12 @@ export default defineConfig({
       // A new server takes accounts by invitation. The suites create theirs
       // freely, so sign-up is opened first, the way an operator does it:
       // from the machine. The administration suite covers the rest.
-      command: `pnpm build.server && node scripts/csp-hashes.mjs && ${SEEDLING} -- signup open && ${SEEDLING}`,
+      //
+      // They also create many more accounts from 127.0.0.1 than the five a
+      // day a server allows one address by default: that limit is raised
+      // the same way, on a server that has limits (`seedling help limits`
+      // fails on one older than them, and the step is skipped).
+      command: `pnpm build.server && node scripts/csp-hashes.mjs && ${SEEDLING} -- signup open && { if ${SEEDLING} -- help limits >/dev/null 2>&1; then ${SEEDLING} -- limits set sign_ups_per_ip_per_day 1000; fi; } && ${SEEDLING}`,
       // A TCP check, not a URL: with a certificate the server speaks HTTPS
       // only, and this readiness check cannot be told to accept a
       // self-signed certificate.
