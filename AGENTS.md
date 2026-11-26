@@ -95,8 +95,12 @@ tag `vX.Y.Z` and the GitHub Release follow. The shared workflow (brig-id/.github
 starts CI and E2E on that pull request, which a pull request opened by a workflow
 would not get otherwise. The servers then receive the release from Renovate. So:
 
-- the commit type decides the version: `feat` is a minor, `fix` a patch, a `!` or a
-  `BREAKING CHANGE:` footer a minor too while the version is 0.x;
+- the commit type decides the version: while it is 0.x, `feat` and `fix` are a patch,
+  a `!` or a `BREAKING CHANGE:` footer a minor; `build`, `ci`, `chore`, `docs`, `test`
+  and `refactor` alone make no release;
+- an update from outside the project comes from Renovate as `build(deps)`, one pull
+  request a week, and makes no release of its own; the seedling the E2E suite runs
+  against comes as `ci(deps)`, which releases nothing either;
 - the commit subject is the changelog line: write it for someone reading the release;
 - do not edit `CHANGELOG.md`, `.release-please-manifest.json` or the version of
   `package.json` by hand.
