@@ -946,7 +946,7 @@ export const MESSAGES = {
     "Invitation revoked",
     "Invitation révoquée",
   ],
-  "admin.log.action.limits-set": ["Limits changed", "Limites modifiées"],
+  "admin.log.action.limit-set": ["Limit changed", "Limite modifiée"],
 
   // -- identities --------------------------------------------------------------
   "identities.eyebrow": ["Your identities", "Vos identités"],
