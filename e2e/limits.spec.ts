@@ -114,5 +114,8 @@ test("an administrator lowers a limit, a person reaching it is told so, and it g
 
   // And it is in the log.
   await page.getByRole("link", { name: "Log", exact: true }).click();
-  await expect(page.locator('[data-action^="limit"]').first()).toBeVisible({ timeout: 20_000 });
+  const logged = page.locator('[data-action="limit.set"]').first();
+  await expect(logged).toBeVisible({ timeout: 20_000 });
+  await expect(logged).toContainText("Limit changed");
+  await expect(logged).toContainText("identities_per_account=");
 });
