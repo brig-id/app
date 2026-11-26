@@ -7,6 +7,19 @@ From 0.2.0 on, each entry is written by release-please from the commits merged
 since the last release: there is no "Unreleased" section to keep by hand. What
 a list of commits does not say is in the pull requests it links to.
 
+## [0.11.2](https://github.com/brig-id/app/compare/v0.11.1...v0.11.2) (2026-11-26)
+
+
+### Features
+
+* **app:** ✨ change the server's limits, and say which one was reached ([4705a5d](https://github.com/brig-id/app/commit/4705a5d29d5c74a8ca8ccee62783b1af7e5aa266))
+
+
+### Bug Fixes
+
+* **app:** 🐛 a server older than the limits says so instead of failing ([0c8fcb3](https://github.com/brig-id/app/commit/0c8fcb35556654d09e4e98ea4317e50ff07558aa))
+* **app:** 🐛 name the log entry of a limit changed as the server does ([96c2da4](https://github.com/brig-id/app/commit/96c2da4b7a1adf5af838798a982a71aa0fe1bac7))
+
 ## [0.11.1](https://github.com/brig-id/app/compare/v0.11.0...v0.11.1) (2026-11-25)
 
 
