@@ -7,7 +7,8 @@ import { serverInfo } from "./api";
 
 declare const BRIGID_INTERFACE_VERSION: string;
 
-/** The version of this interface (`package.json`, at build time). */
+/** The version of this interface, written at build time: the version of the
+ * server it is released in, or `0.0.0` in any other build. */
 export const INTERFACE_VERSION: string = BRIGID_INTERFACE_VERSION;
 
 export interface ServerVersion {

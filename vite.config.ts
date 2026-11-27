@@ -16,13 +16,17 @@ export default defineConfig(() => {
     plugins: [qwikRouter(), qwikVite()],
     // The version of this interface, written into the build: the
     // administration shows it next to the server's (`src/lib/version.ts`).
+    // The interface has no release of its own: the release build of a server
+    // gives its own version (BRIGID_INTERFACE_VERSION); any other build says
+    // the one of package.json, 0.0.0.
     define: {
       BRIGID_INTERFACE_VERSION: JSON.stringify(
-        (
-          JSON.parse(
-            readFileSync(new URL("package.json", import.meta.url), "utf8"),
-          ) as { version: string }
-        ).version,
+        process.env.BRIGID_INTERFACE_VERSION ||
+          (
+            JSON.parse(
+              readFileSync(new URL("package.json", import.meta.url), "utf8"),
+            ) as { version: string }
+          ).version,
       ),
     },
     resolve: {
