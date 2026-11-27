@@ -1,93 +1,27 @@
 name: E2E
 
-# Its own workflow, not a reusable one of brig-id/.github: the suite drives a
-# real server from the sibling brig-id/server-seedling repository, which pulls
-# brig-id/core and brig-id/crypto at build time. That shape is this suite's.
+# The Playwright suite (sign-up, sign-in, passkeys) against a real server, and
+# the demonstration site's against a server with this interface: seedling at
+# the head of its main, built with the core and crypto at the head of theirs,
+# so that a run says what this change will meet. A branch of the same name
+# with an open pull request in another repository is taken instead of its
+# main: a change that spans repositories is tested whole before it is merged.
+# The steps are in brig-id/.github, integration.yml, which the other
+# repositories run with their own changes.
 
 on:
   push:
     branches: [main, "dev/*"]
   pull_request:
     branches: [main, "dev/*"]
-  # Started by the release workflow on the release pull request.
   workflow_dispatch:
-
-env:
-  CARGO_TERM_COLOR: always
-  CARGO_INCREMENTAL: 0
 
 permissions:
   contents: read
 
 jobs:
-  e2e:
-    name: Playwright (sign-up, sign-in, passkeys against a real server)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout web
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          path: web
-
-      - name: Checkout server-seedling
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          repository: brig-id/server-seedling
-          # Pinned to a release, so that a run says something about this
-          # repository and not about what moved in the server. Renovate
-          # proposes each new release of the server (as ci: nothing to release).
-          # renovate: datasource=github-tags depName=brig-id/server-seedling
-          ref: 42f0a14670c3888d44ed05be44c4ee70534bd0f9 # v0.12.0
-          path: server-seedling
-
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master @ 2026-08-05
-        with:
-          toolchain: stable
-
-      - name: Install system dependencies
-        run: sudo apt-get update -qq && sudo apt-get install -y mold
-
-      - name: Cache cargo
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-          key: ${{ runner.os }}-cargo-${{ hashFiles('server-seedling/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
-
-      - uses: helpers4/action/setup-pnpm@6fddd178620e7325d446a246c38a44f979569fc4 # main @ 2026-07-29
-        with:
-          node-version: "24"
-          working-directory: web
-
-      - name: Build the server
-        # Playwright starts it with `cargo run` and waits 60 s for its port:
-        # enough to start a binary, not to compile one. Build it beforehand.
-        run: cargo build --manifest-path server-seedling/Cargo.toml
-
-      - name: Install Playwright browsers
-        working-directory: web
-        run: npx playwright install --with-deps chromium firefox
-
-      - name: Run Playwright E2E suite
-        working-directory: web
-        env:
-          BRIGID_SERVER_DIR: ${{ github.workspace }}/server-seedling
-          CI: "true"
-        run: pnpm run test.e2e
-
-      - name: Upload Playwright traces on failure
-        # playwright.config.ts uses the "github" reporter in CI (inline PR
-        # annotations, no HTML report file) — test-results/ still holds a
-        # trace.zip per failed test (trace: "on-first-retry"), viewable via
-        # `npx playwright show-trace`.
-        if: failure()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: playwright-traces
-          path: web/test-results/
-          retention-days: 14
+  integration:
+    uses: brig-id/.github/.github/workflows/integration.yml@main
+    with:
+      heads: true
+      suites: interface demo
