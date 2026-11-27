@@ -74,7 +74,7 @@ Format: `type(scope): <emoji> description`. Full type→emoji mapping:
 | `ci`   | `.github/workflows/`                                         |
 | `deps` | Dependency bumps                                             |
 | `ai`   | Instructions for coding agents (this file)                   |
-| `docs` | README, CHANGELOG, CREDITS                                   |
+| `docs` | README, CREDITS                                              |
 
 **Do not use a scope outside this list.** Update this table and
 `scopes.json` together if a new scope is needed.
@@ -88,22 +88,26 @@ chore(deps): 📦 bump @qwik.dev/core to 2.0.0
 
 ## Releases
 
-Nobody tags by hand. `.github/workflows/release.yml` (release-please) keeps a release
-pull request up to date: the next version (from the commit types since the last
-release) and its `CHANGELOG.md` entry. **Merging that pull request is the release**: the
-tag `vX.Y.Z` and the GitHub Release follow. The shared workflow (brig-id/.github) also
-starts CI and E2E on that pull request, which a pull request opened by a workflow
-would not get otherwise. The servers then receive the release from Renovate. So:
+The interface has no release of its own: no version to bump (`package.json` says
+`0.0.0`), no tag, no `CHANGELOG.md`. The servers embed it at a commit of `main` (the
+`APP_REF` of their `ci.yml`), their release build gives it the server's version
+(`BRIGID_INTERFACE_VERSION`), and a server's release notes list what changed here since
+the release before, from the commit subjects. So:
 
-- the commit type decides the version: while it is 0.x, `feat` and `fix` are a patch,
-  a `!` or a `BREAKING CHANGE:` footer a minor; `build`, `ci`, `chore`, `docs`, `test`
-  and `refactor` alone make no release;
+- one pull request per change. A change that needs the core or a server too is a pull
+  request there as well, **on a branch of the same name**: the E2E workflow
+  (brig-id/.github, `integration.yml`) builds seedling with those branches and runs
+  this suite and the demo's against it, before anything is merged. They are merged from
+  crypto down to the servers; the server's pull request then follows the commit this
+  one got on `main`;
+- the commit type says whether a person running a server would notice: `feat`, `fix`,
+  `perf` and `revert` are listed in the server's release notes and are a reason for a
+  release; `build`, `ci`, `chore`, `docs`, `test` and `refactor` are not. A `!` or a
+  `BREAKING CHANGE:` footer is announced first;
+- the commit subject is the line people read in those notes: write it for them;
 - an update from outside the project comes from Renovate as `build(deps)`, one pull
-  request a week, and makes no release of its own; the seedling the E2E suite runs
-  against comes as `ci(deps)`, which releases nothing either;
-- the commit subject is the changelog line: write it for someone reading the release;
-- do not edit `CHANGELOG.md`, `.release-please-manifest.json` or the version of
-  `package.json` by hand.
+  request a week;
+- `brigid release` (brig-id/cli) shows what the servers do not follow yet.
 
 ## CSP hash manifest
 

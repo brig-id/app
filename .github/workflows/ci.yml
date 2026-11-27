@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   ci:
-    uses: brig-id/.github/.github/workflows/ci-web.yml@5e019131d735e4ed0bd3598b5a61137bdae7eff3
+    uses: brig-id/.github/.github/workflows/ci-web.yml@main
     with:
       working-directory: .
 

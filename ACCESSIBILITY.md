@@ -48,4 +48,4 @@ Before a release, with the built interface served by a server:
       over the background image, in both themes (each sits on its own plate; check it when
       an image is added).
 
-Note what was checked, with which browser and screen reader, in the release pull request.
+Note what was checked, with which browser and screen reader, in the notes of the release.
