@@ -65,6 +65,14 @@ export async function answerReturnAddress(page: Page) {
 // know `*.localhost`).
 const TOKEN_ENDPOINT = `${E2E_ORIGIN.replace("brigid.localhost", "127.0.0.1")}/token`;
 
+/** On the linking page: picks the identity the application will meet. The
+ * page never picks one itself, and shows what an identity gives only once
+ * it is chosen. */
+export async function chooseIdentity(page: Page, name: string): Promise<void> {
+  await page.getByRole("radio", { name }).click();
+  await expect(page.locator(".chosen")).toContainText(name);
+}
+
 /** Continues to the application and returns what the token it gets says.
  * An application that has a `secret` proves who it is with it. */
 export async function continueAndReadToken(
@@ -76,7 +84,7 @@ export async function continueAndReadToken(
   // Refused for going too fast, the page says so and stays.
   await expect(async () => {
     await page
-      .getByRole("button", { name: "Continue", exact: true })
+      .getByRole("button", { name: /^Continue with / })
       .click({ timeout: 2000 });
     await page.waitForURL(/application\.example\/back\?/, { timeout: 3000 });
   }).toPass({ timeout: 40_000 });

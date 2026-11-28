@@ -8,6 +8,7 @@ import {
 import {
   answerReturnAddress,
   ask,
+  chooseIdentity,
   continueAndReadToken,
   registerApplication,
 } from "./application";
@@ -23,7 +24,7 @@ test.beforeEach(async () => {
   await new Promise((resolve) => setTimeout(resolve, 4000));
 });
 
-test("an application receives what was ticked, nothing else, and it can be withdrawn", async ({
+test("an application receives what the person shares, nothing else, and it can be withdrawn", async ({
   page,
   context,
   request,
@@ -49,7 +50,11 @@ test("an application receives what was ticked, nothing else, and it can be withd
 
   // -- it asks for the identifier only: nothing else to decide ----------------
   await ask(page, clientId, "openid");
-  await page.getByRole("radio", { name: "Work" }).check();
+  // No identity is chosen for the person, and nothing of any is shown.
+  await expect(page.getByRole("radio")).toHaveCount(3);
+  await expect(page.getByRole("radio", { checked: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^Continue with / })).toHaveCount(0);
+  await chooseIdentity(page, "Work");
   await expect(page.locator(".asked")).toHaveCount(0);
   let claims = await continueAndReadToken(page, request, clientId);
   expect(claims.sub).toBeTruthy();
@@ -58,67 +63,77 @@ test("an application receives what was ticked, nothing else, and it can be withd
 
   // -- it asks for attributes the identity does not have ----------------------
   await ask(page, clientId, "openid profile email");
-  const next = page.getByRole("button", { name: "Continue", exact: true });
-  const asked = page.getByRole("group", { name: "Field Notes asks for" });
-  await expect(page.getByRole("radio", { name: "Work" })).toBeChecked();
-  await expect(asked.locator(".asked-row")).toHaveCount(2);
-  await expect(asked.getByText("This identity has none.")).toHaveCount(2);
-  await expect(asked.getByText("Required", { exact: true })).toHaveCount(1);
-  await expect(asked.getByText("Optional", { exact: true })).toHaveCount(1);
-  // The address is required and absent: no way forward yet.
+  // Not even the identity chosen last time is selected.
+  await expect(page.getByRole("radio", { checked: true })).toHaveCount(0);
+  await chooseIdentity(page, "Work");
+  const next = page.getByRole("button", { name: "Continue with Work" });
+  const needed = page.getByRole("region", { name: "This application needs it" });
+  const optional = page.getByRole("region", { name: "You choose" });
+  await expect(needed.locator(".asked-row")).toHaveCount(1);
+  await expect(optional.locator(".asked-row")).toHaveCount(1);
+  await expect(page.getByText("This identity has none.")).toHaveCount(2);
+  // The address is required and absent: no way forward yet, and the page
+  // says why just above the button.
   await expect(next).toBeDisabled();
-  await expect(page.getByText(/does not work without/)).toBeVisible();
+  await expect(page.getByText(/Something is missing/)).toBeVisible();
 
-  // Put on the identity from here, a value is shown, and not ticked. (The
-  // server limits how fast an account's pages may write; refused, the page
-  // says so and keeps the field, and a person would press again.)
+  // Put on the identity from here. (The server limits how fast an account's
+  // pages may write; refused, the page says so and keeps the field, and a
+  // person would press again.)
   const addToIdentity = (label: string, value: string) =>
     expect(async () => {
-      await asked.getByLabel(`${label} of this identity`).fill(value);
-      await asked
-        .locator(".asked-row", { hasText: label })
-        .getByRole("button", { name: "Add to this identity" })
-        .click({ timeout: 2000 });
-      await expect(
-        asked.getByRole("checkbox", { name: new RegExp(label) }),
-      ).toBeVisible({ timeout: 3000 });
+      const row = page.locator(".asked-row", { hasText: label });
+      const field = page.getByLabel(`${label} of this identity`);
+      if ((await field.count()) > 0) {
+        await field.fill(value);
+        await row
+          .getByRole("button", { name: "Add to this identity" })
+          .click({ timeout: 2000 });
+      }
+      await expect(row.getByText(value)).toBeVisible({ timeout: 3000 });
     }).toPass({ timeout: 40_000 });
-  const email = asked.getByRole("checkbox", { name: /E-mail address/ });
-  const firstName = asked.getByRole("checkbox", { name: /First name/ });
+  // What the application needs is shown and sent: no switch, and the way
+  // forward opens.
   await addToIdentity("E-mail address", "ada@work.example");
-  await expect(email).not.toBeChecked();
-  await expect(asked.getByText("ada@work.example")).toBeVisible();
-  await addToIdentity("First name", "Ada");
-  await expect(firstName).not.toBeChecked();
-  await expect(next).toBeDisabled();
-
-  // The first name alone is not enough; the address alone is.
-  await firstName.check();
-  await expect(next).toBeDisabled();
-  await firstName.uncheck();
-  await email.check();
+  await expect(needed.getByText("ada@work.example")).toBeVisible();
+  await expect(needed.getByRole("switch")).toHaveCount(0);
+  await expect(page.getByText(/Something is missing/)).toHaveCount(0);
   await expect(next).toBeEnabled();
+  // What it would like is shared unless the person turns it off.
+  await addToIdentity("First name", "Ada");
+  const firstName = optional.getByRole("switch", { name: "Share: First name" });
+  await expect(firstName).toBeChecked();
+  await page.getByText("What Field Notes will know about you").click();
+  await expect(page.getByText(/these 2 pieces of information only/)).toBeVisible();
+  await firstName.click();
+  await expect(firstName).not.toBeChecked();
+  await expect(optional.getByText("Kept to yourself")).toBeVisible();
+  await expect(optional.getByText("Ada", { exact: true })).toHaveCount(0);
+  await expect(page.getByText(/this one piece of information only/)).toBeVisible();
   claims = await continueAndReadToken(page, request, clientId);
   expect(claims.sub).toBe(sub);
   expect(claims.email).toBe("ada@work.example");
   expect(claims.email_verified).toBe(false);
-  // On the identity, asked for, and not ticked: not sent.
+  // On the identity, asked for, and turned off: not sent.
   expect(claims).not.toHaveProperty("given_name");
   // No label of the identity either.
   expect(JSON.stringify(claims)).not.toContain("Work");
 
-  // -- it asks again: what was decided is remembered ---------------------------
+  // -- it asks again: what was refused stays off -------------------------------
   await ask(page, clientId, "openid profile email");
-  await expect(email).toBeChecked();
+  await chooseIdentity(page, "Work");
+  await expect(needed.getByText("ada@work.example")).toBeVisible();
   await expect(firstName).not.toBeChecked();
-  await expect(asked.getByText("You accepted this before.")).toBeVisible();
-  await expect(asked.getByText("You refused this before.")).toBeVisible();
-  // Another identity starts from nothing.
-  await page.getByRole("radio", { name: "Personal" }).check();
-  await expect(asked.getByText("This identity has none.")).toHaveCount(2);
-  await page.getByRole("radio", { name: "Work" }).check();
-  await expect(email).toBeChecked();
-  await firstName.check();
+  // Another identity has neither value: back to the choice, and again.
+  await page.getByRole("button", { name: "Change" }).click();
+  await expect(page.getByRole("radio", { checked: true })).toHaveCount(0);
+  await chooseIdentity(page, "Personal");
+  await expect(page.getByText("This identity has none.")).toHaveCount(2);
+  await page.getByRole("button", { name: "Change" }).click();
+  await chooseIdentity(page, "Work");
+  await expect(firstName).not.toBeChecked();
+  await firstName.click();
+  await expect(firstName).toBeChecked();
   claims = await continueAndReadToken(page, request, clientId);
   expect(claims.email).toBe("ada@work.example");
   expect(claims.given_name).toBe("Ada");
@@ -168,13 +183,13 @@ test("an application receives what was ticked, nothing else, and it can be withd
   );
   await expect(application.locator(".shared-row")).toHaveCount(1);
 
-  // The application asks again: the new address and the first name both
-  // wait for an answer.
+  // The application asks again: the new address is the one shown, and the
+  // first name, withdrawn, is shared again unless turned off.
   await ask(page, clientId, "openid profile email");
-  await expect(asked.getByText("ada@new.example")).toBeVisible();
-  await expect(email).not.toBeChecked();
-  await expect(firstName).not.toBeChecked();
-  await expect(next).toBeDisabled();
+  await chooseIdentity(page, "Work");
+  await expect(needed.getByText("ada@new.example")).toBeVisible();
+  await expect(firstName).toBeChecked();
+  await expect(next).toBeEnabled();
 
   // Everything withdrawn, after a confirmation that says what it cannot do.
   await page.goto("/identities/");
@@ -202,5 +217,5 @@ test("an application receives what was ticked, nothing else, and it can be withd
       }),
   );
   await ask(page, clientId, "openid profile email");
-  await expect(page.getByRole("radio", { name: "Work" })).not.toBeChecked();
+  await expect(page.getByRole("radio", { checked: true })).toHaveCount(0);
 });
