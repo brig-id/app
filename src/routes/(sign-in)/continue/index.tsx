@@ -16,11 +16,11 @@ import {
 } from "~/lib/api";
 import type { AuthorizationRequest } from "~/lib/api-types";
 import {
-  acceptedBefore,
   askedRows,
   type AttributeName,
   blocking,
   isAttribute,
+  sharedAtFirst,
   toShare,
 } from "~/lib/attributes";
 import { continueStep, requestErrorMessage } from "~/lib/continue";
@@ -30,12 +30,14 @@ import { login, WebAuthnError } from "~/lib/webauthn";
 /**
  * The linking page: an application sent the person here to sign in. The
  * server kept the application's request and gave this page its id; the page
- * signs the person in if needed, lets them choose the identity the
- * application will meet and what of it they share, and sends the browser
- * back to it.
+ * signs the person in if needed, then goes in two steps on the same page.
+ * First the identity the application will meet: none is chosen for the
+ * person. Then what that identity gives: what the application needs, shown
+ * and always sent; what it would like, each with a switch; and a field for
+ * what the identity lacks. Nothing is sent before the person continues.
  *
  * The application receives an identifier that exists for it alone and, of
- * the attributes it asked for, the ones the person ticked. The names and
+ * the attributes it asked for, the ones shown as shared. The names and
  * icons shown here are for the person: they never leave this server.
  */
 export default component$(() => {
@@ -44,9 +46,10 @@ export default component$(() => {
   /** A message that ends the page: nothing more can be done here. */
   const dead = useSignal<MessageId | null>(null);
   const error = useSignal<Message | null>(null);
+  /** The identity chosen: none until the person picks one. */
   const selected = useSignal<string | null>(null);
-  /** The attributes ticked, of the ones the application asks for. */
-  const accepted = useSignal<string[]>([]);
+  /** The optional attributes left shared, for the identity chosen. */
+  const shared = useSignal<string[]>([]);
   const busy = useSignal(false);
   const leaving = useSignal(false);
 
@@ -63,12 +66,11 @@ export default component$(() => {
         window.location.replace(await answerSilently(requestId.value));
         return;
       }
-      // The first time the choice is shown: the identity remembered, and
-      // what was accepted before for it. Reading the request again (after
-      // an attribute was added) keeps what the person did since.
-      if (step.kind === "choose" && request.value?.must_sign_in !== false) {
-        selected.value = step.selected;
-        accepted.value = acceptedBefore(askedRows(r, step.selected));
+      // An identity that is gone since the page was read is no longer the
+      // choice. Otherwise reading the request again (after an attribute was
+      // added) keeps what the person did.
+      if (!r.identities.some((identity) => identity.id === selected.value)) {
+        selected.value = null;
       }
       request.value = r;
     } catch (err) {
@@ -110,7 +112,8 @@ export default component$(() => {
   });
 
   /** Puts a value the application asks for on the chosen identity. It is
-   * then shown like the others, not ticked. */
+   * then shown like the others: sent if the application needs it, shared
+   * unless turned off if it is optional. */
   const add = $(async (name: AttributeName, value: string) => {
     if (selected.value === null || !value.trim()) return;
     error.value = null;
@@ -118,6 +121,12 @@ export default component$(() => {
     try {
       await updateIdentity(selected.value, { attributes: { [name]: value } });
       await load();
+      const row =
+        request.value &&
+        askedRows(request.value, selected.value).find((r) => r.name === name);
+      if (row && !row.required && row.value !== null) {
+        shared.value = [...shared.value.filter((n) => n !== name), name];
+      }
     } catch (err) {
       if (err instanceof SessionEndedError) await load();
       else error.value = failure(err, "continue.add.failed");
@@ -138,14 +147,14 @@ export default component$(() => {
       return;
     }
     const rows = askedRows(request.value, selected.value);
-    if (blocking(rows, accepted.value).length > 0) return;
+    if (blocking(rows).length > 0) return;
     error.value = null;
     busy.value = true;
     try {
       const to = await approveAuthorization(
         requestId.value,
         selected.value,
-        toShare(rows, accepted.value),
+        toShare(rows, shared.value),
       );
       leaving.value = true;
       window.location.assign(to);
@@ -215,8 +224,12 @@ export default component$(() => {
   const app = r.client.host ?? r.client.name;
   const declared =
     r.client.host && r.client.name !== r.client.host ? r.client.name : null;
-  const rows = r.must_sign_in ? [] : askedRows(r, selected.value);
-  const blocked = blocking(rows, accepted.value).length > 0;
+  const chosen = r.must_sign_in
+    ? undefined
+    : r.identities.find((identity) => identity.id === selected.value);
+  const rows = chosen ? askedRows(r, chosen.id) : [];
+  const blocked = blocking(rows).length > 0;
+  const count = toShare(rows, shared.value).length;
   return (
     <section class="card signin-card signin-card--wide stack stack--loose">
       <h1 class="signin-title">
@@ -265,78 +278,119 @@ export default component$(() => {
             <T id="continue.none.link" />
           </a>
         </Callout>
-      ) : (
-        <form
-          class="stack stack--loose"
-          preventdefault:submit
-          onSubmit$={proceed}
-        >
-          <fieldset class="choices">
-            <legend>
-              <T id="continue.which" />
-            </legend>
+      ) : chosen === undefined ? (
+        // Step 1: the identity. Nothing is selected, and nothing of any
+        // identity is shown.
+        <fieldset class="choices">
+          <legend>
+            <T id="continue.which" />
+          </legend>
+          <div class="choices-grid">
             {r.identities.map((identity) => (
               <label key={identity.id} class="choice">
                 <input
                   type="radio"
                   name="identity"
                   value={identity.id}
-                  checked={selected.value === identity.id}
+                  checked={false}
                   onChange$={() => {
                     selected.value = identity.id;
-                    accepted.value = acceptedBefore(askedRows(r, identity.id));
+                    shared.value = sharedAtFirst(askedRows(r, identity.id));
                   }}
                 />
                 <IdentityLogo logo={identity.logo} size="s" />
                 <span class="choice-name">{identity.name}</span>
               </label>
             ))}
-          </fieldset>
-          {rows.length > 0 && selected.value !== null && (
-            <AskedAttributes
-              app={app}
-              rows={rows}
-              accepted={accepted}
-              busy={busy.value}
-              onAdd$={add}
-            />
-          )}
+          </div>
           <p class="quiet small">
-            <T
-              id={
-                rows.length > 0
-                  ? "continue.shared.attributes"
-                  : "continue.shared"
-              }
-              p={{ app }}
-            />
+            <T id="continue.which.hint" p={{ app }} />
           </p>
-          {blocked && selected.value !== null && (
-            <p id="continue-blocked" class="blocked small">
-              <T id="continue.blocked" p={{ app }} />
-            </p>
+        </fieldset>
+      ) : (
+        // Step 2: what the identity chosen gives, then the answer.
+        <form
+          class="stack stack--loose"
+          preventdefault:submit
+          onSubmit$={proceed}
+        >
+          <div class="chosen">
+            <IdentityLogo logo={chosen.logo} size="s" />
+            <span class="chosen-text">
+              <span class="quiet small">
+                <T id="continue.identity" />
+              </span>
+              <span class="choice-name">{chosen.name}</span>
+            </span>
+            <button
+              type="button"
+              class="link-button"
+              disabled={busy.value}
+              onClick$={() => {
+                selected.value = null;
+                shared.value = [];
+              }}
+            >
+              <T id="continue.change" />
+            </button>
+          </div>
+          <AskedAttributes
+            rows={rows}
+            shared={shared}
+            busy={busy.value}
+            onAdd$={add}
+          />
+          <details class="knows">
+            <summary>
+              <T id="continue.knows" p={{ app }} />
+            </summary>
+            <ul>
+              <li>
+                <T
+                  id={
+                    count === 0
+                      ? "continue.knows.nothing"
+                      : count === 1
+                        ? "continue.knows.one"
+                        : "continue.knows.several"
+                  }
+                  p={{ count: String(count) }}
+                />
+              </li>
+              <li>
+                <T id="continue.knows.identifier" />
+              </li>
+            </ul>
+          </details>
+          {blocked && (
+            <div id="continue-blocked">
+              <Callout kind="warning">
+                <T id="continue.blocked" p={{ app }} />
+              </Callout>
+            </div>
           )}
           <button
             type="submit"
             class="button button--primary button--wide"
-            disabled={busy.value || selected.value === null || blocked}
+            disabled={busy.value || blocked}
             aria-describedby={blocked ? "continue-blocked" : undefined}
           >
-            <T id="common.continue" />
+            <T id="continue.with" p={{ identity: chosen.name }} />
           </button>
         </form>
       )}
 
-      <p class="signin-links signin-links--center">
-        <button
-          type="button"
-          class="link-button"
-          disabled={busy.value}
-          onClick$={cancel}
-        >
-          <T id="continue.cancel" p={{ app }} />
-        </button>
-      </p>
+      <button
+        type="button"
+        class="button button--wide"
+        disabled={busy.value}
+        onClick$={cancel}
+      >
+        <T
+          id={chosen === undefined ? "continue.cancel" : "continue.refuse"}
+          p={{ app }}
+        />
+      </button>
     </section>
   );
 });

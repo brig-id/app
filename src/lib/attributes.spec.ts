@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { isMessage } from "~/i18n";
 import type { AuthorizationRequest, Identity } from "./api-types";
 import {
-  acceptedBefore,
   askedRows,
   ATTRIBUTES,
   attributeLabel,
@@ -11,6 +10,7 @@ import {
   identitiesSharingMailbox,
   isAttribute,
   mailbox,
+  sharedAtFirst,
   toShare,
 } from "./attributes";
 
@@ -119,12 +119,11 @@ describe("what an application asks for", () => {
     expect(rows).toEqual([]);
   });
 
-  it("ticks nothing in advance", () => {
-    const rows = askedRows(request(), "work");
-    expect(acceptedBefore(rows)).toEqual([]);
-  });
-
-  it("ticks what was accepted before, and only that", () => {
+  it("shares every optional attribute the identity has, unless refused before", () => {
+    // Nothing decided yet: the first name is shared, the address is not a
+    // choice (required), and the identity has no language.
+    expect(sharedAtFirst(askedRows(request(), "work"))).toEqual(["given_name"]);
+    // Refused last time for this application: it stays off.
     const rows = askedRows(
       request({ decisions: { work: { email: true, given_name: false } } }),
       "work",
@@ -134,30 +133,23 @@ describe("what an application asks for", () => {
       "accepted",
       null,
     ]);
-    expect(acceptedBefore(rows)).toEqual(["email"]);
-    // Another identity starts from nothing.
-    expect(
-      acceptedBefore(
-        askedRows(request({ decisions: { work: { email: true } } }), "bare"),
-      ),
-    ).toEqual([]);
+    expect(sharedAtFirst(rows)).toEqual([]);
+    // An identity with nothing to share shares nothing.
+    expect(sharedAtFirst(askedRows(request(), "bare"))).toEqual([]);
   });
 
-  it("is stopped by a required attribute refused or absent", () => {
-    const work = askedRows(request(), "work");
-    expect(blocking(work, [])).toEqual(["email"]);
-    expect(blocking(work, ["given_name"])).toEqual(["email"]);
-    expect(blocking(work, ["email"])).toEqual([]);
-    // An identity without the address cannot continue, whatever is ticked.
-    const bare = askedRows(request(), "bare");
-    expect(blocking(bare, ["email"])).toEqual(["email"]);
+  it("is stopped by a required attribute the identity lacks, and by that only", () => {
+    expect(blocking(askedRows(request(), "work"))).toEqual([]);
+    expect(blocking(askedRows(request(), "bare"))).toEqual(["email"]);
   });
 
-  it("sends what is ticked, asked and present", () => {
+  it("always sends what is required, and the optional attributes left shared", () => {
     const rows = askedRows(request(), "work");
-    expect(toShare(rows, ["email", "locale", "family_name"])).toEqual([
-      "email",
-    ]);
-    expect(toShare(rows, [])).toEqual([]);
+    expect(toShare(rows, ["given_name"])).toEqual(["given_name", "email"]);
+    // Everything optional turned off: the required address still goes.
+    expect(toShare(rows, [])).toEqual(["email"]);
+    // What is not asked, or absent from the identity, never goes.
+    expect(toShare(rows, ["locale", "family_name"])).toEqual(["email"]);
+    expect(toShare(askedRows(request(), "bare"), ["given_name"])).toEqual([]);
   });
 });

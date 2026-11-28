@@ -222,33 +222,44 @@ export const MESSAGES = {
     "Sign in to choose the identity this application will meet.",
     "Connectez-vous pour choisir l’identité que cette application rencontrera.",
   ],
-  "continue.which": [
-    "Which identity will this application meet?",
-    "Quelle identité cette application rencontrera-t-elle ?",
+  "continue.which": ["With which identity?", "Avec quelle identité ?"],
+  "continue.which.hint": [
+    "{app} will only know the one you choose. You will then see what it would give, before you continue.",
+    "{app} ne connaîtra que celle que vous choisissez. Vous verrez ensuite ce qu’elle lui donnerait, avant de continuer.",
   ],
+  "continue.identity": ["Your identity", "Votre identité"],
+  "continue.change": ["Change", "Changer"],
   "continue.none": [
     "Your account has no identity yet. Create one, then start again from the application.",
     "Votre compte n’a pas encore d’identité. Créez-en une, puis recommencez depuis l’application.",
   ],
   "continue.none.link": ["Create an identity", "Créer une identité"],
-  "continue.shared": [
-    "{app} receives an identifier that exists for this application and this identity only. It receives neither the identity’s name nor its icon, and it cannot connect it to your other identities.",
-    "{app} reçoit un identifiant qui n’existe que pour cette application et cette identité. Elle ne reçoit ni le nom ni l’icône de l’identité, et ne peut pas la relier à vos autres identités.",
+  "continue.needs": [
+    "This application needs it",
+    "Cette application en a besoin",
   ],
-  "continue.asks": ["{app} asks for", "{app} demande"],
-  "continue.asks.hint": [
-    "Tick what you accept to share with it. Nothing is ticked for you.",
-    "Cochez ce que vous acceptez de lui partager. Rien n’est coché à votre place.",
+  "continue.choose": ["You choose", "Vous choisissez"],
+  "continue.share": ["Share: {attribute}", "Partager : {attribute}"],
+  "continue.kept": ["Kept to yourself", "Gardé pour vous"],
+  "continue.knows": [
+    "What {app} will know about you",
+    "Ce que {app} saura de vous",
   ],
-  "continue.required": ["Required", "Requis"],
-  "continue.optional": ["Optional", "Facultatif"],
-  "continue.accepted-before": [
-    "You accepted this before.",
-    "Vous l’avez déjà accepté.",
+  "continue.knows.nothing": [
+    "You share nothing of this identity with it: neither its name, nor its icon, nor anything else of your account.",
+    "Vous ne partagez rien de cette identité avec elle : ni son nom, ni son icône, ni rien d’autre de votre compte.",
   ],
-  "continue.refused-before": [
-    "You refused this before.",
-    "Vous l’avez déjà refusé.",
+  "continue.knows.one": [
+    "You share with it this one piece of information only, and nothing else of your account.",
+    "Vous partagez avec elle uniquement cette information, et rien d’autre de votre compte.",
+  ],
+  "continue.knows.several": [
+    "You share with it these {count} pieces of information only, and nothing else of your account.",
+    "Vous partagez avec elle uniquement ces {count} informations, et rien d’autre de votre compte.",
+  ],
+  "continue.knows.identifier": [
+    "It also receives a virtual identifier, made for it alone: it cannot be used to recognise you anywhere else, to protect your privacy.",
+    "Elle reçoit aussi un identifiant virtuel, créé pour elle seule : il ne permet pas de vous reconnaître ailleurs, pour protéger votre vie privée.",
   ],
   "continue.missing": ["This identity has none.", "Cette identité n’en a pas."],
   "continue.add.label": [
@@ -256,21 +267,18 @@ export const MESSAGES = {
     "{attribute} de cette identité",
   ],
   "continue.add": ["Add to this identity", "Ajouter à cette identité"],
-  "continue.add.hint": [
-    "A value you add is saved on this identity. It is sent only if you then tick it.",
-    "Une valeur ajoutée est enregistrée sur cette identité. Elle n’est envoyée que si vous la cochez ensuite.",
-  ],
   "continue.add.failed": [
     "This value was not accepted. Check it and try again.",
     "Cette valeur n’a pas été acceptée. Vérifiez-la, puis réessayez.",
   ],
   "continue.blocked": [
-    "{app} does not work without what is marked “Required”. Accept it, choose another identity, or go back.",
-    "{app} ne fonctionne pas sans ce qui est marqué « Requis ». Acceptez-le, choisissez une autre identité, ou revenez en arrière.",
+    "**Something is missing.** {app} needs it: add it to this identity, above, or change identity, to continue.",
+    "**Il manque quelque chose.** {app} en a besoin : ajoutez-le à cette identité, plus haut, ou changez d’identité, pour continuer.",
   ],
-  "continue.shared.attributes": [
-    "{app} receives an identifier that exists for this application and this identity only, and what you tick, with the values shown. It never receives the identity’s name, icon or description.",
-    "{app} reçoit un identifiant qui n’existe que pour cette application et cette identité, et ce que vous cochez, avec les valeurs affichées. Elle ne reçoit jamais le nom, l’icône ni la description de l’identité.",
+  "continue.with": ["Continue with {identity}", "Continuer avec {identity}"],
+  "continue.refuse": [
+    "Refuse and go back to {app}",
+    "Refuser et retourner à {app}",
   ],
   "continue.setup": [
     "Your account is not ready yet: it needs its recovery code. Finish setting it up, then start again from the application.",

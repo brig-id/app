@@ -32,6 +32,7 @@ const UI = [
   "key",
   "lightbulb",
   "list-bullets",
+  "lock",
   "moon",
   "pencil-simple",
   "plus",
