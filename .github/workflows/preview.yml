@@ -15,8 +15,11 @@ name: Preview
 # The server is the latest released image, not one built from a branch: a pull
 # request that needs an API not released yet runs against the API as released.
 #
-# The setup link that makes the first administrator is kept out of the log,
-# which is public: the administration pages cannot be tried here.
+# The administration can be tried too: the comment carries the link that makes
+# an administrator (`seedling admin link`). It works once, for an hour, and is
+# made again before it ends. It is public, like the pull request: whoever
+# opens it first administers this server, which holds nothing and ends with
+# the job.
 
 on:
   pull_request:
@@ -106,8 +109,7 @@ jobs:
           # The image runs as nonroot: a directory anyone can write to.
           mkdir -m 777 "$RUNNER_TEMP/data"
           data="$RUNNER_TEMP/data:/data"
-          # A new server only lets invited people sign up, and its first
-          # administrator is out of reach here: anyone may sign up instead.
+          # A new server only lets invited people sign up: here anyone may.
           docker run --rm --env-file "$env_file" -v "$data" "$SEEDLING_IMAGE" signup open
           # Reachable from this machine only, through the tunnel.
           docker run -d --name seedling -p 127.0.0.1:8080:8080 \
@@ -140,7 +142,7 @@ jobs:
           echo "::error::$URL does not answer."
           exit 1
 
-      - name: Comment the address
+      - name: Comment the address, and the link that makes an administrator
         env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
@@ -148,18 +150,40 @@ jobs:
           SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           version=$(docker run --rm "$SEEDLING_IMAGE" --version | awk '{ print $2 }' || true)
-          until=$(date -u -d "+$PREVIEW_MINUTES minutes" '+%H:%M UTC')
+          end=$(( $(date +%s) + PREVIEW_MINUTES * 60 ))
+          until=$(date -u -d "@$end" '+%H:%M UTC')
+          # Used again below, each time the link is made anew.
+          cat > "$RUNNER_TEMP/comment.sh" <<SCRIPT
+          # On an empty server the link creates the first account, which
+          # administers it; once there are accounts, it makes the signed-in
+          # one that opens it an administrator.
+          link=\$(docker exec seedling /seedling admin link | grep -oE 'https://[^ ]+#link=[^ ]+' | head -n 1)
+          [ -n "\$link" ] || { echo "::error::The server gave no link."; exit 1; }
           gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --edit-last --create-if-none --body \
-            "Preview: $URL — commit ${SHA:0:7}, served by seedling ${version:-latest}, until $until. An empty server, open to anyone: sign up first. Re-run the Preview workflow to get a new one."
+            "Preview: $URL — commit ${SHA:0:7}, served by seedling ${version:-latest}, until $until. An empty server, open to anyone to sign up.
 
+          Administration: \$link makes whoever opens it the administrator: open it before signing up, it creates the first account (once the server has accounts, sign in first). Made at \$(date -u '+%H:%M UTC'), it works once and for an hour, and a new one replaces it here before it ends. The server holds nothing and ends with the preview.
+
+          Re-run the Preview workflow to get a new one."
+          SCRIPT
+          echo "end=$end" >> "$GITHUB_ENV"
+          bash -euo pipefail "$RUNNER_TEMP/comment.sh"
       - name: Keep it running
-        run: sleep $((PREVIEW_MINUTES * 60))
-
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # A link lasts an hour: a new one every 55 minutes, until the end.
+          while :; do
+            left=$(( end - $(date +%s) ))
+            [ "$left" -le 0 ] && break
+            sleep $(( left < 3300 ? left : 3300 ))
+            [ $(( end - $(date +%s) )) -le 60 ] && break
+            bash -euo pipefail "$RUNNER_TEMP/comment.sh" || true
+          done
       - name: Server log
         if: always()
         run: |
-          # Without the setup link: whoever reads this public log would become
-          # the preview's administrator.
+          # Without the links: the one that counts is in the comment.
           docker logs seedling 2>&1 | sed 's/#link=.*/#link=***/' || true
 
       - name: Say it has ended
