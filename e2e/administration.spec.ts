@@ -248,7 +248,7 @@ test("an administrator named from the machine registers an application, invites,
   await expect(listed.getByText("E-mail address")).toBeVisible();
 
   await ask(page, clientId, "openid");
-  await page.getByRole("radio", { name: "Work" }).check();
+  await page.getByRole("radio", { name: "Work" }).click();
   const claims = await continueAndReadToken(page, request, clientId, secret);
   expect(claims.sub).toBeTruthy();
   expect(claims.aud).toBe(clientId);

@@ -44,28 +44,11 @@ describe("continueStep", () => {
     });
   });
 
-  it("preselects the identity remembered for the site", () => {
-    expect(continueStep(request({ chosen: "b" }))).toEqual({
-      kind: "choose",
-      selected: "b",
-    });
-  });
-
-  it("picks nothing for the person when several identities exist", () => {
-    expect(continueStep(request({}))).toEqual({ kind: "choose", selected: null });
-  });
-
-  it("forgets a remembered identity that no longer exists", () => {
-    expect(continueStep(request({ chosen: "gone" }))).toEqual({
-      kind: "choose",
-      selected: null,
-    });
-  });
-
-  it("selects the only identity there is", () => {
+  it("chooses no identity for the person: not the one remembered, not the only one", () => {
+    expect(continueStep(request({}))).toEqual({ kind: "choose" });
+    expect(continueStep(request({ chosen: "b" }))).toEqual({ kind: "choose" });
     expect(continueStep(request({ identities: [identity("a")] }))).toEqual({
       kind: "choose",
-      selected: "a",
     });
   });
 });

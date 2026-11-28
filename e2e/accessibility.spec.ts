@@ -170,25 +170,37 @@ for (const { locale, colorScheme } of CASES) {
       await page.locator(".check input").check();
       await continueToIdentities(page);
 
-      // The linking page: attributes the identity lacks, then one it has,
-      // then ticked.
+      // The linking page: the identities with none chosen, then the one
+      // chosen with attributes it lacks, then one it has, then a switch.
       await ask(page, clientId, "openid profile email");
-      await page.locator(".choice input").last().check();
+      await expect(page.locator(".choice")).not.toHaveCount(0);
+      await expectNoViolation(page, "/continue/ with an identity to choose");
+      await page.locator(".choice input").last().click();
       await expect(page.locator(".asked-row--missing")).toHaveCount(2);
       await expectNoViolation(page, "/continue/ asked for what the identity lacks");
       // Refused for going too fast, the page says so and keeps the field:
       // pressed again, as a person would.
-      const box = page.locator(".asked-choice input");
-      await expect(async () => {
-        if ((await box.count()) === 0) {
-          await page.locator('input[data-add="email"]').fill("ada@work.example");
-          await page.locator(".asked-add .button").last().click({ timeout: 2000 });
-        }
-        await expect(box).toHaveCount(1, { timeout: 3000 });
-      }).toPass({ timeout: 40_000, intervals: [3500] });
-      await expectNoViolation(page, "/continue/ with a value to accept");
-      await box.check();
-      await expectNoViolation(page, "/continue/ with a value accepted");
+      const add = (name: string, value: string) =>
+        expect(async () => {
+          const field = page.locator(`input[data-add="${name}"]`);
+          if ((await field.count()) > 0) {
+            await field.fill(value);
+            await page
+              .locator(`[data-attribute="${name}"] .asked-add .button`)
+              .click({ timeout: 2000 });
+          }
+          await expect(field).toHaveCount(0, { timeout: 3000 });
+        }).toPass({ timeout: 40_000, intervals: [3500] });
+      await add("email", "ada@work.example");
+      await expectNoViolation(page, "/continue/ with what the application needs");
+      await add("given_name", "Ada");
+      const share = page.locator(".switch");
+      await expect(share).toHaveCount(1);
+      await expectNoViolation(page, "/continue/ with a value shared");
+      await share.click();
+      await expectNoViolation(page, "/continue/ with a value kept");
+      await page.locator("details.knows summary").click();
+      await expectNoViolation(page, "/continue/ with what the application will know");
       await page.locator("form > .button--primary").click();
       await page.waitForURL(/application\.example/);
 
@@ -197,7 +209,8 @@ for (const { locale, colorScheme } of CASES) {
       await page.locator(".identity-card-link").last().click();
       await expect(page.locator(".identity-hero")).toBeVisible({ timeout: 10_000 });
       await page.locator("#tab-usage").click();
-      await expect(page.locator(".shared-row")).toHaveCount(1, { timeout: 10_000 });
+      // The address, shared, and the first name, kept.
+      await expect(page.locator(".shared-row")).toHaveCount(2, { timeout: 10_000 });
       await expectNoViolation(page, "/identities/details/?tab=usage");
       await page.locator("[data-application] .button--danger").click();
       await expect(page.locator(".confirm")).toBeVisible();

@@ -52,8 +52,8 @@ test("onboarding proposes identities; the export holds them; deleting leaves not
 
   // -- one identity signs in to an application ---------------------------------
   await ask(page, clientId, "openid");
-  await page.getByRole("radio", { name: "Job" }).check();
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.getByRole("radio", { name: "Job" }).click();
+  await page.getByRole("button", { name: "Continue with Job" }).click();
   await page.waitForURL(/application\.example/);
 
   // -- the export: made in the browser, readable --------------------------------

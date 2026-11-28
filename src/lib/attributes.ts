@@ -133,36 +133,35 @@ export function askedRows(
   });
 }
 
-/** The boxes ticked when the page opens: what the person accepted before,
- * with the value the identity still has. Nothing else is ever ticked for
- * them. */
-export function acceptedBefore(rows: readonly AskedRow[]): AttributeName[] {
-  return rows
-    .filter((row) => row.decided === "accepted" && row.value !== null)
-    .map((row) => row.name);
-}
-
-/** The required attributes that stop the sign-in as things stand: not
- * accepted, or absent from the identity. */
-export function blocking(
-  rows: readonly AskedRow[],
-  accepted: readonly string[],
-): AttributeName[] {
+/** The optional attributes shared when an identity is shown: all the ones it
+ * has, but those the person refused before for this application. A required
+ * attribute is not a choice: it is always sent (`toShare`). */
+export function sharedAtFirst(rows: readonly AskedRow[]): AttributeName[] {
   return rows
     .filter(
-      (row) =>
-        row.required && (row.value === null || !accepted.includes(row.name)),
+      (row) => !row.required && row.value !== null && row.decided !== "refused",
     )
     .map((row) => row.name);
 }
 
-/** What is sent with the answer: the boxes ticked, among what is asked and
- * what the identity has. */
+/** The required attributes the identity lacks: they stop the sign-in until
+ * they are added, or another identity is chosen. */
+export function blocking(rows: readonly AskedRow[]): AttributeName[] {
+  return rows
+    .filter((row) => row.required && row.value === null)
+    .map((row) => row.name);
+}
+
+/** What is sent with the answer, of what the identity has: every required
+ * attribute, and the optional ones left shared. */
 export function toShare(
   rows: readonly AskedRow[],
-  accepted: readonly string[],
+  shared: readonly string[],
 ): AttributeName[] {
   return rows
-    .filter((row) => row.value !== null && accepted.includes(row.name))
+    .filter(
+      (row) =>
+        row.value !== null && (row.required || shared.includes(row.name)),
+    )
     .map((row) => row.name);
 }
